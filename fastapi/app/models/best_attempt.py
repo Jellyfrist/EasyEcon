@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from .learning_page import LearningPage
 
 
-class PageQuizAttempt(Base):
+class BestAttempt(Base):
     '''
     - one row per (student, learning_page)
     - upsert on every retake
