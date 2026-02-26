@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from .course import Course
     from .learning_page import LearningPage
     from .flashcard import FlashcardProgress
-    from .quiz_attempt import QuizAttempt
     from .best_attempt import BestAttempt
     from .exam_attempt import ExamAttempt
     from .exam_session import ExamSession
@@ -85,7 +84,6 @@ class User(Base):
         back_populates = "student",
         foreign_keys="FlashcardProgress.student_id",
     )
-    quiz_attempt: Mapped[List["QuizAttempt"]] = relationship(back_populates="student")
     best_attempt: Mapped[List["BestAttempt"]] = relationship(
         back_populates="student",
         foreign_keys="BestAttempt.student_id",
