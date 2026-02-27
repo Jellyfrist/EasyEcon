@@ -12,7 +12,10 @@ available block types:
   { "id": "b3", "type": "paragraph",  "data": { "text": "..." } }
   { "id": "b4", "type": "image",      "data": { "url": "...", "caption": "..." } }
   { "id": "b5", "type": "video",      "data": { "url": "...", "caption": "..." } }
-  { "id": "b6", "type": "code",       "data": { "language": "python", "code": "..." } }
+  { "id": "b6", "type": "formula",    "data": { "expression": "\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}", "display": "block" } }
+  #   expression: LaTeX string (e.g. "E = mc^2", "\\int_0^\\infty f(x)dx")
+  #   display: "block"  -> centered on its own line (like Word equation block)
+  #            "inline" -> embedded inside a paragraph
   { "id": "b7", "type": "divider",    "data": {} }
   { "id": "b8", "type": "mini_quiz",  "data": {
       "title": "Quick Check",
@@ -29,7 +32,7 @@ available block types:
         }
       ]
   }}
-
+  
 topic_tag (on the page itself):
 - backend-only label used to link this page to exam question tag
 - when a student answers an exam question incorrectly and that question's
