@@ -64,9 +64,16 @@ class Settings(BaseSettings):
                 logging.warning("USE_SUPABASE is True but SUPABASE_DB_URL is missing!")
         return v
     allowed_origins: Union[List[str], str, None] = ["*"]
+
+    # google
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
     google_discovery_url: Optional[str] = None
+
+    # github
+    github_client_id: Optional[str] = None
+    github_client_secret: Optional[str] = None
+    
     frontend_login_success_uri: str = "http://localhost:8080/login-success"  # Default
 
     @validator("allowed_origins", pre=True, always=True)
