@@ -65,7 +65,6 @@ def create_set(
     '''teacher creates a new flashcard topic for a course'''
     fs = FlashcardSet(
         **body.model_dump(),
-        created_by_user_id=teacher.id,
     )
     db.add(fs)
     db.commit()
@@ -86,7 +85,6 @@ def list_sets_teacher(
         db.query(FlashcardSet)
         .filter(
             FlashcardSet.course_id == course_id,
-            FlashcardSet.created_by_user_id == teacher.id,
         )
         .all()
     )
@@ -103,6 +101,7 @@ def update_set(
     set_id: int,
     body: FlashcardSetUpdate,
     db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
 ):
     fs = _get_set_or_404(set_id, db)
     for field, value in body.model_dump(exclude_unset = True).items():
@@ -118,6 +117,7 @@ def update_set(
 def delete_set(
     set_id: int,
     db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
 ):
     fs = _get_set_or_404(set_id, db)
     db.delete(fs)
@@ -129,6 +129,7 @@ def add_card(
     set_id: int,
     body: FlashcardCreate,
     db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
 ):
     '''teacher adds a card (term / definition / hint) to a set'''
     fs = _get_set_or_404(set_id, db)
@@ -144,6 +145,7 @@ def update_card(
     card_id: int,
     body: FlashcardUpdate,
     db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
 ):
     card = db.get(Flashcard, card_id)
     if not card:
@@ -159,6 +161,7 @@ def update_card(
 def delete_card(
     card_id: int,
     db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
 ):
     card = db.get(Flashcard, card_id)
     if not card:
