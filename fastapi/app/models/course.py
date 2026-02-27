@@ -14,14 +14,14 @@ hierarchy:
     └── exam template = ExamSession -> ExamAttempt (past exams)
 '''
 
+from __future__ import annotations
+
 from typing import List, TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 if TYPE_CHECKING:
     from .user import User

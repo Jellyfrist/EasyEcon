@@ -9,14 +9,14 @@ by adding a mini_quiz block inside any LearningPage's content_blocks JSON.
 note: flashcard set and exam template isnt inside module
 '''
 
+from __future__ import annotations
+
 from typing import List, TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 if TYPE_CHECKING:
     from .course import Course

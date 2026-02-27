@@ -45,72 +45,70 @@ if TYPE_CHECKING:
 
 
 class ExamTemplate(Base):
-    '''
-    Teacher authored exam template
-    The 'blank form' before it is launched
-    '''
+    '''Teacher-authored exam template — the blank form before it is launched.'''
 
     __tablename__ = "exam_templates"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index = True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # ownership
     created_by_user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable = False
+        Integer, ForeignKey("users.id"), nullable=False
     )
     # past exams cover the whole course
     course_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("courses.id"), nullable = False, index = True
+        Integer, ForeignKey("courses.id"), nullable=False, index=True
     )
 
     # metadata
-    title: Mapped[str] = mapped_column(String(200), nullable = False)
-    description: Mapped[str] = mapped_column(Text, nullable = True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # midterm / final
-    exam_type: Mapped[str] = mapped_column(String(30), nullable = False, default = "midterm")
+    # midterm | final | practice
+    exam_type: Mapped[str] = mapped_column(String(30), nullable=False, default="midterm")
 
-    # Academic context: allows browsing past-year papers
-    academic_year: Mapped[str] = mapped_column(
-        String(20), nullable=True,
-        comment = "e.g. '2025'"
+    # academic context — for browsing past-year papers
+    academic_year: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True, comment="e.g. '2025'"
     )
-    term: Mapped[str] = mapped_column(
-        String(20), nullable = True,
-        comment = "e.g. 'Semester 2'"
+    term: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True, comment="e.g. 'Semester 2'"
     )
 
-    # question bank (JSON *no DB rows)
-    question_data: Mapped[list] = mapped_column(
-        JSON, nullable = False, default=list
-    )
+    # question bank (JSON — no DB rows)
+    question_data: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
     # settings
-    time_limit_minutes: Mapped[int] = mapped_column(Integer, nullable = True)
-    randomise_questions: Mapped[bool] = mapped_column(Boolean, default = False)
-    randomise_options: Mapped[bool] = mapped_column(Boolean, default = False)
-    show_correct_after: Mapped[bool] = mapped_column(Boolean, default = True)
-    allow_review: Mapped[bool] = mapped_column(Boolean, default = True)
+    time_limit_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    passing_score_pct: Mapped[int] = mapped_column(Integer, default=60)
+    randomise_questions: Mapped[bool] = mapped_column(Boolean, default=False)
+    randomise_options: Mapped[bool] = mapped_column(Boolean, default=False)
+    show_correct_after: Mapped[bool] = mapped_column(Boolean, default=True)
+    allow_review: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # publishing
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    '''
-    relationships
-    '''
-    course: Mapped["Course"] = relationship(back_populates = "exam_templates")
+    # relationships
+    creator: Mapped["User"] = relationship(
+        "User", foreign_keys=[created_by_user_id], back_populates="exam_templates"
+    )
+    course: Mapped["Course"] = relationship(back_populates="exam_templates")
     sessions: Mapped[List["ExamSession"]] = relationship(
-        back_populates = "template", cascade = "all, delete-orphan"
+        back_populates="template", cascade="all, delete-orphan"
     )
 
-    # helper
+    # helpers
     @property
     def total_points(self) -> int:
         return sum(q.get("points", 0) for q in (self.question_data or []))

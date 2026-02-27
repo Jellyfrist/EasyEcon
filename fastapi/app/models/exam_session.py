@@ -35,60 +35,58 @@ class ExamSession(Base):
 
     __tablename__ = "exam_sessions"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key = True, index = True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # source template
     template_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("exam_templates.id"), nullable = False
+        Integer, ForeignKey("exam_templates.id"), nullable=False
     )
 
-    # design: questions are embedded here. (not in DB)
-    # Copy of template.question_data taken at launch
-    # Ensures grading is consistent even if the template is later edited
+    # frozen copy of template.question_data taken at launch
+    # ensures grading is consistent even if the template is later edited
     question_snapshot: Mapped[list] = mapped_column(
-        JSON, nullable = False, default=list,
+        JSON, nullable=False, default=list
     )
 
     # session info
-    title: Mapped[str] = mapped_column(String(200), nullable = False)
-    instructions: Mapped[str] = mapped_column(Text, nullable = True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    instructions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # access window
-    available_from: Mapped[datetime] = mapped_column(DateTime, nullable = True)
-    available_until: Mapped[datetime] = mapped_column(DateTime, nullable = True)
+    available_from: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    available_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # override settings (inherit from template if None)
-    time_limit_minutes: Mapped[int] = mapped_column(Integer, nullable = True)
+    time_limit_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     max_attempts: Mapped[int] = mapped_column(
-        Integer, default = 1
+        Integer, default=1,
+        comment="0 = unlimited"
     )
 
     # lifecycle
-    is_active: Mapped[bool] = mapped_column(Boolean, default = True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     launched_by_user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable = False
+        Integer, ForeignKey("users.id"), nullable=False
     )
     launched_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC)
     )
 
-    '''
-    relationship
-    '''
+    # relationships
     template: Mapped["ExamTemplate"] = relationship(
-        "ExamTemplate", back_populates = "sessions"
+        "ExamTemplate", back_populates="sessions"
     )
     launched_by: Mapped["User"] = relationship(
-        "User", foreign_keys = [launched_by_user_id], back_populates = "launched_sessions"
+        "User", foreign_keys=[launched_by_user_id], back_populates="launched_sessions"
     )
     attempts: Mapped[List["ExamAttempt"]] = relationship(
-        "ExamAttempt", back_populates = "session", cascade = "all, delete-orphan"
+        "ExamAttempt", back_populates="session", cascade="all, delete-orphan"
     )
 
     # helper
     @property
     def is_open(self) -> bool:
-        '''True if the session is currently accepting submissions'''
+        '''True if the session is currently accepting submissions.'''
         now = datetime.now(UTC)
         if not self.is_active:
             return False

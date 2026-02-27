@@ -6,14 +6,14 @@ social auth = maps a user to their OAuth provider identity
 - teacher are admin created with username/password and dont use SSO
 '''
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 '''
 A foreign key (FK) is a column or a set of columns in one database table

@@ -60,21 +60,21 @@ if TYPE_CHECKING:
 
 class ExamAttempt(Base):
     '''
-    one student's graded submission for an exam session
-    all scoring and weakness analysis is computed from the session
-    question_snapshot: no live DB question rows are need
+    one student's graded submission for an exam session.
+    all scoring and weakness analysis is computed from the session's
+    question_snapshot — no live DB question rows needed.
     '''
 
     __tablename__ = "exam_attempts"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key = True, index = True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # participants
     student_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable = False
+        Integer, ForeignKey("users.id"), nullable=False
     )
     session_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("exam_sessions.id"), nullable = False
+        Integer, ForeignKey("exam_sessions.id"), nullable=False
     )
 
     # submission
@@ -85,58 +85,41 @@ class ExamAttempt(Base):
     started_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC)
     )
-    submitted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # scoring
     score: Mapped[float] = mapped_column(Float, default=0.0)
     max_score: Mapped[float] = mapped_column(Float, default=0.0)
-    score_pct: Mapped[float] = mapped_column(Float, default=0.0) # score / max_score * 100
+    score_pct: Mapped[float] = mapped_column(Float, default=0.0)  # score / max_score * 100
     passed: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # percentile
-    percentile: Mapped[float] = mapped_column(
-        Float, nullable = True,
-    )
+    # percentile rank within this session (0-100), recalculated after each submission
+    percentile: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # weakness analysis
-    topic_stats: Mapped[dict] = mapped_column(
-        JSON, nullable = True, default = dict
-    )
+    topic_stats: Mapped[dict] = mapped_column(JSON, nullable=True, default=dict)
+    weakness_report: Mapped[list] = mapped_column(JSON, nullable=True, default=list)
 
-    # sorted list of weak topics with suggested page ID
-    weakness_report: Mapped[list] = mapped_column(
-        JSON, nullable=True, default=list,
-    )
-
-    
-    '''
-    relationship
-    '''
+    # relationships
     student: Mapped["User"] = relationship(
-        "User", foreign_keys = [student_id], back_populates = "exam_attempts"
+        "User", foreign_keys=[student_id], back_populates="exam_attempts"
     )
     session: Mapped["ExamSession"] = relationship(
-        "ExamSession", back_populates = "attempts"
+        "ExamSession", back_populates="attempts"
     )
 
     # grading logic
-
     def grade(self, passing_score_pct: int = 60) -> None:
         '''
-        auto grade this attempt against the session's question_snapshot
-
-        call this after setting self.answers
-        it populates:
-            score, max_score, score_pct, passed, topic_stats, weakness_report
-
-        this method is free of any DB queries
-        from the JSON snapshot stored on the session
+        auto-grade this attempt against the session's question_snapshot.
+        call this after setting self.answers.
+        populates: score, max_score, score_pct, passed, topic_stats, weakness_report.
+        no DB queries — all data comes from the JSON snapshot on the session.
         '''
         questions: list = self.session.question_snapshot or []
 
         raw_score = 0.0
         raw_max = 0.0
-        # { topic_tag: {"correct": int, "total": int, "page_ids": list[int]} }
         topic_buckets: dict = {}
 
         for q in questions:
@@ -159,10 +142,11 @@ class ExamAttempt(Base):
             if student_ans is None:
                 continue
 
-            # normalise comparison
             if isinstance(correct, list):
-                is_correct = sorted(str(a).strip().lower() for a in student_ans) == \
-                             sorted(str(a).strip().lower() for a in correct)
+                is_correct = (
+                    sorted(str(a).strip().lower() for a in student_ans)
+                    == sorted(str(a).strip().lower() for a in correct)
+                )
             else:
                 is_correct = str(student_ans).strip().lower() == str(correct).strip().lower()
 
@@ -190,33 +174,31 @@ class ExamAttempt(Base):
             }
         self.topic_stats = stats
 
-        # build weakness_report (only weak topics, sorted worst-first)
-        weak = [
-            {
-                "topic_tag": tag,
-                "score_pct": v["score_pct"],
-                "suggested_page_ids": v["suggested_page_ids"],
-                "message": (
-                    f"You scored {v['score_pct']}% on '{tag}'. "
-                    "Review the linked lessons to strengthen this area."
-                ),
-            }
-            for tag, v in stats.items()
-            if v["is_weak"]
-        ]
-        self.weakness_report = sorted(weak, key=lambda x: x["score_pct"])
+        # build weakness_report — weak topics only, sorted worst-first
+        self.weakness_report = sorted(
+            [
+                {
+                    "topic_tag": tag,
+                    "score_pct": v["score_pct"],
+                    "suggested_page_ids": v["suggested_page_ids"],
+                    "message": (
+                        f"You scored {v['score_pct']}% on '{tag}'. "
+                        "Review the linked lessons to strengthen this area."
+                    ),
+                }
+                for tag, v in stats.items()
+                if v["is_weak"]
+            ],
+            key=lambda x: x["score_pct"],
+        )
 
     @staticmethod
     def recalculate_percentiles(orm_session: OrmSession, session_id: int) -> None:
-        """
-        Recalculate percentile ranks for all submitted attempts in a session.
-
-        Call this after each new attempt is committed:
-            ExamAttempt.recalculate_percentiles(db, session_id=attempt.session_id)
-
-        Percentile = % of other attempts with score_pct strictly lower than this one.
-        (Standard "lower than" percentile formula.)
-        """
+        '''
+        recalculate percentile ranks for all submitted attempts in a session.
+        call this after each new attempt is committed.
+        percentile = % of attempts with score_pct strictly lower than this one.
+        '''
         attempts = (
             orm_session.query(ExamAttempt)
             .filter(

@@ -32,7 +32,7 @@ available block types:
         }
       ]
   }}
-  
+
 topic_tag (on the page itself):
 - backend-only label used to link this page to exam question tag
 - when a student answers an exam question incorrectly and that question's
@@ -46,6 +46,8 @@ template_type:
 teachers can freely add/remove/reorder blocks after picking one
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import List, TYPE_CHECKING
 
@@ -53,8 +55,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String, Tex
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 UTC = timezone.utc
 
