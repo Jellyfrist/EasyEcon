@@ -9,11 +9,12 @@ note: JWT authentication following https://fastapi.tiangolo.com/tutorial/securit
 '''
 
 import logging
+import secrets
+
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -28,8 +29,7 @@ SECRET_KEY = settings.jwt_secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
 
 # password helper
 def hash_password(plain: str) -> str:
@@ -43,28 +43,46 @@ def create_access_token(
     data: dict,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
+    '''
+    แreates a JWT with:
+        - "sub"        : user id (str)
+        - "role"       : user role
+        - "csrf_token" : random hex - matched by JWTAndCSRFMiddleware
+        - "exp"        : expiry timestamp
+
+    frontend flow:
+        1. after login, backend sets "jwt" cookie + returns csrf_token in JSON body
+        2. frontend stores csrf_token (e.g. in memory or localStorage)
+        3. frontend sends X-CSRF-Token: <csrf_token> header on every POST/PUT/DELETE
+    '''
     payload = data.copy()
     expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta or timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload.update({"exp": expire})
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    payload.update({
+        "exp": expire,
+        "csrf_token": secrets.token_hex(16),
+    })
+    return jwt.encode(payload, SECRET_KEY, algorithm = ALGORITHM)
 
 # current user depency
 def get_current_user(
-    # token depend on oauth2
-    token: str = Depends(oauth2_scheme),
+    request: Request,
     db: Session = Depends(get_db),
 ) -> User:
     '''
-    Decode JWT -> look up user in DB.
-    Raises 401 for any invalid/missing/expired token.
+    - reads JWT from "jwt" cookie
+    - raises 401 for missing / invalid / expired token
     '''
     credentials_exc = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+        status_code = status.HTTP_401_UNAUTHORIZED,
+        detail = "Could not validate credentials",
     )
+
+    token = request.cookies.get("jwt")
+    if not token:
+        raise credentials_exc
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -72,7 +90,7 @@ def get_current_user(
             raise credentials_exc
     except JWTError:
         raise credentials_exc
-
+    
     user = db.get(User, int(user_id))
     if user is None or not user.is_active:
         raise credentials_exc
