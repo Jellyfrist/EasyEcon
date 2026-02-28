@@ -1,26 +1,45 @@
-from pydantic import BaseModel, Field
+from __future__ import annotations
 from typing import Optional
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-class UserResponse(BaseModel):
-    '''
-    Response model for user profile information.
-    '''
-    name: str = Field(..., description="Full name of the user", example="John Doe")
-    email: str = Field(..., description="Email address of the user", example="john@example.com")
-    avatar_url: Optional[str] = Field(None, description="URL to the user's avatar image", example="https://lh3.googleusercontent.com/...")
 
-    class Config:
-        from_attributes = True
+# token
 
 class Token(BaseModel):
-    '''
-    Response model for JWT access token.
-    '''
-    access_token: str = Field(..., description="JWT access token")
-    token_type: str = Field("bearer", description="Token type, usually 'bearer'")
+    access_token: str
+    token_type: str = "bearer"
 
-class Message(BaseModel):
-    '''
-    Generic message response.
-    '''
-    message: str = Field(..., description="Informational message", example="Operation successful")
+
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
+
+
+# student self registration
+
+class StudentRegister(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = None
+
+
+# teacher creation (admin only)
+
+class TeacherCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = None
+
+
+# user response
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    email: str
+    full_name: Optional[str]
+    role: str
+    is_active: bool
