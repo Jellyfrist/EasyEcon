@@ -51,6 +51,10 @@ def _get_set_or_404(set_id: int, db: Session) -> FlashcardSet:
         raise HTTPException(status_code = 404, detail = "Flashcard set not found")
     return fs
 
+def _own_set_or_403(fs: FlashcardSet, teacher: User) -> None:
+    if fs.created_by_user_id != teacher.id and teacher.role != "admin":
+        raise HTTPException(status_code=403, detail="Not your flashcard set")
+
 '''
 teacher router
 '''
@@ -65,6 +69,7 @@ def create_set(
     '''teacher creates a new flashcard topic for a course'''
     fs = FlashcardSet(
         **body.model_dump(),
+        created_by_user_id=teacher.id,
     )
     db.add(fs)
     db.commit()
@@ -85,6 +90,7 @@ def list_sets_teacher(
         db.query(FlashcardSet)
         .filter(
             FlashcardSet.course_id == course_id,
+            FlashcardSet.created_by_user_id == teacher.id,
         )
         .all()
     )
@@ -104,6 +110,7 @@ def update_set(
     teacher: User = Depends(require_teacher),
 ):
     fs = _get_set_or_404(set_id, db)
+    _own_set_or_403(fs, teacher)
     for field, value in body.model_dump(exclude_unset = True).items():
         setattr(fs, field, value)
     db.commit()
@@ -120,6 +127,7 @@ def delete_set(
     teacher: User = Depends(require_teacher),
 ):
     fs = _get_set_or_404(set_id, db)
+    _own_set_or_403(fs, teacher)
     db.delete(fs)
     db.commit()
 
@@ -133,6 +141,7 @@ def add_card(
 ):
     '''teacher adds a card (term / definition / hint) to a set'''
     fs = _get_set_or_404(set_id, db)
+    _own_set_or_403(fs, teacher)
     card = Flashcard(set_id = set_id, **body.model_dump())
     db.add(card)
     db.commit()
@@ -166,6 +175,7 @@ def delete_card(
     card = db.get(Flashcard, card_id)
     if not card:
         raise HTTPException(status_code = 404, detail = "Card not found")
+    _own_set_or_403(card.flashcard_set, teacher)
     db.delete(card)
     db.commit()
 
