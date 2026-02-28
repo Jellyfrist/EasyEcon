@@ -1,9 +1,8 @@
-# fastapi/app/__init__.py
 from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import Base, engine
-from app.routers import auth, phonebook
+from app.routers import auth, flashcard, learning, exam
 from app.env_detector import should_auto_create_tables
 import logging
 import os
@@ -46,9 +45,34 @@ fastapi_app.add_middleware(
 
 class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: StarletteRequest, call_next):
-        excluded_paths = ["/", "/login", "/google/auth", "/logout"]
+        # Paths that skip JWT/CSRF check entirely
+        # - GET requests are always allowed (read-only)
+        # - Auth endpoints (login, register, SSO callbacks) must be excluded
+        #   so users can reach them before they have a token
+        excluded_paths = [
+            "/",
+            # auth: login & register never have a token yet
+            "/auth/token",
+            "/auth/register",
+            "/auth/login/google",
+            "/auth/google/callback",
+            "/auth/login/github",
+            "/auth/github/callback",
+            # legacy paths kept for backward compatibility
+            "/login",
+            "/google/auth",
+            "/logout",
+            # docs
+            f"{api_prefix}/docs",
+            f"{api_prefix}/redoc",
+            f"{api_prefix}/openapi.json",
+        ]
+
         logger.debug(f"Request method: {request.method}, path: {request.url.path}")
-        if request.method not in ["POST", "PUT", "DELETE"] or request.url.path in excluded_paths:
+
+        # skip middleware for GET/HEAD/OPTIONS or excluded paths
+        if request.method not in ["POST", "PUT", "DELETE", "PATCH"] \
+                or request.url.path in excluded_paths:
             logger.debug("Skipping JWT/CSRF validation for this request")
             return await call_next(request)
 
@@ -91,11 +115,11 @@ except Exception as e:
     logger.error(f"Error during table creation: {e}")
     # Don't fail the app if table creation fails
 
-auth_router = APIRouter()
-auth.register_routes(auth_router)
-fastapi_app.include_router(auth_router, prefix=api_prefix, tags=["Auth"])
-fastapi_app.include_router(
-    phonebook.router, prefix=f"{api_prefix}/lab10", tags=["Phonebook"])
+# router registration
+fastapi_app.include_router(auth.router,      prefix = api_prefix)
+fastapi_app.include_router(flashcard.router, prefix = api_prefix)
+fastapi_app.include_router(learning.router,  prefix = api_prefix)
+fastapi_app.include_router(exam.router,      prefix = api_prefix)
 
 
 @fastapi_app.exception_handler(JWTError)
