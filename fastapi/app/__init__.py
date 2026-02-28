@@ -116,10 +116,10 @@ except Exception as e:
     # Don't fail the app if table creation fails
 
 # router registration
-fastapi_app.include_router(auth.router,      prefix = api_prefix)
-fastapi_app.include_router(flashcard.router, prefix = api_prefix)
-fastapi_app.include_router(learning.router,  prefix = api_prefix)
-fastapi_app.include_router(exam.router,      prefix = api_prefix)
+fastapi_app.include_router(auth.router,      prefix=api_prefix)
+fastapi_app.include_router(flashcard.router, prefix=api_prefix)
+fastapi_app.include_router(learning.router,  prefix=api_prefix)
+fastapi_app.include_router(exam.router,      prefix=api_prefix)
 
 
 @fastapi_app.exception_handler(JWTError)
