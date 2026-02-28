@@ -9,6 +9,8 @@ the session stores a snapshot of question_data at launch time so that
 teachers can later edit the template without affecting in-progress sessions
 '''
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List
 
@@ -16,8 +18,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String, Tex
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 UTC = timezone.utc
 

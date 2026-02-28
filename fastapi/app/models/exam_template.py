@@ -26,6 +26,8 @@ b/c the whole point of the exam system is to analyse weaknesses and
 link back to learning pages for review
 '''
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import List, TYPE_CHECKING
 
@@ -33,8 +35,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String, Tex
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 UTC = timezone.utc
 

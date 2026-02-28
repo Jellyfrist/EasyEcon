@@ -24,6 +24,7 @@ weakness_report schema (sorted worst-first):
         }
     ]
 '''
+from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -35,8 +36,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 UTC = timezone.utc
 
