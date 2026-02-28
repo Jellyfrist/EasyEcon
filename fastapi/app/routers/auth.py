@@ -3,12 +3,27 @@
 
 '''
 endpoints:
-    POST /auth/register          = student self-registration
-    POST /auth/token             = login (all roles) → JWT
-    GET  /auth/me                = current user profile
-    POST /auth/admin/teachers    = admin creates a teacher account
-    GET  /auth/login/google      = redirect to Google OAuth
-    GET  /auth/google/callback   = Google OAuth callback
+    POST /auth/register             student self-registration
+    POST /auth/token                login (all roles) -> sets JWT cookie + returns csrf_token
+    POST /auth/logout               clears JWT cookie
+    GET  /auth/me                   current user profile
+    POST /auth/admin/teachers       admin creates a teacher account
+    GET  /auth/login/google         redirect to Google OAuth
+    GET  /auth/google/callback      Google OAuth callback -> sets JWT cookie
+    GET  /auth/login/github         redirect to GitHub OAuth
+    GET  /auth/github/callback      GitHub OAuth callback -> sets JWT cookie
+
+about cookie:
+  - JWT stored in HTTP-only cookie named "jwt"
+  - csrf_token returned in JSON body on login
+  - Frontend must send X-CSRF-Token: <csrf_token> on every POST/PUT/PATCH/DELETE
+  - JWTAndCSRFMiddleware in app/__init__.py enforces this system-wide
+
+note on OAuth2PasswordRequestForm:
+  - Still used as a convenient form parser for /auth/token
+  - But token is set as a cookie, NOT returned as Bearer in body
+  - This means Swagger UI /docs Authorize button will NOT auto-set the cookie
+  - For testing: call /auth/token -> copy csrf_token -> use manually
 
 Follows: https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
 '''
@@ -17,27 +32,27 @@ import logging
 
 from datetime import timedelta
 
-from fastapi import APIRouter, Request, Depends, HTTPException, status
+from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+
+from httpx import AsyncClient
+from jose import jwt, JWTError
 
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas.auth import UserResponse, Message
-
-from app.config import settings
-from jose import jwt, JWTError
-
-from httpx import AsyncClient
 
 from app.config import settings
 from app.db import get_db
+
 from app.models.user import User
 from app.models.social_auth import SocialAuth
-from app.schemas.auth import StudentRegister, TeacherCreate, Token, UserResponse
+from app.schemas.auth import StudentRegister, TeacherCreate, UserResponse
 from app.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    SECRET_KEY,
+    ALGORITHM,
     create_access_token,
     get_current_user,
     hash_password,
@@ -55,14 +70,62 @@ GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
+# set jwt
+def _set_jwt_cookie(response: Response, token: str) -> str:
+    '''
+    - set JWT as HTTP-only cookie
+    - returns the csrf_token from the payload so it can be sent to the frontend
+    '''
+    response.set_cookie(
+        key="jwt",
+        value=token,
+        httponly=True,                           # JS cannot read it: XSS safe
+        secure=settings.jwt_cookie_secure,       # True in production (HTTPS only)
+        samesite=settings.jwt_cookie_samesite,   # "Lax"
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    return payload.get("csrf_token", "")
 
-# student selfregistration
+def _unique_username(email: str, db: Session) -> str:
+    '''auto-generate a unique username from email prefix for SSO users'''
+    base = email.split("@")[0]
+    username = base
+    suffix = 1
+    while db.query(User).filter(User.username == username).first():
+        username = f"{base}{suffix}"
+        suffix += 1
+    return username
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+
+def _sso_redirect(token: str) -> RedirectResponse:
+    '''
+    - build a redirect response for SSO callbacks
+    - sets the JWT cookie and passes csrf_token as a url query
+    so the frontend can store it after the redirect
+    '''
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    csrf_token = payload.get("csrf_token", "")
+    redirect = RedirectResponse(
+        url=f"{settings.frontend_login_success_uri}?csrf_token={csrf_token}"
+    )
+    redirect.set_cookie(
+        key="jwt",
+        value=token,
+        httponly=True,
+        secure=settings.jwt_cookie_secure,
+        samesite=settings.jwt_cookie_samesite,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    return redirect
+
+# student self registration
+
+@router.post("/register", response_model=UserResponse, status_code=201)
 def register_student(body: StudentRegister, db: Session = Depends(get_db)):
     '''
     - student register themselves with username, email, and password.
-    - role is always set to 'student': teachers are created by admins only.
+    - role is always set to 'student' -> teachers are created by admins only.
     '''
     if db.query(User).filter(User.username == body.username).first():
         raise HTTPException(status_code = 400, detail = "Username already taken")
@@ -84,15 +147,22 @@ def register_student(body: StudentRegister, db: Session = Depends(get_db)):
 
 # login (all roles) -> JWT
 
-@router.post("/token", response_model=Token)
+@router.post("/token")
 def login(
+    response: Response,
     form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     '''
-    - standard OAuth2 password flow
-    - username field accepts either username or email
-    - returns a Bearer JWT
+    login with username (or email) + password
+
+    on success:
+      - sets "jwt" HTTP-only cookie (browser stores it automatically)
+      - returns { "csrf_token": "...", "user": { ... } } in JSON body
+
+    frontend must:
+      1. store csrf_token (in memory or localStorage *not in a cookie)
+      2. send X-CSRF-Token: <csrf_token> header on every POST/PUT/PATCH/DELETE
     '''
     # allow login by username OR email
     user = (
@@ -101,25 +171,39 @@ def login(
     )
     if not user or not user.hashed_password:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code = status.HTTP_401_UNAUTHORIZED,
+            detail = "Incorrect username or password",
         )
     if not verify_password(form.password, user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code = status.HTTP_401_UNAUTHORIZED,
+            detail = "Incorrect username or password",
         )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive account")
+        raise HTTPException(status_code = 400, detail = "Inactive account")
 
     token = create_access_token(
         data={"sub": str(user.id), "role": user.role},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        expires_delta = timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES),
     )
-    return {"access_token": token, "token_type": "bearer"}
+    csrf_token = _set_jwt_cookie(response, token)
 
+    return {
+        "csrf_token": csrf_token,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "full_name": user.full_name,
+        }
+    }
+
+# logout: clear jwt cookie
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(key="jwt")
+    return {"message": "Logged out successfully"}
 
 # current user
 
@@ -130,12 +214,7 @@ def me(current_user: User = Depends(get_current_user)):
 
 
 # admin: create teacher account
-
-@router.post(
-    "/admin/teachers",
-    response_model = UserResponse,
-    status_code = status.HTTP_201_CREATED,
-)
+@router.post("/admin/teachers", response_model=UserResponse, status_code=201)
 def create_teacher(
     body: TeacherCreate,
     db: Session = Depends(get_db),
@@ -155,7 +234,7 @@ def create_teacher(
         email = body.email,
         hashed_password = hash_password(body.password),
         full_name = body.full_name,
-        role = "teacher",
+        role = "teacher"
     )
     db.add(teacher)
     db.commit()
@@ -165,7 +244,7 @@ def create_teacher(
 
 # Google SSO
 
-@router.get("/login/google", include_in_schema=True)
+@router.get("/login/google")
 def google_login(request: Request):
     '''redirect student to Google consent page'''
     redirect_uri = str(request.url_for("google_callback"))
@@ -228,34 +307,25 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         user = db.query(User).filter(User.email == email).first()
         if not user:
             # auto-generate username from email prefix
-            base = email.split("@")[0]
-            username = base
-            suffix = 1
-            while db.query(User).filter(User.username == username).first():
-                username = f"{base}{suffix}"
-                suffix += 1
-
             user = User(
-                username=username,
-                email=email,
-                full_name=name,
-                role="student",
+                username = _unique_username(email, db),
+                email = email,
+                full_name = name,
+                role = "student",
             )
             db.add(user)
             db.flush()
 
         db.add(SocialAuth(
-            user_id=user.id,
-            provider="google",
-            provider_id=google_id,
+            user_id = user.id,
+            provider = "google",
+            provider_id = google_id,
         ))
         db.commit()
         db.refresh(user)
 
-    token = create_access_token(data={"sub": str(user.id), "role": user.role})
-    # return token: frontend reads from redirect URL or JSON
-    frontend_url = settings.frontend_login_success_uri
-    return RedirectResponse(url=f"{frontend_url}?token={token}")
+    token = create_access_token(data = {"sub": str(user.id), "role": user.role})
+    return _sso_redirect(token)
 
 # Github SSO
     
@@ -291,7 +361,7 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
                 "client_secret": GITHUB_CLIENT_SECRET,
                 "code": code,
             },
-            headers={"Accept": "application/json"},
+            headers = {"Accept": "application/json"},
         )
         token_data = token_resp.json()
         access_token = token_data.get("access_token")
@@ -312,10 +382,15 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
                 GITHUB_EMAIL_URL,
                 headers={"Authorization": f"Bearer {access_token}"},
             )
-            emails = email_resp.json()
-            primary = next((e for e in emails if e.get("primary") and e.get("verified")), None)
+            primary = next(
+                (e for e in email_resp.json() if e.get("primary") and e.get("verified")),
+                None,
+            )
             if not primary:
-                raise HTTPException(status_code=400, detail="No verified email on GitHub account")
+                raise HTTPException(
+                    status_code = 400,
+                    detail = "No verified email on GitHub account",
+                )
             email = primary["email"]
 
     github_id = str(profile["id"])
@@ -332,19 +407,17 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
     else:
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            base = email.split("@")[0]
-            username = base
-            suffix = 1
-            while db.query(User).filter(User.username == username).first():
-                username = f"{base}{suffix}"
-                suffix += 1
-            user = User(username=username, email=email, full_name=name, role="student")
+            user = User(
+                username = _unique_username(email, db),
+                email = email,
+                full_name = name,
+                role = "student",
+            )
             db.add(user)
             db.flush()
-
-        db.add(SocialAuth(user_id=user.id, provider="github", provider_id=github_id))
+        db.add(SocialAuth(user_id = user.id, provider = "github", provider_id = github_id))
         db.commit()
         db.refresh(user)
 
-    token = create_access_token(data={"sub": str(user.id), "role": user.role})
-    return RedirectResponse(url=f"{settings.frontend_login_success_uri}?token={token}")
+    token = create_access_token(data = {"sub": str(user.id), "role": user.role})
+    return _sso_redirect(token)

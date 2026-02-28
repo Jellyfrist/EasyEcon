@@ -1,9 +1,10 @@
 '''
 JWT authentication
 
-- passwoord hash with bcrypt via passlib
-- require_student, require_teacher, require_admin
-- OAuth2PasswordBearer
+match JWTAndCSRFMiddleware in app/__init__.py:
+  - token is read from the "jwt" cookie
+  - CSRF token is embedded in the JWT payload as "csrf_token"
+  - frontend must send X-CSRF-Token header on POST/PUT/DELETE requests
 
 note: JWT authentication following https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
 '''
@@ -44,7 +45,7 @@ def create_access_token(
     expires_delta: Optional[timedelta] = None,
 ) -> str:
     '''
-    แreates a JWT with:
+    creates a JWT with:
         - "sub"        : user id (str)
         - "role"       : user role
         - "csrf_token" : random hex - matched by JWTAndCSRFMiddleware
