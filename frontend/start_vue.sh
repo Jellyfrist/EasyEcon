@@ -5,6 +5,6 @@ if [ "$APP_ENV" = "development" ]; then
   npm run dev
   exec "$@"
 elif [ "$APP_ENV" = "production" ]; then
-  npm run build
+  npm install --verbose
+  npm run build && npm run preview
 fi
-
