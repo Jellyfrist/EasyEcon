@@ -65,6 +65,11 @@ cover/
 *.mo
 *.pot
 
+# Ignore SQLite databases
+*.db
+*.sqlite3
+fastapi/app.db
+
 # Django stuff:
 *.log
 local_settings.py
@@ -166,6 +171,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.local
 
 # Spyder project settings
 .spyderproject
@@ -224,3 +230,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
