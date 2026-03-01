@@ -1,45 +1,65 @@
-<script setup>
-</script>
 <template>
-  <div>
-    <!-- <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a> -->
-    <nav class="navbar">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/login">Google SSO</router-link> |
-      <router-link to="/phonebook">Phonebook</router-link> |
-      <router-link to="/contacts">Contacts</router-link>
-    </nav>
-    <!-- Render the appropriate component for the current route -->
+  <div id="app">
+
+    <!-- Conditionally display the Navbar -->
+    <Navbar v-if="showNavbar" />
+
+    <!-- Conditionally display the DashboardHero -->
+    <DashboardHero v-if="showDashboardHero" />
+
+    <!-- Page content -->
     <router-view />
+
+    <!-- Conditionally display the Footer -->
+    <Footer v-if="showFooter" />
+
   </div>
 </template>
+
+<script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+import Navbar from '@/components/Navbar.vue';
+import Footer from '@/components/Footer.vue';
+import DashboardHero from '@/components/DashboardHero.vue';
+
+const route = useRoute();
+
+// Show the Navbar for the main layout; hide it for the auth layout
+const showNavbar = computed(() => {
+  return route.meta.showNavbar === true;
+});
+
+// Show the Footer for the main layout; hide it for the auth layout
+const showFooter = computed(() => {
+  return route.meta.showFooter === true;
+});
+
+// Show the DashboardHero only for the Feature Dashboard layout
+const showDashboardHero = computed(() => {
+  return route.meta.showDashboardHero === true;
+});
+
+</script>
+
 <style>
+@import './style.css';
+
 * {
-  font-family: 'Kanit', sans-serif;
-}
-</style>
-<style scoped>
-nav {
-  margin-top: 1em;
+  font-family: 'Kanit', 'Lexend', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+body {
+  margin: 0;
+  min-height: 100vh;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+#app {
+  width: 100%;
+  min-height: 100vh;
 }
 </style>
