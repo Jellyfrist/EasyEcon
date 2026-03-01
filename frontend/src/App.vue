@@ -1,17 +1,19 @@
 <template>
-    <div id="app">
-        <!-- Conditionally show Navbar -->
-        <Navbar v-if="showNavbar" />
-    
-        <DashboardHero v-if="showDashboardHero" />
-    
-        <!-- Page content -->
-        <router-view />
-    
-        <!-- Conditionally show Footer -->
-        <Footer v-if="showFooter" />
-    
-    </div>
+  <div id="app">
+
+    <!-- Conditionally display the Navbar -->
+    <Navbar v-if="showNavbar" />
+
+    <!-- Conditionally display the DashboardHero -->
+    <DashboardHero v-if="showDashboardHero" />
+
+    <!-- Page content -->
+    <router-view />
+
+    <!-- Conditionally display the Footer -->
+    <Footer v-if="showFooter" />
+
+  </div>
 </template>
 
 <script setup>
@@ -24,38 +26,40 @@ import DashboardHero from '@/components/DashboardHero.vue';
 
 const route = useRoute();
 
-// Show navbar for main layout, hide for auth layout
+// Show the Navbar for the main layout; hide it for the auth layout
 const showNavbar = computed(() => {
-    return route.meta.showNavbar === true;
+  return route.meta.showNavbar === true;
 });
 
-// Show Footer for main layout, hide for auth layout
+// Show the Footer for the main layout; hide it for the auth layout
 const showFooter = computed(() => {
-    return route.meta.showFooter === true;
+  return route.meta.showFooter === true;
 });
 
-// Show DashboardHero for Feature Dashboard layout
+// Show the DashboardHero only for the Feature Dashboard layout
 const showDashboardHero = computed(() => {
-    return route.meta.showDashboardHero === true;
+  return route.meta.showDashboardHero === true;
 });
+
 </script>
 
 <style>
 @import './style.css';
+
 * {
-    font-family: 'Kanit', 'Lexend', sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  font-family: 'Kanit', 'Lexend', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    min-height: 100vh;
+  margin: 0;
+  min-height: 100vh;
 }
 
 #app {
-    width: 100%;
-    min-height: 100vh;
+  width: 100%;
+  min-height: 100vh;
 }
 </style>
