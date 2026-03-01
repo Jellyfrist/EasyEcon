@@ -1,18 +1,17 @@
 <template>
     <div class="page-wrapper">
-    
-        <AuthHeroSection subtitle="Your Economics Space Awaits" />
+        <AuthHeroSection />
     
         <div class="form-section">
             <div class="form-container">
                 <nav class="auth-nav">
-                    <router-link to="/signup" class="nav-item">Sign up</router-link>
-                    <div class="nav-item active">Log in</div>
+                    <div class="nav-item active">Sign up</div>
+                    <router-link to="/login" class="nav-item">Log in</router-link>
                 </nav>
     
                 <header class="form-header">
-                    <h2>Continue learning</h2>
-                    <p>Log in to continue your economics journey.</p>
+                    <h2>Create your account</h2>
+                    <p>Start your journey into the world of economics.</p>
                 </header>
     
                 <div class="social-group">
@@ -35,35 +34,36 @@
                     <span>or email</span>
                 </div>
     
-                <form @submit.prevent="login">
+                <form @submit.prevent="signUp" class="signup-form">
                     <div class="form-group">
-                        <label>Email / Username</label>
-                        <input v-model="email" type="text" placeholder="Enter your email or username" required />
+                        <label>Username</label>
+                        <input v-model="username" type="text" placeholder="johndoe" required />
                     </div>
     
                     <div class="form-group">
-                        <div class="label-row">
-                            <label>Password</label>
-                            <a href="#" class="forgot-link">Forgot password?</a>
-                        </div>
+                        <label>Email</label>
+                        <input v-model="email" type="email" placeholder="john@example.com" required />
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Password</label>
                         <div class="password-wrapper">
                             <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" required />
                             <button type="button" @click="showPassword = !showPassword" class="toggle-btn">
                                     <span class="material-symbols-outlined">
-                                        {{ showPassword ? 'visibility_off' : 'visibility' }}
+                                    {{ showPassword ? 'visibility_off' : 'visibility' }}
                                     </span>
                                 </button>
                         </div>
                     </div>
     
-                    <button type="submit" class="btn-login" :disabled="isLoading">
-                            {{ isLoading ? 'Logging in...' : 'Log in' }}
+                    <button type="submit" class="btn-signup" :disabled="isLoading">
+                            {{ isLoading ? 'Signing up...' : 'Sign Up' }}
                         </button>
                 </form>
     
-                <p class="footer-text">
-                    New to the site?
-                    <router-link to="/signup">Create an account</router-link>
+                <p class="terms-text">
+                    By clicking Sign Up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
                 </p>
             </div>
         </div>
@@ -77,21 +77,35 @@ import { authService } from '../services/authService';
 import AuthHeroSection from '@/components/AuthHeroSection.vue'
 
 const router = useRouter();
+const username = ref('');
 const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const isLoading = ref(false);
 
-const login = async () => {
+const signUp = async () => {
     isLoading.value = true;
     try {
-        await authService.login(email.value, password.value);
-        router.push('/dashboard');
+        const userData = {
+            username: username.value,
+            email: email.value,
+            password: password.value
+        };
+
+        await authService.register(
+            userData.username, 
+            userData.email, 
+            userData.password, 
+            userData.full_name
+        );
+        
+        alert("Registration successful! Please log in.");
+        router.push('/login');
+
     } catch (error) {
-        console.error("Login failed:", error);
-        const errorMessage = error.response?.data?.detail || "Invalid login credentials";
+        console.error("Registration failed:", error);
+        const errorMessage = error.response?.data?.detail || "An error occurred during registration";
         alert("ERROR: " + errorMessage);
-        password.value = ''; // Clear the password field
     } finally {
         isLoading.value = false;
     }
@@ -231,22 +245,6 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     color: #374151;
 }
 
-.label-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.forgot-link {
-    font-size: 12px;
-    color: var(--forest-green);
-    text-decoration: none;
-}
-
-.forgot-link:hover {
-    text-decoration: underline;
-}
-
 input {
     width: 100%;
     padding: 12px 16px;
@@ -279,42 +277,39 @@ input:focus {
     cursor: pointer;
 }
 
-.btn-login {
+.btn-signup {
     width: 100%;
     padding: 14px;
-    background-color: var(--forest-green);
+    background: var(--forest-green);
     color: white;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 12px;
+    font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(10, 112, 60, 0.2);
 }
 
-.btn-login:hover {
+.btn-signup:hover {
     filter: brightness(1.2);
     box-shadow: 0 4px 12px rgba(10, 112, 60, 0.2);
 }
 
-.btn-login:active {
+.btn-signup:active {
     transform: scale(0.98);
 }
 
-.footer-text {
+.terms-text {
+    font-size: 11px;
+    color: #9ca3af;
     text-align: center;
-    margin-top: 24px;
-    color: var(--gray-text);
-    font-size: 14px;
+    margin-top: 25px;
+    line-height: 1.5;
 }
 
-.footer-text a {
-    color: var(--forest-green);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.footer-text a:hover {
+.terms-text a {
+    color: #6b7280;
     text-decoration: underline;
 }
 
