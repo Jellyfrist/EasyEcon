@@ -100,7 +100,7 @@ class BestAttempt(Base):
     relationship
     '''
     student: Mapped["User"] = relationship(
-        "User", foreign_keys=[student_id], back_populates="page_quiz_attempts"
+        "User", foreign_keys=[student_id], back_populates="best_attempt"
     )
     learning_page: Mapped["LearningPage"] = relationship(back_populates="quiz_attempts")
 

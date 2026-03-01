@@ -106,12 +106,20 @@ class LearningPage(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime, nullable = True)
 
     # author tracking
+    created_by_user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+
     # if have collab teacher
     last_edited_by_user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable = True
     )
 
     # timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default = lambda: datetime.now(UTC),
@@ -122,6 +130,12 @@ class LearningPage(Base):
     relationship
     '''
     module: Mapped["Module"] = relationship(back_populates = "learning_pages")
+
+    creator: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[created_by_user_id],
+        back_populates="created_pages",
+    )
 
     # if have collab teacher
     last_editor: Mapped["User"] = relationship(

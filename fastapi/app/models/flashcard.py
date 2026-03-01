@@ -19,6 +19,8 @@ student flow:
     come back anytime and see how many words they have learned
 '''
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import List, Optional, TYPE_CHECKING
 
@@ -29,8 +31,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-
-from __future__ import annotations
 
 UTC = timezone.utc
 

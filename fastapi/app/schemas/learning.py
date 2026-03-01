@@ -122,6 +122,22 @@ class LearningPageResponse(BaseModel):
     last_edited_by_user_id: Optional[int]
     updated_at: datetime
 
+class LearningPageStudentResponse(BaseModel):
+    '''
+    page response for student
+    - topic_tag is EXCLUDED
+    - correct_answer and explanation stripped from mini_quiz blocks
+    '''
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    module_id: int
+    title: str
+    template_type: str
+    content_blocks: List[ContentBlock]   # correct_answers stripped by router
+    order_index: int
+    preview: Optional[str]
+
 class LearningPageSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
