@@ -14,8 +14,8 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = "http://localhost:56733";
-const AUTH_URL = `${API_URL}/auth`;
+const BACKEND_URL = "http://localhost:56733";
+const AUTH_URL = `${BACKEND_URL}/auth`;
 
 // Axios defaults
 
