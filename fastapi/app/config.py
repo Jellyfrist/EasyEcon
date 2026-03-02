@@ -73,6 +73,13 @@ class Settings(BaseSettings):
     # github
     github_client_id: Optional[str] = None
     github_client_secret: Optional[str] = None
+
+    # email: used by invite_teacher router to send credentials to new teachers
+    mail_username: str = ""
+    mail_password: str = ""
+    mail_from: str = ""
+    mail_port: int = 587
+    mail_server: str = "smtp.gmail.com"
     
     frontend_login_success_uri: str = "http://localhost:8080/login-success"  # Default
 
