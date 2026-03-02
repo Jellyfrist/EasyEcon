@@ -41,14 +41,12 @@ from jose import jwt, JWTError
 
 from sqlalchemy.orm import Session
 
-from app.db import get_db
-
 from app.config import settings
 from app.db import get_db
 
 from app.models.user import User
 from app.models.social_auth import SocialAuth
-from app.schemas.auth import StudentRegister, TeacherCreate, UserResponse
+from app.schemas.auth import StudentRegister, UserResponse
 from app.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     SECRET_KEY,
@@ -206,41 +204,10 @@ def logout(response: Response):
     return {"message": "Logged out successfully"}
 
 # current user
-
 @router.get("/me", response_model = UserResponse)
 def me(current_user: User = Depends(get_current_user)):
     '''return the profile of the currently logged-in user'''
     return current_user
-
-
-# admin: create teacher account
-@router.post("/admin/teachers", response_model=UserResponse, status_code=201)
-def create_teacher(
-    body: TeacherCreate,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
-):
-    '''
-    admin create a teacher account with username + password
-    teacher cannt self register: they must be created here
-    '''
-    if db.query(User).filter(User.username == body.username).first():
-        raise HTTPException(status_code = 400, detail = "Username already taken")
-    if db.query(User).filter(User.email == body.email).first():
-        raise HTTPException(status_code = 400, detail = "Email already registered")
-
-    teacher = User(
-        username = body.username,
-        email = body.email,
-        hashed_password = hash_password(body.password),
-        full_name = body.full_name,
-        role = "teacher"
-    )
-    db.add(teacher)
-    db.commit()
-    db.refresh(teacher)
-    return teacher
-
 
 # Google SSO
 
