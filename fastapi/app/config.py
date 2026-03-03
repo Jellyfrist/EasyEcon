@@ -34,14 +34,26 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "my_jwt_secret"
     jwt_token_location: List[str] = ["cookies"]
     jwt_access_cookie_name: str = "jwt"
-    jwt_cookie_secure: bool = False
-    jwt_cookie_samesite: str = "Lax"
+    jwt_cookie_secure: bool = True  # Use HTTPS for production
+    jwt_cookie_samesite: str = "Lax"  # Allow cross-site cookies for OAuth redirects
     jwt_cookie_csrf_protect: bool = False
     secret_key: str = "df0331cefc6c2b9a5d0208a726a5d1c0fd37324feba25506"
     json_as_ascii: bool = False
     database_url: str = "sqlite:///./app.db"  # Default; overridden by .env
     use_supabase: bool = False
     supabase_db_url: Optional[str] = None
+
+    # email send
+    mail_username: str = ""
+    mail_password: str = ""
+    mail_from: str = ""
+    mail_port: int = 587
+    mail_server: str = "smtp.gmail.com"
+    mail_from_name: str = "EasyEcon"
+    mail_starttls: bool = True
+    mail_ssl_tls: bool = False
+    use_credentials: bool = True
+    validate_certs: bool = True
 
     @validator("database_url", pre=True, always=True)
     def check_supabase_url(cls, v, values):
