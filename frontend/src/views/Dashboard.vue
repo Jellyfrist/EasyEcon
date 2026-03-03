@@ -176,7 +176,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/authService';
-// import learningService from '@/services/learningService';
 
 // Import composable to check protected feature access
 import { useProtectedFeature } from '@/composables/useProtectedFeature';
