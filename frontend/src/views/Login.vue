@@ -17,18 +17,18 @@
     
                 <div class="social-group">
                     <button class="social-btn" @click="loginWithGoogle">
-                            <svg width="20" height="20" viewBox="0 0 48 48">
-                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.69 1.22 9.18 3.6l6.85-6.85C35.91 2.27 30.42 0 24 0 14.82 0 6.89 5.48 3.18 13.44l7.98 6.19C13.06 13.11 18.07 9.5 24 9.5z"/>
-                                <path fill="#4285F4" d="M46.14 24.5c0-1.57-.14-3.08-.4-4.55H24v9.1h12.44c-.54 2.9-2.2 5.36-4.7 7.02l7.2 5.6c4.2-3.87 6.6-9.57 6.6-17.17z"/>
-                                <path fill="#FBBC05" d="M10.16 28.63c-.5-1.48-.8-3.06-.8-4.63s.3-3.15.8-4.63l-7.98-6.19C.77 16.24 0 20.02 0 24s.77 7.76 2.18 10.82l7.98-6.19z"/>
-                                <path fill="#34A853" d="M24 48c6.42 0 11.91-2.12 15.88-5.75l-7.2-5.6c-2 1.35-4.56 2.15-8.68 2.15-5.93 0-10.94-3.61-12.84-8.87l-7.98 6.19C6.89 42.52 14.82 48 24 48z"/>
-                            </svg>
-                            <span>Continue with Google</span>
-                        </button>
+                                <svg width="20" height="20" viewBox="0 0 48 48">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.69 1.22 9.18 3.6l6.85-6.85C35.91 2.27 30.42 0 24 0 14.82 0 6.89 5.48 3.18 13.44l7.98 6.19C13.06 13.11 18.07 9.5 24 9.5z"/>
+                                    <path fill="#4285F4" d="M46.14 24.5c0-1.57-.14-3.08-.4-4.55H24v9.1h12.44c-.54 2.9-2.2 5.36-4.7 7.02l7.2 5.6c4.2-3.87 6.6-9.57 6.6-17.17z"/>
+                                    <path fill="#FBBC05" d="M10.16 28.63c-.5-1.48-.8-3.06-.8-4.63s.3-3.15.8-4.63l-7.98-6.19C.77 16.24 0 20.02 0 24s.77 7.76 2.18 10.82l7.98-6.19z"/>
+                                    <path fill="#34A853" d="M24 48c6.42 0 11.91-2.12 15.88-5.75l-7.2-5.6c-2 1.35-4.56 2.15-8.68 2.15-5.93 0-10.94-3.61-12.84-8.87l-7.98 6.19C6.89 42.52 14.82 48 24 48z"/>
+                                </svg>
+                                <span>Continue with Google</span>
+                            </button>
                     <button class="social-btn" @click="loginWithGithub">
-                            <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor"></path></svg>
-                            <span>Continue with GitHub</span>
-                        </button>
+                                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor"></path></svg>
+                                <span>Continue with GitHub</span>
+                            </button>
                 </div>
     
                 <div class="divider">
@@ -49,16 +49,16 @@
                         <div class="password-wrapper">
                             <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" required />
                             <button type="button" @click="showPassword = !showPassword" class="toggle-btn">
-                                    <span class="material-symbols-outlined">
-                                        {{ showPassword ? 'visibility_off' : 'visibility' }}
-                                    </span>
-                                </button>
+                                        <span class="material-symbols-outlined">
+                                            {{ showPassword ? 'visibility_off' : 'visibility' }}
+                                        </span>
+                                    </button>
                         </div>
                     </div>
     
                     <button type="submit" class="btn-login" :disabled="isLoading">
-                            {{ isLoading ? 'Logging in...' : 'Log in' }}
-                        </button>
+                                {{ isLoading ? 'Logging in...' : 'Log in' }}
+                            </button>
                 </form>
     
                 <p class="footer-text">
@@ -74,9 +74,12 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/authService';
+import { useAuthStore } from '../store/authStore';
 import AuthHeroSection from '@/components/AuthHeroSection.vue'
 
 const router = useRouter();
+const authStore = useAuthStore();
+
 const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
@@ -85,13 +88,21 @@ const isLoading = ref(false);
 const login = async () => {
     isLoading.value = true;
     try {
-        await authService.login(email.value, password.value);
-        router.push('/dashboard');
+        const result = await authStore.login(email.value, password.value);
+
+        // Redirect based on the role
+        if (result.success) {
+            if (authStore.isAdmin) {
+                router.push('/admin');
+            } else {
+                router.push('/dashboard');
+            }
+        }
     } catch (error) {
         console.error("Login failed:", error);
-        const errorMessage = error.response?.data?.detail || "Invalid login credentials";
+        const errorMessage = error.response?.data?.detail || error.message || "Invalid login credentials";
         alert("ERROR: " + errorMessage);
-        password.value = ''; // Clear the password field
+        password.value = ''; 
     } finally {
         isLoading.value = false;
     }
