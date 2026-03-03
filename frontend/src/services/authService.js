@@ -71,7 +71,7 @@ export class AuthError extends Error {
  */
 export function saveToken(csrfToken, userData) {
     if (csrfToken) localStorage.setItem("csrf_token", csrfToken);
-    if (userData)  localStorage.setItem("user", JSON.stringify(userData));
+    if (userData) localStorage.setItem("user", JSON.stringify(userData));
 }
 
 /**
