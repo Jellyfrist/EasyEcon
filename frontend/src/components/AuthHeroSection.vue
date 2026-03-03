@@ -8,10 +8,12 @@
     
         <div class="hero-content">
             <div class="logo-circle">
-                <img src="@/assets/EasyEcon_logo.png" alt="EasyEcon Logo" class="main-logo" />
+                <div class="logo-stack">
+                    <img src="@/assets/EasyEcon_logo_white.png" alt="EasyEcon Logo" class="main-logo" />
+                </div>
             </div>
             <h1>Easy<span class="highlight">Econ</span></h1>
-            <h2>{{ subtitle }}</h2>
+            <h2>Welcome to Econ Learning space</h2>
             <div class="tagline-group">
                 <p class="tagline">Everyday Economics, Made Simple.</p>
                 <p class="university">Based on Faculty Of Economics — Chiang Mai University</p>
@@ -32,7 +34,7 @@ defineProps({
 <style scoped>
 .hero-section {
     flex: 1;
-    background: radial-gradient(circle at 30% 20%, #f472b6, #db2777);
+    background: radial-gradient(circle at 30% 20%, var(--primary-pink), var(--primary-hover));
     position: relative;
     overflow: hidden;
     display: flex;
@@ -41,6 +43,8 @@ defineProps({
     color: white;
     padding: 40px;
 }
+
+/* --- icon ---*/
 
 .decor {
     position: absolute;
@@ -69,11 +73,7 @@ defineProps({
     opacity: 0.08;
 }
 
-.hero-content {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-}
+/* --- Logo --- */
 
 .logo-circle {
     width: 200px;
@@ -92,6 +92,15 @@ defineProps({
     width: 70%;
     height: auto;
     display: block;
+    margin: 0 auto;
+}
+
+/* --- Content --- */
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
 }
 
 .hero-section h1 {
@@ -117,16 +126,18 @@ defineProps({
     font-weight: 300;
 }
 
+/* --- Effect --- */
+
 .highlight {
-    background: linear-gradient(90deg, #fde047, #facc15, #f59e0b, #fde047);
+    background: linear-gradient( 90deg, #fde047, #facc15, #f59e0b, #fde047);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shine 3s ease-in-out infinite;
+    animation: shine 2s ease-in-out infinite;
 }
 
 .highlight-icon {
-    background: linear-gradient(90deg, #fffcee, #e9ddab, rgb(255, 185, 65), #fffef8);
+    background: linear-gradient( 90deg, #fffcee, #e9ddab, rgb(255, 185, 65), #fffef8);
     background-size: 150% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -154,12 +165,6 @@ defineProps({
     }
     100% {
         transform: translateY(0px) rotate(0deg);
-    }
-}
-
-@media (max-width: 768px) {
-    .hero-section {
-        display: none;
     }
 }
 </style>
