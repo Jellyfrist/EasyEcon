@@ -16,9 +16,10 @@ hierarchy:
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import List, TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -29,38 +30,53 @@ if TYPE_CHECKING:
     from .flashcard import FlashcardSet
     from .exam_template import ExamTemplate
 
+UTC = timezone.utc
+
 class Course(Base):
     __tablename__ = "courses"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key = True, index = True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     teacher_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable = False, index = True
+        Integer, ForeignKey("users.id"), nullable=False, index=True
     )
 
-    # title and deacription
-    title: Mapped[str] = mapped_column(String(50), nullable = False)
-    description: Mapped[str] = mapped_column(Text, nullable = True)
+    # title and description
+    title: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # timestamps: set automatically on create and update
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC)
+    )
 
     '''
-    relationship
+    relationships
     '''
 
     # teacher
-    teacher: Mapped["User"] = relationship(back_populates = "courses")
+    teacher: Mapped["User"] = relationship(back_populates="courses")
 
-    # order lessson
+    # ordered lessons
     modules: Mapped[List["Module"]] = relationship(
-        back_populates = "course", cascade = "all, delete-orphan"
+        back_populates="course", cascade="all, delete-orphan"
     )
 
     # flashcard (stand alone)
     flashcard_sets: Mapped[List["FlashcardSet"]] = relationship(
-        back_populates = "course", cascade = "all, delete-orphan"
+        back_populates="course", cascade="all, delete-orphan"
     )
 
     # exam from past year or past semester
     exam_templates: Mapped[List["ExamTemplate"]] = relationship(
-        back_populates = "course", cascade = "all, delete-orphan"
+        back_populates="course", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
