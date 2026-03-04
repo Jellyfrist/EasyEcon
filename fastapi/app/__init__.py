@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import Base, engine
-from app.routers import auth, flashcard, learning, exam, admin, user
+from app.routers import auth, course, flashcard, learning, exam, admin, user
 from app.env_detector import should_auto_create_tables
 import logging
 import os
@@ -36,7 +36,7 @@ fastapi_app.logger = logger
 
 fastapi_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -117,6 +117,7 @@ except Exception as e:
 
 # router registration
 fastapi_app.include_router(auth.router,      prefix=api_prefix)
+fastapi_app.include_router(course.router,    prefix=api_prefix)
 fastapi_app.include_router(flashcard.router, prefix=api_prefix)
 fastapi_app.include_router(learning.router,  prefix=api_prefix)
 fastapi_app.include_router(exam.router,      prefix=api_prefix)
