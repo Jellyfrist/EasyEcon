@@ -43,9 +43,9 @@ export const useAuthStore = defineStore("auth", {
 
         // user info
         fullName: (state) =>
-            state.user?.full_name ||
-            state.user?.username ||
-            "Guest",
+            (state.user?.role === 'teacher' || state.user?.role === 'admin')
+                ? state.user?.full_name || 'Guest'
+                : state.user?.username || 'Guest',
 
         email: (state) => state.user?.email || null,
         username: (state) => state.user?.username || null,
@@ -55,7 +55,17 @@ export const useAuthStore = defineStore("auth", {
         // internal helpers
 
         _setUser(user) {
-            this.user = user;
+            if (user && user.role === 'student') {
+                const { full_name, ...rest } = user;
+                this.user = rest;
+            } else {
+                this.user = user;
+            }
+            if (this.user) {
+                localStorage.setItem("user", JSON.stringify(this.user));
+            } else {
+                localStorage.removeItem("user");
+            }
         },
 
         setError(error) {
