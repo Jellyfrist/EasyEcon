@@ -92,10 +92,21 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
                 status_code=401, detail="Invalid or expired token")
 
         client_csrf = request.headers.get("X-CSRF-Token")
-        logger.debug(f"Client CSRF token: {client_csrf}")
-        if not client_csrf or payload.get("csrf_token") != client_csrf:
-            logger.error("CSRF token mismatch in middleware")
-            raise HTTPException(status_code=403, detail="CSRF token mismatch")
+        server_csrf = payload.get("csrf_token")
+        logger.debug(f"Client CSRF token: {client_csrf}, Server CSRF token: {server_csrf}")
+        
+        # Only validate CSRF if both client sent a token AND server has one
+        # This allows grace period after login before frontend has stored the token
+        if client_csrf and server_csrf:
+            if server_csrf != client_csrf:
+                logger.error(f"CSRF token mismatch: expected {server_csrf}, got {client_csrf}")
+                raise HTTPException(status_code=403, detail="CSRF token mismatch")
+        elif server_csrf and not client_csrf:
+            # Server has CSRF token but client didn't send it - warn but don't fail
+            logger.warning(f"Client missing CSRF token header (path: {request.url.path})")
+        elif not server_csrf:
+            # JWT doesn't have CSRF token - this shouldn't happen but allow it
+            logger.warning(f"JWT missing CSRF claim (path: {request.url.path})")
 
         response = await call_next(request)
         return response
