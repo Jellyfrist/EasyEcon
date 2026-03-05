@@ -94,7 +94,7 @@ class FlashcardSetResponse(BaseModel):
 
 class FlashcardSetDetail(FlashcardSetResponse):
     '''full set with all cards: used when teacher edits or student study'''
-    cards: List[FlashcardResponse] = []
+    cards: List[FlashcardStudentResponse] = []
 
 
 # flashcard progress

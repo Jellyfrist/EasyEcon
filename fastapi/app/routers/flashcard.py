@@ -101,6 +101,18 @@ def list_sets_teacher(
         results.append(r)
     return results
 
+# get all cards in a set (teacher only)
+@router.get("/sets/{set_id}/cards", response_model = List[FlashcardResponse])
+def list_cards_teacher(
+    set_id: int,
+    db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
+):
+    '''teacher fetches all cards in their set to populate the editor on page reload'''
+    fs = _get_set_or_404(set_id, db)
+    _own_set_or_403(fs, teacher)
+    return fs.cards
+
 # update set title/description
 @router.patch("/sets/{set_id}", response_model = FlashcardSetResponse)
 def update_set(

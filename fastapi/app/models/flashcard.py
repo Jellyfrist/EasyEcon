@@ -58,9 +58,18 @@ class FlashcardSet(Base):
         Integer, ForeignKey("courses.id"), nullable = False, index = True
     )
 
+    # teacher who created this set
+    created_by_user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable = False, index = True
+    )
+
     title: Mapped[str] = mapped_column(String(200), nullable = False)
     description: Mapped[str] = mapped_column(Text, nullable = True)
 
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default = lambda: datetime.now(UTC),
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default = lambda: datetime.now(UTC),
@@ -70,7 +79,7 @@ class FlashcardSet(Base):
     '''
     relationships
     '''
-    
+
     course: Mapped["Course"] = relationship(back_populates = "flashcard_sets")
     cards: Mapped[List["Flashcard"]] = relationship(
         back_populates = "flashcard_set",
@@ -131,7 +140,7 @@ class FlashcardProgress(Base):
     - per-student progress on each individual card
     - one row per (student_id, flashcard_id): upsert on every review
 
-    status: "known" | "learning"
+    status: "known" or "learning"
 
     - the student dashboard derives "how many words learned on this topic"
     by counting rows where status = "known" for a given FlashcardSet
