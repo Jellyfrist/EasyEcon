@@ -1,154 +1,161 @@
 <template>
     <div class="settings-wrapper">
-    
-        <div class="settings-content">
-    
-            <!-- page header -->
-            <div class="page-header">
-                <h1>Account <span class="text-pink">Settings</span></h1>
-                <p>Manage your profile and security preferences</p>
-            </div>
-    
-            <!-- success banner -->
-            <transition name="fade">
-                <div v-if="successMsg" class="alert alert--success">
-                    <span class="material-symbols-outlined">check_circle</span> {{ successMsg }}
-                    <button class="alert-close" @click="successMsg = ''">
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
+
+        <!-- ── Full-width page header, grounded with border ── -->
+        <div class="page-banner">
+            <div class="page-banner-inner">
+                <!-- left: page title -->
+                <div class="banner-title">
+                    <h1>Account <span class="text-pink">Settings</span></h1>
+                    <p class="text-muted">Manage your profile and security preferences</p>
                 </div>
-            </transition>
-    
-            <!-- error banner -->
-            <transition name="fade">
-                <div v-if="errorMsg" class="alert alert--error">
-                    <span class="material-symbols-outlined">error</span> {{ errorMsg }}
-                    <button class="alert-close" @click="errorMsg = ''">
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
-                </div>
-            </transition>
-    
-            <!-- profile card -->
-            <div class="section-card">
-                <div class="section-title-row">
-                    <span class="material-symbols-outlined section-icon">manage_accounts</span>
-                    <div>
-                        <h2>Profile</h2>
-                        <p>Your personal information</p>
-                    </div>
-                </div>
-    
-                <!-- avatar row -->
-                <div class="avatar-row">
-                    <div class="user-avatar" :data-role="user?.role">
-                        {{ initials }}
-                    </div>
-                    <div class="avatar-info">
-                        <span class="avatar-name">{{ user?.full_name || user?.username }}</span>
+                <!-- right: profile info -->
+                <div class="banner-profile">
+                    <div class="user-avatar" :data-role="user?.role">{{ initials }}</div>
+                    <div class="banner-profile-info">
+                        <span class="banner-username">{{ user?.full_name || user?.username }}</span>
                         <span class="role-badge" :class="`role-badge--${user?.role}`">{{ user?.role }}</span>
                     </div>
                 </div>
-    
-                <!-- fields -->
-                <div class="fields-grid">
-    
-                    <!-- username -->
+            </div>
+        </div>
+
+        <!-- ── Content ── -->
+        <div class="settings-body">
+
+            <transition name="fade">
+                <div v-if="successMsg" class="alert alert--success">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>{{ successMsg }}</span>
+                    <button class="alert-close" @click="successMsg = ''">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </transition>
+
+            <transition name="fade">
+                <div v-if="errorMsg" class="alert alert--error">
+                    <span class="material-symbols-outlined">error</span>
+                    <span>{{ errorMsg }}</span>
+                    <button class="alert-close" @click="errorMsg = ''">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </transition>
+
+            <!-- ── Profile Card ── -->
+            <section class="card section-card">
+                <div class="section-title-row">
+                    <div class="section-icon-wrap">
+                        <span class="material-symbols-outlined">manage_accounts</span>
+                    </div>
+                    <div>
+                        <h2>Profile</h2>
+                        <p class="text-muted">Your personal information</p>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="grid-2 fields-grid">
+
                     <div class="form-group">
                         <label>Username</label>
                         <div v-if="isStudent" class="input-with-btn">
-                            <input v-model="form.username" type="text" :placeholder="user?.username" :disabled="saving" />
-                            <button class="btn-action" :disabled="saving || !form.username || form.username === user?.username" @click="saveUsername">
-                                    {{ saving ? '…' : 'Save' }}
-                                </button>
+                            <input class="input-field" v-model="form.username" type="text"
+                                :placeholder="user?.username" :disabled="saving" />
+                            <button class="btn btn-green btn-save"
+                                :disabled="saving || !form.username || form.username === user?.username"
+                                @click="saveUsername">
+                                {{ saving ? '…' : 'Save' }}
+                            </button>
                         </div>
                         <div v-else class="read-field">{{ user?.username }}</div>
                     </div>
-    
-                    <!-- email: always read-only -->
+
                     <div class="form-group">
                         <label>Email Address</label>
                         <div class="read-field">{{ user?.email }}</div>
                         <span class="field-hint">contact admin to change</span>
                     </div>
-    
-                    <!-- full name: teacher only -->
+
                     <div v-if="!isStudent" class="form-group">
                         <label>Full Name</label>
                         <div class="read-field">{{ user?.full_name || '—' }}</div>
                         <span class="field-hint">shown on published content</span>
                     </div>
-    
+
                 </div>
-    
-                <!-- teacher notice -->
+
                 <div v-if="!isStudent" class="notice-box">
                     <span class="material-symbols-outlined">info</span>
-                    <p>
-                        Your account is managed by the administrator. To update your details or reset your password, contact your admin.
-                    </p>
+                    <p>Your account is managed by the administrator. To update your details or reset your password, contact your admin.</p>
                 </div>
-            </div>
-    
-            <!-- password card: student only -->
-            <div v-if="isStudent" class="section-card">
+            </section>
+
+            <!-- ── Password Card ── -->
+            <section v-if="isStudent" class="card section-card">
                 <div class="section-title-row">
-                    <span class="material-symbols-outlined section-icon">lock</span>
+                    <div class="section-icon-wrap section-icon-wrap--pink">
+                        <span class="material-symbols-outlined">lock</span>
+                    </div>
                     <div>
                         <h2>Change Password</h2>
-                        <p>Choose a new password — at least 8 characters</p>
+                        <p class="text-muted">Choose a new password — at least 8 characters</p>
                     </div>
                 </div>
-    
-                <div class="fields-grid">
-    
+
+                <div class="section-divider"></div>
+
+                <div class="grid-2 fields-grid">
                     <div class="form-group">
                         <label>New Password</label>
                         <div class="password-wrapper">
-                            <input v-model="pw.new_password" :type="pw.showNew ? 'text' : 'password'" placeholder="min. 8 characters" :disabled="saving" />
+                            <input class="input-field" v-model="pw.new_password"
+                                :type="pw.showNew ? 'text' : 'password'"
+                                placeholder="min. 8 characters" :disabled="saving" />
                             <button type="button" class="toggle-btn" @click="pw.showNew = !pw.showNew">
-                                    <span class="material-symbols-outlined">
-                                        {{ pw.showNew ? 'visibility_off' : 'visibility' }}
-                                    </span>
-                                </button>
+                                <span class="material-symbols-outlined">{{ pw.showNew ? 'visibility_off' : 'visibility' }}</span>
+                            </button>
                         </div>
                     </div>
-    
+
                     <div class="form-group">
                         <label>Confirm Password</label>
                         <div class="password-wrapper">
-                            <input v-model="pw.confirm" :type="pw.showConfirm ? 'text' : 'password'" placeholder="repeat new password" :disabled="saving" />
+                            <input class="input-field" v-model="pw.confirm"
+                                :type="pw.showConfirm ? 'text' : 'password'"
+                                placeholder="repeat new password" :disabled="saving" />
                             <button type="button" class="toggle-btn" @click="pw.showConfirm = !pw.showConfirm">
-                                    <span class="material-symbols-outlined">
-                                        {{ pw.showConfirm ? 'visibility_off' : 'visibility' }}
-                                    </span>
-                                </button>
+                                <span class="material-symbols-outlined">{{ pw.showConfirm ? 'visibility_off' : 'visibility' }}</span>
+                            </button>
                         </div>
                         <span v-if="pw.confirm && pw.new_password !== pw.confirm" class="field-error">
-                                passwords do not match
-                            </span>
+                            passwords do not match
+                        </span>
                     </div>
-    
                 </div>
-    
-                <button class="btn-action" :disabled="saving || !passwordValid" @click="savePassword">
-                        <span class="material-symbols-outlined">lock_reset</span>
-                        {{ saving ? 'Saving…' : 'Update Password' }}
-                    </button>
-            </div>
-    
+
+                <button class="btn btn-primary btn-update-pw"
+                    :disabled="saving || !passwordValid" @click="savePassword">
+                    <span class="material-symbols-outlined">lock_reset</span>
+                    {{ saving ? 'Saving…' : 'Update Password' }}
+                </button>
+            </section>
+
         </div>
-    
+
         <Footer />
-    
     </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import userService from '@/services/userService'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const user = computed(() => authStore.user)
@@ -169,11 +176,7 @@ const pw = reactive({
 
 const initials = computed(() =>
     (user.value?.full_name || user.value?.username || '?')
-    .split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+    .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 )
 
 const passwordValid = computed(() =>
@@ -181,6 +184,10 @@ const passwordValid = computed(() =>
 )
 
 onMounted(() => {
+    if (!authStore.isAuthenticated) {
+        router.push('/login')
+        return
+    }
     form.username = user.value?.username || ''
 })
 
@@ -195,8 +202,11 @@ async function saveUsername() {
     errorMsg.value = ''
     try {
         const res = await userService.updateUsername(form.username)
-        authStore._setUser({ ...authStore.user, username: res.data.username })
-        localStorage.setItem('user', JSON.stringify(authStore.user))
+        const newUsername = res.data?.username ?? form.username
+        const updatedUser = { ...authStore.user, username: newUsername }
+        authStore._setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        form.username = newUsername
         successMsg.value = 'username updated'
     } catch (err) {
         _handleError(err)
@@ -223,65 +233,124 @@ async function savePassword() {
 </script>
 
 <style scoped>
+
 .settings-wrapper {
     min-height: 100vh;
-    background: var(--background-light);
     display: flex;
     flex-direction: column;
 }
 
-.settings-content {
+/* ── Page Banner — blends with app gradient, no harsh color ── */
+.page-banner {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.page-banner-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* right block */
+.banner-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.banner-profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.banner-username {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* left block */
+.banner-title {
+    text-align: left;
+}
+
+.banner-title h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.text-pink { color: var(--primary-pink); }
+
+/* ── Avatar in banner ── */
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-lg);
+    background: var(--light-green);
+    color: var(--forest-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.user-avatar[data-role="teacher"] { background: var(--light-yellow); color: #c2410c; }
+.user-avatar[data-role="student"] { background: var(--light-pink);   color: var(--primary-pink); }
+
+/* ── Role badge ── */
+.role-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: capitalize;
+    flex-shrink: 0;
+}
+
+.role-badge--student { background: var(--light-pink);   color: var(--primary-pink); }
+.role-badge--teacher { background: var(--light-yellow); color: #c2410c; }
+.role-badge--admin   { background: var(--light-green);  color: var(--forest-green); }
+
+/* ── Body ── */
+.settings-body {
     flex: 1;
-    max-width: 720px;
+    max-width: 800px;
     width: 100%;
     margin: 0 auto;
-    padding: 48px 24px 40px;
+    padding: 32px 32px 48px;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 20px;
 }
 
-/* page header */
-
-.page-header h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 6px;
-}
-
-.text-pink {
-    color: var(--primary-hover);
-}
-
-.page-header p {
-    font-size: 14px;
-    color: #6b7280;
-}
-
-/* alert banners */
-
+/* ── Alerts ── */
 .alert {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 13px 16px;
-    border-radius: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
 }
 
-.alert--success {
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-}
-
-.alert--error {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-}
+.alert--success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.alert--error   { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
 
 .alert-close {
     margin-left: auto;
@@ -292,295 +361,143 @@ async function savePassword() {
     opacity: 0.5;
     display: flex;
     align-items: center;
+    transition: opacity 0.15s;
 }
+.alert-close:hover { opacity: 1; }
 
-.alert-close:hover {
-    opacity: 1;
-}
-
-/* section card */
-
+/* ── Cards ── */
 .section-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 28px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 24px 28px;
 }
 
 .section-title-row {
     display: flex;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.section-icon {
-    font-size: 22px;
-    color: var(--primary-hover);
-    margin-top: 2px;
-}
-
-.section-title-row h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 4px;
-}
-
-.section-title-row p {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-/* avatar row */
-
-.avatar-row {
-    display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: #fff6fd;
-    color: var(--primary-hover);
+.section-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--light-green);
+    color: var(--forest-green);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
     flex-shrink: 0;
 }
 
-.user-avatar[data-role="teacher"] {
-    background: #f2ffed;
-    color: var(--accent-green);
+.section-icon-wrap--pink {
+    background: var(--light-pink);
+    color: var(--primary-pink);
 }
 
-.user-avatar[data-role="admin"] {
-    background: #e7faff;
-    color:  #00145d;
-}
+.section-icon-wrap .material-symbols-outlined { font-size: 18px; }
 
-.avatar-info {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.avatar-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.role-badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    align-self: flex-start;
-}
-
-.role-badge--student {
-    background: #f1f3f7;
-    color: #6b7280;
-}
-
-.role-badge--teacher {
-    background: #fff7ed;
-    color: #c2410c;
-}
-
-.role-badge--admin {
-    background: #f0fdf4;
-    color: var(--forest-green);
-}
-
-/* fields */
-
-.fields-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 0;
-}
-
-.form-group label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-}
-
-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #f9fafb;
+.section-title-row h2 {
     font-size: 15px;
-    font-family: inherit;
-    box-sizing: border-box;
-    transition: all 0.2s;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 2px;
 }
 
-input:focus {
-    outline: none;
-    border-color: var(--forest-green);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(10, 112, 60, 0.1);
-}
+.section-divider { height: 1px; background: var(--card-border); }
 
-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* ── Fields ── */
+.fields-grid { gap: 16px; }
+.section-card .form-group { margin-bottom: 0; }
+.section-card .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
-
-/* read-only field */
 
 .read-field {
-    padding: 12px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #f9fafb;
-    font-size: 15px;
-    color: #9ca3af;
+    padding: 11px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    background: var(--gray-light);
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
-.field-hint {
-    font-size: 11px;
-    color: #d1d5db;
-}
+.field-hint  { display: block; font-size: 11px; color: #d1d5db; margin-top: 4px; }
+.field-error { display: block; font-size: 12px; color: #be123c;  margin-top: 4px; }
 
-.field-error {
-    font-size: 12px;
-    color: #be123c;
-}
+.input-with-btn { display: flex; gap: 8px; }
+.input-with-btn .input-field { flex: 1; }
 
-/* input with inline save button */
-
-.input-with-btn {
-    display: flex;
-    gap: 8px;
-}
-
-.input-with-btn input {
-    flex: 1;
-}
-
-/* primary action button */
-
-.btn-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    background: var(--forest-green);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s;
-    align-self: flex-start;
-    white-space: nowrap;
-}
-
-.btn-action:hover:not(:disabled) {
-    filter: brightness(1.15);
-    box-shadow: 0 4px 12px rgba(10, 112, 60, 0.2);
-}
-
-.btn-action:active {
-    transform: scale(0.98);
-}
-
-.btn-action:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* notice box */
-
-.notice-box {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 14px 16px;
-    color: #6b7280;
-}
-
-.notice-box .material-symbols-outlined {
-    font-size: 20px;
-    flex-shrink: 0;
-}
-
-.notice-box p {
+.btn-save {
+    padding: 0 18px;
     font-size: 13px;
-    line-height: 1.6;
-    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    height: 44px;
 }
+.btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* password wrapper — same pattern as Login.vue */
-
-.password-wrapper {
-    position: relative;
-}
+/* ── Password ── */
+.password-wrapper { position: relative; }
+.password-wrapper .input-field { padding-right: 42px; }
 
 .toggle-btn {
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #9ca3af;
+    color: var(--text-muted);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.15s;
 }
+.toggle-btn:hover { color: var(--text-main); }
+.toggle-btn .material-symbols-outlined { font-size: 18px; }
 
-.toggle-btn:hover {
-    color: #374151;
+.btn-update-pw { align-self: flex-start; padding: 12px 28px; font-size: 14px; }
+.btn-update-pw:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Notice ── */
+.notice-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--light-yellow);
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    color: #92400e;
+    font-size: 13px;
+    line-height: 1.6;
 }
+.notice-box .material-symbols-outlined { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
 
-/* transitions */
+/* ── Transitions ── */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-
-/* responsive */
-
+/* ── Responsive ── */
 @media (max-width: 600px) {
-    .fields-grid {
-        grid-template-columns: 1fr;
-    }
-    .input-with-btn {
-        flex-direction: column;
-    }
-    .btn-action {
-        align-self: stretch;
-        justify-content: center;
-    }
+    .page-banner-inner { padding: 20px 16px; gap: 14px; }
+    .page-banner-inner h1 { font-size: 20px; }
+    .user-avatar { width: 48px; height: 48px; font-size: 16px; }
+    .role-badge { display: none; }
+    .settings-body { padding: 20px 16px 40px; }
+    .section-card { padding: 18px 16px; }
+    .fields-grid { grid-template-columns: 1fr !important; }
+    .input-with-btn { flex-direction: column; }
+    .btn-save { height: auto; padding: 11px 18px; }
+    .btn-update-pw { align-self: stretch; }
 }
 </style>
