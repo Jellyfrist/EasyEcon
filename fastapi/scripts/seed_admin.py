@@ -3,7 +3,7 @@ run this once to create the first admin account.
 
 usage:
     cd fastapi
-    python -m scripts.seed_admin
+    docker compose exec fastapi python -m scripts.seed_admin
 
 what it does:
     - checks if any admin already exists
