@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     jwt_cookie_secure: bool = False
     jwt_cookie_samesite: str = "Lax"
     jwt_cookie_csrf_protect: bool = False
-    secret_key: str = "df0331cefc6c2b9a5d0208a726a5d1c0fd37324feba25506"
+    secret_key: str = ""
     json_as_ascii: bool = False
     database_url: str = "sqlite:///./app.db"  # Default; overridden by .env
     use_supabase: bool = False
