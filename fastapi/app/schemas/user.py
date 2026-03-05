@@ -1,27 +1,27 @@
 from __future__ import annotations
 from typing import Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 class StudentProfileResponse(BaseModel):
     '''fields shown to a student on their settings page'''
     id: int
     username: str
-    password: str     # shown as "********", not editable
+    password: Optional[str] = Field(default=None, alias="hashed_password")  # shown as "********", not editable
     email: str        # shown but not editable
     role: str
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 class TeacherProfileResponse(BaseModel):
     '''fields shown to a teacher on their settings page'''
     id: int
     username: str             # shown, read-only (just for display, not editable)
-    password: str             # shown, read-only (just for display, not editable)
+    password: Optional[str] = Field(default=None, alias="hashed_password")  # shown, read-only (just for display, not editable)
     full_name: Optional[str]  # shown as display name on published content
     email: str                # shown, read-only
     role: str
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 # input schemas
 class StudentUpdate(BaseModel):
