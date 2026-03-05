@@ -57,6 +57,12 @@ const flashcardService = {
         return api.delete(`/flashcards/cards/${cardId}`)
     },
 
+    // get all cards in a set (teacher only)
+    // GET /flashcards/sets/{set_id}/cards
+    getCards(setId) {
+        return api.get(`/flashcards/sets/${setId}/cards`)
+    },
+
 
     /*
         student endpoints:
