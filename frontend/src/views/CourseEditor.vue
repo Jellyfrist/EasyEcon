@@ -41,7 +41,7 @@
             <!-- flashcard: route matches /flashcards/:courseId/edit/:setId? in index.js -->
             <!-- card click: go to flashcard dashboard for this course -->
             <!-- button click: go to create new flashcard set (no setId = create mode) -->
-            <div class="card action-card" @click="router.push({ name: 'FlashcardsDashboard', params: { courseId: courseId } })">
+            <div class="card action-card" @click="router.push({ name: 'TeacherFlashcardDashboard', params: { courseId: courseId } })">
                 <div class="card-icon">🃏</div>
                 <h3>Flashcard Sets</h3>
                 <p class="text-muted">Stand-alone flashcard topics for this course.</p>
