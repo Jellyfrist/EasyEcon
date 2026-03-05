@@ -69,9 +69,11 @@ def create_access_token(
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
     )
+    # Only generate CSRF token if not already in payload
+    if "csrf_token" not in payload:
+        payload["csrf_token"] = secrets.token_hex(16)
     payload.update({
-        "exp": expire,
-        "csrf_token": secrets.token_hex(16),
+        "exp": expire
     })
     return jwt.encode(payload, SECRET_KEY, algorithm = ALGORITHM)
 
