@@ -1,4 +1,10 @@
 <template>
+
+  <!--
+    TODO: In CourseEditor replace button click with this line.
+     <button class="btn btn-outline mt-2" @click.stop="router.push({ name: 'ExamEditor', params: { courseId: courseId } })">
+  -->
+
   <div class="designer-page">
     
 
@@ -37,6 +43,41 @@
 
         <div v-if="error" class="toast toast-error">⚠️ {{ error }}</div>
 
+        <!-- Delete (Only on edit mode) -->
+        <button
+          v-if="templateId"
+          @click="showDeleteConfirm = true"
+          :disabled="isDeleting"
+          class="btn-danger"
+        >
+          Delete Exam
+        </button>
+
+        <!-- Confirm Dialog -->
+        <div v-if="showDeleteConfirm" class="modal-overlay">
+          <div class="modal">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete the exam <strong>{{ title }}</strong>?</p>
+            <p>This action cannot be undone.</p>
+
+            <div class="modal-actions">
+              <button
+                @click="showDeleteConfirm = false"
+                :disabled="isDeleting"
+              >
+                Cancel
+              </button>
+              <button
+                @click="deleteExam"
+                :disabled="isDeleting"
+                class="btn-danger"
+              >
+                {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -68,6 +109,8 @@
             <select v-model="examType" class="input-field select-field">
               <option value="midterm">Midterm</option>
               <option value="final">Final</option>
+              <option value="summer">Summer</option>
+              <option value="quiz">Quiz</option>
             </select>
           </div>
 
@@ -163,118 +206,23 @@
 
         <div class="section-header">
           <h2>Questions</h2>
-          <span class="badge badge-pink">{{ localQuestions.length }} question{{ localQuestions.length !== 1 ? 's' : '' }}</span>
+          <span class="badge badge-pink">
+            {{ localQuestions.length }} question{{ localQuestions.length !== 1 ? 's' : '' }}
+          </span>
         </div>
 
         <div class="questions-list">
-
-          <div
+          <QuestionEditor
             v-for="(q, qi) in localQuestions"
             :key="q._lid"
-            class="question-card"
-          >
-
-            <div class="flex items-center gap-2 mb-2">
-              <span class="badge badge-pink">Q{{ qi + 1 }}</span>
-              <span v-if="q.points" class="badge badge-yellow">{{ q.points }} pt{{ q.points !== 1 ? 's' : '' }}</span>
-              <span v-if="q.topic_tag" class="badge badge-green">{{ q.topic_tag }}</span>
-              <button
-                class="btn-remove"
-                @click="removeLocalQuestion(q._lid)"
-              >✕</button>
-            </div>
-
-            <div class="form-group">
-              <label>Question Text</label>
-              <textarea
-                v-model="q.question_text"
-                class="input-field"
-                rows="3"
-                placeholder="Enter your question here..."
-              />
-            </div>
-
-            <div class="question-row-group">
-
-              <div class="form-group">
-                <label>Points</label>
-                <input
-                  type="number"
-                  v-model.number="q.points"
-                  class="input-field"
-                  placeholder="1"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Topic Tag</label>
-                <input v-model="q.topic_tag" class="input-field" placeholder="e.g. Supply & Demand"/>
-              </div>
-
-              <div class="form-group">
-                <label>Linked Learning Page ID</label>
-                <input
-                  type="number"
-                  v-model.number="q.linked_learning_page_id"
-                  class="input-field"
-                  placeholder="Optional page id"
-                />
-              </div>
-
-            </div>
-
-
-            <!-- OPTIONS -->
-            <div class="options-block">
-
-              <div class="flex justify-between items-center mb-2">
-                <h4 class="text-sm font-semibold text-muted">OPTIONS</h4>
-                <span class="text-xs text-muted">Select the correct answer</span>
-              </div>
-
-              <div
-                v-for="(opt, oi) in q.options"
-                :key="oi"
-                class="option-row"
-                :class="{ 'is-correct': q.correct_answer === oi }"
-              >
-
-                <label class="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    :name="'correct'+qi"
-                    :value="oi"
-                    v-model="q.correct_answer"
-                    class="option-radio"
-                  />
-                  <span class="option-letter">{{ ['A','B','C','D'][oi] || oi + 1 }}</span>
-                </label>
-
-                <input
-                  v-model="opt.text"
-                  placeholder="Option text"
-                  class="input-field option-input"
-                />
-
-              </div>
-
-            </div>
-
-
-            <div class="form-group">
-              <label>Explanation <span class="text-xs text-muted">(shown after exam if enabled)</span></label>
-              <textarea v-model="q.explanation" class="input-field" rows="2" placeholder="Explain the correct answer..."/>
-            </div>
-
-          </div>
-
+            :q="q"
+            :index="qi"
+            @remove="removeLocalQuestion"
+          />
         </div>
 
-        <button
-          class="btn btn-green w-full mt-3"
-          @click="addEmptyQuestion"
-        >
-          +
+        <button class="btn btn-green w-full mt-3" @click="addEmptyQuestion">
+          + Add Question
         </button>
 
       </section>
@@ -339,12 +287,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/store/examStore'
-// import { examService } from '@/services/examService.js'
-/* TODO: update services/examService.js and apply into this script */
+import QuestionEditor from '@/components/QuestionEditor.vue'
 
-
+const router = useRouter()
 const route = useRoute()
 const examStore = useExamStore()
 
@@ -381,6 +328,10 @@ const showCorrectAfter = ref(false)
 const allowReview = ref(false)
 const isPublished = ref(false)
 
+function togglePublish() {
+  isPublished.value = !isPublished.value
+}
+
 
 /* =============================
    QUESTIONS
@@ -388,22 +339,24 @@ const isPublished = ref(false)
 
 const localQuestions = ref([])
 
+/**
+ * Creates a blank ExamQuestion-shaped object for the editor.
+**/
+
 function newQuestion() {
   return {
-    _lid: Date.now() + Math.random(),
-    type: "multiple_choice",
+    _lid: Date.now() + Math.random(), // UI-only stable key
+    id: '',
+    type: 'multiple_choice',
     text: '',
-    options: [
-      { text: '' },
-      { text: '' },
-      { text: '' },
-      { text: '' }
-    ],
-    correct_answer: 0,
+    _html: '',                        // UI-only rich HTML for RTE
+    options: ['', '', '', ''],        // List[str]
+    correct_answer: '',               // str (matches first option after user types)
     explanation: '',
     points: 1,
     topic_tag: '',
-    linked_learning_page_id: ''
+    order_index: 0,                    // filled in buildPayload
+    linked_learning_page_id: null,
   }
 }
 
@@ -413,10 +366,6 @@ function addEmptyQuestion() {
 
 function removeLocalQuestion(lid) {
   localQuestions.value = localQuestions.value.filter(q => q._lid !== lid)
-}
-
-function togglePublish() {
-  isPublished.value = !isPublished.value
 }
 
 
@@ -453,9 +402,9 @@ function buildPayload() {
     
     question_data: localQuestions.value.map((q, i) => ({
       id: `q${i+1}`,
-      type: "multiple_choice",
+      type: q.type,
       text: q.text,
-      options: q.options.map(o => o.text),
+      options: q.options ?? null,
       correct_answer: q.correct_answer,
       explanation: q.explanation || null,
       points: q.points,
@@ -512,7 +461,6 @@ async function save() {
   }
 }
 
-
 /* =============================
    LOAD TEMPLATE (EDIT MODE)
 ============================= */
@@ -526,50 +474,63 @@ async function loadTemplate() {
   const t = examStore.currentTemplate
   if (!t) return
 
-  /* =============================
-     BASIC INFO
-  ============================= */
-
+  // Basic info
   title.value = t.title || ''
   description.value = t.description || ''
   examType.value = t.exam_type || 'midterm'
   academicYear.value = t.academic_year || ''
   term.value = t.term || '1'
-
   passingScore.value = t.passing_score_pct ?? 50
   durationMinutes.value = t.time_limit_minutes ?? 60
 
-
-  /* =============================
-     BEHAVIOUR (root level)
-  ============================= */
-
+  // Behaviour
   randomiseQuestions.value = t.randomise_questions ?? false
   randomiseOptions.value = t.randomise_options ?? false
   showCorrectAfter.value = t.show_correct_after ?? false
   allowReview.value = t.allow_review ?? false
 
-
-  /* =============================
-     QUESTIONS
-  ============================= */
-
   const qd = t.question_data || []
 
-  localQuestions.value = qd.map(q => ({
+  localQuestions.value = (t.question_data || []).map(q => ({
     _lid: Date.now() + Math.random(),
-
+    id: q.id,
+    type: q.type || 'multiple_choice',
     text: q.text || '',
+    _html: q.text || '',                // plain text as initial HTML
+    options: q.options ?? [],
+    correct_answer: q.correct_answer ?? '',
+    explanation: q.explanation || '',
     points: q.points ?? 1,
     topic_tag: q.topic_tag || '',
+    order_index: q.order_index ?? 0,
     linked_learning_page_id: q.linked_learning_page_id ?? null,
-    correct_answer: q.correct_answer ?? 0,
-    explanation: q.explanation || '',
-
-    options: (q.options || []).map(o => ({
-      text: o
-    }))
   }))
+}
+
+/* =============================
+   DELETE
+============================= */
+
+const isDeleting = ref(false)
+const showDeleteConfirm = ref(false)
+
+async function deleteExam() {
+  if (!templateId) return
+
+  isDeleting.value = true
+  error.value = null
+
+  try {
+    const res = await examStore.deleteTemplate(templateId)
+    if (!res) throw new Error(examStore.error || 'Delete failed')
+    router.push({ name: 'CourseExams', params: { courseId } })
+
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    isDeleting.value = false
+    showDeleteConfirm.value = false
+  }
 }
 
 
