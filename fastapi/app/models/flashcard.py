@@ -17,6 +17,10 @@ student flow:
     2. flip through cards: mark each as "known" or "learning"
     3. flashcard progress is upserted on every review so students can
     come back anytime and see how many words they have learned
+
+note
+is_active = False : hidden from normal views
+deleted_at : when it was deleted (used to calculate 30-day expiry)
 '''
 
 from __future__ import annotations
@@ -24,10 +28,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import List, Optional, TYPE_CHECKING
 
-from sqlalchemy import (
-    Boolean, DateTime, ForeignKey, Integer,
-    String, Text, UniqueConstraint,
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -57,14 +58,17 @@ class FlashcardSet(Base):
     course_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("courses.id"), nullable = False, index = True
     )
-
     # teacher who created this set
     created_by_user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable = False, index = True
     )
-
+    
     title: Mapped[str] = mapped_column(String(200), nullable = False)
-    description: Mapped[str] = mapped_column(Text, nullable = True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable = True)
+
+    # soft delete
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable = False)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable = True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -113,7 +117,17 @@ class Flashcard(Base):
     image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable = True)  # optional back image
 
     order_index: Mapped[int] = mapped_column(Integer, default = 0)
-    is_active: Mapped[bool] = mapped_column(Boolean, default = True)
+
+    # soft delete
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, 
+        default = True, 
+        nullable = False
+    )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, 
+        nullable = True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC)
@@ -131,9 +145,6 @@ class Flashcard(Base):
     def __repr__(self) -> str:
         return f"<Flashcard(id={self.id}, term='{self.term[:30]}')>"
 
-'''
-Flashcard Progress
-'''
 
 class FlashcardProgress(Base):
     '''
