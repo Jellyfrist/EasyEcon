@@ -7,6 +7,7 @@
 
   <div class="designer-page">
     
+    <button class="btn btn-primary" @click="$router.back()">← Back</button>
 
     <!-- ================= TOP BAR ================= -->
     <div class="top-bar">
@@ -54,30 +55,31 @@
         </button>
 
         <!-- Confirm Dialog -->
-        <div v-if="showDeleteConfirm" class="modal-overlay">
-          <div class="modal">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete the exam <strong>{{ title }}</strong>?</p>
-            <p>This action cannot be undone.</p>
 
-            <div class="modal-actions">
-              <button
-                @click="showDeleteConfirm = false"
-                :disabled="isDeleting"
-              >
-                Cancel
-              </button>
-              <button
-                @click="deleteExam"
-                :disabled="isDeleting"
-                class="btn-danger"
-              >
-                {{ isDeleting ? 'Deleting...' : 'Delete' }}
-              </button>
-            </div>
-          </div>
+      </div>
+    </div>
+
+    <div v-if="showDeleteConfirm" class="modal-overlay">
+      <div class="modal">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete the exam <strong>{{ title }}</strong>?</p>
+        <p>This action cannot be undone.</p>
+
+        <div class="modal-actions">
+          <button
+            @click="showDeleteConfirm = false"
+            :disabled="isDeleting"
+          >
+            Cancel
+          </button>
+          <button
+            @click="deleteExam"
+            :disabled="isDeleting"
+            class="btn-danger"
+          >
+            {{ isDeleting ? 'Deleting...' : 'Delete' }}
+          </button>
         </div>
-
       </div>
     </div>
 
@@ -206,6 +208,9 @@
 
         <div class="section-header">
           <h2>Questions</h2>
+          <span class="badge badge-yellow">
+            {{ totalPoints }} point{{ totalPoints !== 1 ? 's' : '' }}
+          </span>
           <span class="badge badge-pink">
             {{ localQuestions.length }} question{{ localQuestions.length !== 1 ? 's' : '' }}
           </span>
@@ -338,6 +343,10 @@ function togglePublish() {
 ============================= */
 
 const localQuestions = ref([])
+
+const totalPoints = computed(() => {
+  return localQuestions.value.reduce((sum, q) => sum + (q.points ?? 0), 0)
+})
 
 /**
  * Creates a blank ExamQuestion-shaped object for the editor.
