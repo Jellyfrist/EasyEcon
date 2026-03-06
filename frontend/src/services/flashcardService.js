@@ -33,13 +33,18 @@ const flashcardService = {
         return api.delete(`/flashcards/sets/${setId}`)
     },
 
-
     /*
         teacher: flashcard cards
+        - GET    /flashcards/sets/{set_id}/cards     get all cards in a set
         - POST   /flashcards/sets/{set_id}/cards     add a card to a set
         - PATCH  /flashcards/cards/{card_id}         edit a card
         - DELETE /flashcards/cards/{card_id}         delete a card
     */
+
+    // get all cards in a set (teacher only)
+    getCards(setId) {
+        return api.get(`/flashcards/sets/${setId}/cards`)
+    },
 
     // add a card to a set
     addCard(setId, data) {
@@ -57,12 +62,32 @@ const flashcardService = {
         return api.delete(`/flashcards/cards/${cardId}`)
     },
 
-    // get all cards in a set (teacher only)
-    // GET /flashcards/sets/{set_id}/cards
-    getCards(setId) {
-        return api.get(`/flashcards/sets/${setId}/cards`)
+    // upload image to supabase storage, returns { url: '...' }
+    uploadImage(file) {
+        const form = new FormData()
+        form.append('file', file)
+        return api.post('/flashcards/upload-image', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
     },
 
+    /* 
+        recycle bin
+    */
+
+    // get all deleted sets and cards for a course
+    getRecycleBin(courseId) {
+        return api.get('/flashcards/recycle-bin', { params: { course_id: courseId } })
+    },
+
+    // restore a soft-deleted set and all its cards
+    restoreSet(setId) { return api.post(`/flashcards/sets/${setId}/restore`) },
+
+    // restore a single soft-deleted card
+    restoreCard(cardId) { return api.post(`/flashcards/cards/${cardId}/restore`) },
+
+    // permanently delete set from db and supabase storage
+    permanentDeleteSet(setId) { return api.delete(`/flashcards/sets/${setId}/permanent`) },
 
     /*
         student endpoints:
