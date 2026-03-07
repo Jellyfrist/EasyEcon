@@ -1,7 +1,7 @@
 <template>
   <div class="editor-page prose-container">
     <header class="top-navbar">
-      <button @click="router.push(`/teacher/modules/${courseId}`)" class="back-btn">
+      <button @click="router.push(`/teacher/modules/${courseIdParam}`)" class="back-btn">
         <span class="material-symbols-outlined">arrow_back</span>
         Back To Module
       </button>
@@ -371,7 +371,7 @@ const loadLessonData = async () => {
 
   try {
     isLoading.value = true;
-    const res = await learningService.getPageForTeacher(lesson.value.id); 
+    const res = await learningService.getPage(lesson.value.id); 
     const data = res.data;
     lesson.value.title = data.title;
     lesson.value.module_id = data.module_id;
@@ -422,7 +422,7 @@ const loadLessonData = async () => {
 
 const saveLesson = async () => {
   if (!lesson.value.module_id || isNaN(lesson.value.module_id)) {
-    alert("ไม่พบข้อมูล Module (บทเรียนหลัก)! กรุณาเข้าหน้านี้ผ่านหน้าจัดการคอร์สครับ");
+    alert("ไม่พบข้อมูล Module กรุณาเข้าหน้านี้ผ่านหน้าจัดการคอร์สครับ");
     return;
   }
 
@@ -468,10 +468,10 @@ const saveLesson = async () => {
     
     if (isEditMode.value) {
       await learningService.updatePage(lesson.value.id, payload);
-      alert('บันทึกการแก้ไขเรียบร้อยแล้ว! 💾');
+      alert('บันทึกเรียบร้อย');
     } else {
       await learningService.createPage(payload);
-      alert('สร้างบทเรียนสำเร็จ! 🎉');
+      alert('สร้างบทเรียนสำเร็จ');
     }
 
     router.push(`/teacher/modules/${courseIdParam}`);
