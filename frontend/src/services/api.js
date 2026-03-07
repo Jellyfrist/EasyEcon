@@ -7,8 +7,11 @@
 
 import axios from 'axios'
 
+const rawUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:56733/auth'
+const baseURL = rawUrl.replace(/\/auth$/, '')
+
 const api = axios.create({
-    baseURL: import.meta.env.BACKEND_URL || 'http://localhost:56733',
+    baseURL,
     withCredentials: true, // send jwt cookie on every request
 })
 

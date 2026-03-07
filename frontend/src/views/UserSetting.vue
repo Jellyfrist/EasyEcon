@@ -76,7 +76,7 @@
                     <div class="form-group">
                         <label>Email Address</label>
                         <div class="read-field">{{ user?.email }}</div>
-                        <span class="field-hint">contact admin to change</span>
+                        <span class="field-hint">can not change user email</span>
                     </div>
 
                     <div v-if="!isStudent" class="form-group">
@@ -101,7 +101,7 @@
                     </div>
                     <div>
                         <h2>Change Password</h2>
-                        <p class="text-muted">Choose a new password — at least 8 characters</p>
+                        <p class="text-muted">Choose a new password at least 8 characters</p>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
                         <div class="password-wrapper">
                             <input class="input-field" v-model="pw.new_password"
                                 :type="pw.showNew ? 'text' : 'password'"
-                                placeholder="min. 8 characters" :disabled="saving" />
+                                placeholder="min 8 characters" :disabled="saving" />
                             <button type="button" class="toggle-btn" @click="pw.showNew = !pw.showNew">
                                 <span class="material-symbols-outlined">{{ pw.showNew ? 'visibility_off' : 'visibility' }}</span>
                             </button>

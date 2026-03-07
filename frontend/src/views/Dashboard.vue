@@ -1,5 +1,5 @@
 <template>
-    <div class="page-wrapper">
+    <div class="dashboard-wrapper">
     
         <!-- ================= HERO SECTION (PUBLIC) ================= -->
         <section class="hero-section">
@@ -13,161 +13,173 @@
                 <h1>Easy<span class="highlight">Econ</span></h1>
                 <h2>Elevate Your Economics Grade</h2>
                 <p>
-                    Master complex theories with our interactive flashcards, simulated practice tests, and comprehensive study guides tailored for economics students.
+                    Master theories with our practice past exams, <br> comprehensive study of each course, and interactive flashcards.
                 </p>
             </div>
-    
-            <div class="hero-divider"></div>
     
         </section>
     
     
         <!-- ================ COURSE SECTION ================= -->
         <section class="course-section">
-    
-            <!-- 
-                    If the user is NOT authenticated:
-                    Show a public preview (beginner course teaser)
-                -->
-            <div v-if="!isLoggedIn" class="course-container">
-                <div class="course-card">
-    
-                    <span class="label">
-                            Course Overview
-                        </span>
-    
-                    <h3 class="title">
-                        751100 - Economics for Everyday Life
-                    </h3>
-    
-                    <div class="course-divider"></div>
-    
-                    <p class="description">
-                        This course provides a comprehensive introduction to fundamental economic principles tailored for practical application. Explore how supply, demand, and market forces shape our daily decisions, while gaining a deeper understanding of national and global
-                        economic trends. Designed to empower students with critical thinking skills for a complex world.
-                    </p>
-    
-                    <!-- Require the user to log in or sign up -->
-                    <div class="cta-wrapper">
-                        <router-link to="/login" class="cta"><button>Learn This Course</button></router-link>
-                    </div>
-    
-                    <div>
-                        <router-link to="/teacher" class="text-login">I'm professor</router-link>
-                    </div>
-    
+
+            <!-- not logged in: pink background with login prompt -->
+            <div v-if="!isAuthenticated" class="course-guest">
+                <div class="course-guest-box">
+                    <span class="material-symbols-outlined course-guest-icon">lock</span>
+                    <h2>Start Learning Today</h2>
+                    <p>Log in to see the courses your professor has enrolled you in.</p>
+                    <router-link to="/login" class="course-login-btn">Log In</router-link>
+                    <router-link to="/teacher" class="course-teacher-link">I'm a professor</router-link>
                 </div>
             </div>
-    
-            <!-- 
-                    If the user is authenticated:
-                    Show all courses the user is enrolled in.
-                -->
-            <div v-else class="course-container">
-    
-                <h1>My Courses</h1>
-    
-                <div v-for="course in myCourses" :key="course.id">
-                    <div class="course-card">
-                        <span class="label">
-                                Course Overview
-                            </span>
-    
-                        <h3 class="title">{{ course.title }}</h3>
-    
-                        <div class="course-divider"></div>
-    
-                        <p class="description">
-                            {{ course.description }}
-                        </p>
-    
-                        <button class="btn-enter" @click="$router.push(`/courses/${course.id}`)">
-                            Enter Course
-                        </button>
+
+            <!-- logged in: grid of course tiles -->
+            <div v-else class="course-auth">
+
+                <!-- loading state -->
+                <div v-if="store.loading" class="course-empty">
+                    <span class="material-symbols-outlined course-empty-icon">hourglass_top</span>
+                    <p>Loading your courses...</p>
+                </div>
+
+                <!-- error state -->
+                <div v-else-if="store.error" class="course-empty">
+                    <span class="material-symbols-outlined course-empty-icon">error</span>
+                    <p>{{ store.error }}</p>
+                </div>
+
+                <!-- has courses: show tiles -->
+                <div v-else-if="myCourses.length > 0" class="course-grid">
+                    <div
+                        v-for="course in myCourses"
+                        :key="course.id"
+                        class="course-tile"
+                        @click="$router.push(`/courses/${course.id}`)"
+                    >
+                        <!-- decorative icon in background -->
+                        <span class="material-symbols-outlined tile-bg-icon">school</span>
+                        <div class="tile-content">
+                            <span class="tile-label">Course</span>
+                            <h3 class="tile-title">{{ course.title }}</h3>
+                            <span class="tile-arrow material-symbols-outlined">arrow_forward</span>
+                        </div>
                     </div>
                 </div>
-    
-                <!-- 
-                        Show message when no enrolled courses exist.
-                    -->
-                <div v-if="myCourses.length === 0">
-                    <div class="course-card">
-                        <h2>You are not enrolled in any course yet.</h2>
-                    </div>
+
+                <!-- no courses yet -->
+                <div v-else class="course-empty">
+                    <span class="material-symbols-outlined course-empty-icon">inbox</span>
+                    <p>No courses yet.</p>
                 </div>
-    
+
             </div>
-    
+
         </section>
     
-        <div class="divider">
-            <span>You can Learn by</span>
-        </div>
-    
-        <!-- ================= FEATURE SECTION ================= -->
+            <!-- ================= FEATURE SECTION ================= -->
         <section class="features-wrapper">
-    
-            <!--
-                    If the user is NOT authenticated:
-                    Blurred this section.
-                -->
-    
-            <section class="features" :class="{ blurred: !isLoggedIn }">
-    
-                <!-- Flashcards -->
-                <div class="card green" @click="goToFlashcards">
-                    <h1>Flashcards</h1>
-                    <div class="icon-wrapper">
-                        <span class="material-symbols-outlined">style</span>
-                    </div>
-                    <p>
-                        Master key economic concepts quickly with interactive flashcards designed for rapid memory retention.
-                    </p>
-                </div>
-    
-                <!-- Learn -->
-                <div class="card pink" @click="goToLearn">
-                    <h1>Learn</h1>
-                    <div class="icon-wrapper">
-                        <span class="material-symbols-outlined">school</span>
-                    </div>
-                    <p>
-                        Structured lessons with real-world examples to deepen your understanding step by step.
-                    </p>
-                </div>
-    
-                <!-- Practice Tests -->
-                <div class="card yellow" @click="goToTest">
-                    <h1>Practice Tests</h1>
-                    <div class="icon-wrapper">
-                        <span class="material-symbols-outlined">quiz</span>
-                    </div>
-                    <p>
-                        Test your knowledge with quizzes and scenario-based challenges to reinforce your learning.
-                    </p>
-                </div>
-    
-            </section>
-    
-            <div v-if="!isLoggedIn" class="auth-overlay">
+
+            <!-- section header -->
+            <div class="features-header">
+                <span class="features-eyebrow">What you can do</span>
+                <h4 class="features-title">Everything you need<br>to ace economics</h4>
+            </div>
+
+            <!-- lock overlay when user is not logged in -->
+            <div v-if="!isAuthenticated" class="auth-overlay">
                 <div class="overlay-card">
                     <h2>Unlock All Features</h2>
                     <p class="overlay-sub">
                         Please log in or create an account to continue learning.
                     </p>
-    
-                    <router-link to="/login" class="btn-enter">
-                        Log In
-                    </router-link>
-    
+                    <router-link to="/login" class="btn-enter">Log In</router-link>
                     <div class="divider-text">or</div>
-    
-                    <router-link to="/signup" class="text-login">
-                        Sign Up
-                    </router-link>
+                    <router-link to="/signup" class="text-login">Sign Up</router-link>
                 </div>
             </div>
-    
+
+            <div :class="{ blurred: !isAuthenticated }">
+
+
+                <!-- row 1: illustration left, text right -->
+                <div class="feature-row">
+                    <div class="feature-visual visual-pink">
+                        <!-- swap: replace inner content with <img src="@/assets/exam-preview.png" class="feature-img" /> -->
+                        <div class="visual-inner">
+                            <div class="vi-chip">Question 3 of 10</div>
+                            <div class="vi-question">What happens to price when supply increases?</div>
+                            <div class="vi-options">
+                                <div class="vi-option correct"><span class="material-symbols-outlined">check_circle</span> Price decreases</div>
+                                <div class="vi-option"><span class="material-symbols-outlined">radio_button_unchecked</span> Price increases</div>
+                                <div class="vi-option"><span class="material-symbols-outlined">radio_button_unchecked</span> Demand drops</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feat-num">01</span>
+                        <h3>Past Exams</h3>
+                        <p>Test your knowledge with past midterm and final exams to reinforce your learning.</p>
+                    </div>
+                </div>
+
+                <!-- row 2: text left, illustration right -->
+                <div class="feature-row reverse">
+                    <div class="feature-visual visual-green">
+                        <!-- swap: replace inner content with <img src="@/assets/module-preview.png" class="feature-img" /> -->
+                        <div class="visual-inner">
+                            <div class="vi-chip">Module 1</div>
+                            <div class="vi-module-title">Introduction to Economics</div>
+                            <div class="vi-progress-wrap">
+                                <div class="vi-progress-label">
+                                    <span>Progress</span><span>45%</span>
+                                </div>
+                                <div class="vi-progress-track">
+                                    <div class="vi-progress-bar"></div>
+                                </div>
+                            </div>
+                            <div class="vi-lessons">
+                                <div class="vi-lesson done"><span class="material-symbols-outlined">check_circle</span> What is Economics?</div>
+                                <div class="vi-lesson done"><span class="material-symbols-outlined">check_circle</span> Supply & Demand</div>
+                                <div class="vi-lesson active"><span class="material-symbols-outlined">play_circle</span> Market Equilibrium</div>
+                                <div class="vi-lesson"><span class="material-symbols-outlined">radio_button_unchecked</span> Elasticity</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feat-num">02</span>
+                        <h3>Learning Modules</h3>
+                        <p>Structured lessons with real-world examples to deepen your understanding step by step.</p>
+                    </div>
+                </div>
+
+                <!-- row 3: illustration left, text right -->
+                <div class="feature-row">
+                    <div class="feature-visual visual-yellow">
+                        <!-- swap: replace inner content with <img src="@/assets/flashcard-preview.png" class="feature-img" /> -->
+                        <div class="visual-inner">
+                            <div class="vi-chip">Flashcard</div>
+                            <div class="vi-card">
+                                <div class="vi-card-label">Term</div>
+                                <div class="vi-card-word">Supply &amp; Demand</div>
+                                <div class="vi-card-def">The relationship between the quantity of a good producers want to sell and what consumers want to buy.</div>
+                            </div>
+                            <div class="vi-nav">
+                                <span class="vi-dot active"></span>
+                                <span class="vi-dot"></span>
+                                <span class="vi-dot"></span>
+                                <span class="vi-dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feat-num">03</span>
+                        <h3>Flashcards</h3>
+                        <p>Master key economic concepts quickly with interactive flashcards designed for rapid memory retention.</p>
+                    </div>
+                </div>
+
+            </div>
         </section>
     </div>
 </template>
@@ -175,101 +187,57 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import { authService } from '../services/authService';
-import learningService from '../services/learningService';
-import api from '../services/api'; // เรียกใช้ api โดนตรงเพื่อดึงข้อมูล Course
+import { useCourseStore } from '@/store/courseStore';
 
-const router = useRouter(); 
-const user = ref(null); 
-const loading = ref(true); 
-const myCourses = ref([]); 
-const isLoggedIn = ref(false);
+// check protected feature access
+import { useProtectedFeature } from '@/composables/useProtectedFeature';
+
+const router = useRouter();
+const store = useCourseStore();
+
+// reactive state
+const user = ref(null);
+const loading = ref(true);
+
+// storeToRefs keeps reactivity when destructuring from pinia store
+const { courses: myCourses } = storeToRefs(store);
+
+const { isAuthenticated } = useProtectedFeature();
 
 onMounted(async () => {
-    isLoggedIn.value = authService.isAuthenticated();
+    try {
+        // this page is public - guests can see it too, no redirect needed
+        if (authService.isAuthenticated()) {
+            // get fresh user profile
+            const freshUser = await authService.getProfile();
+            if (freshUser) user.value = freshUser;
 
-    if (isLoggedIn.value) {
-        try {
-            // 1. ดึงข้อมูล User
-            const freshUser = await authService.getUser(); 
-            if (freshUser) {
-                user.value = freshUser;
-                localStorage.setItem('user', JSON.stringify(freshUser));
-            }
-
-            // 2. ดึงข้อมูล "คอร์สเรียน (Course)" ทั้งหมด ไดนามิก 100%
-            // 🚨 ตรงนี้เราต้องยิงไปที่ API ดึงคอร์ส ไม่ใช่ไปดึง Module นะครับ!
-            // (ถ้า API Backend ของใบชาชื่ออื่น เช่น /users/me/courses ให้เปลี่ยนตรงนี้นะครับ)
-            const res = await api.get('/courses/browse/all');
-            
-            myCourses.value = res.data ? res.data : (res || []);
-            
-        } catch (error) {
-            console.error("Dashboard Error:", error);
-            if (error.response?.status === 401) {
-                authService.removeToken();
-                isLoggedIn.value = false;
-            }
-        } finally {
-            loading.value = false;
+            // fetch all courses the student can see
+            await store.browseCourses();
         }
-    } else {
+    } catch (error) {
+        // if token is expired or invalid, clear it but stay on this page
+        console.error('auth check failed:', error);
+        authService.removeToken();
+    } finally {
         loading.value = false;
     }
 });
 
-// นำทางไป Flashcards ของคอร์สแรก
-const goToFlashcards = () => {
-    if (myCourses.value && myCourses.value.length > 0) {
-        router.push(`/flashcards/${myCourses.value[0].id}`);
-    } else {
-        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
-    }
-}
-
-// นำทางไปบทเรียนแบบไดนามิก ป้องกัน Error 422 เด็ดขาด!
-const goToLearn = async () => {
-    if (!myCourses.value || myCourses.value.length === 0) {
-        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
-        return;
-    }
-    
-    // ดึง ID คอร์สแรกของนักเรียนคนนี้มาใช้
-    const firstCourseId = myCourses.value[0].id;
-    
-    try {
-        // ส่ง Course ID ไปให้ API อย่างถูกต้อง จะได้ไม่ติด 422 อีก
-        const res = await learningService.listModules(firstCourseId);
-        
-        if (res.data && res.data.length > 0) {
-            // ถ้าในคอร์สมี Module ให้พุ่งเข้า Module แรกสุดเลย
-            router.push({ 
-                name: 'LearningDashboard', 
-                params: { moduleId: res.data[0].id } 
-            });
-        } else {
-            // ถ้าคอร์สยังว่างเปล่า ไม่มี Module ให้ไปหน้าหลักของคอร์สนั้นแทน
-            router.push(`/courses/${firstCourseId}`);
-        }
-    } catch (error) {
-        console.error("Navigate Error:", error);
-        router.push(`/courses/${firstCourseId}`);
-    }
-}
-
-// นำทางไปหน้ารวม (เพราะยังไม่มีหน้า Test แยก)
-const goToTest = () => {
-    if (myCourses.value && myCourses.value.length > 0) {
-        router.push(`/courses/${myCourses.value[0].id}`);
-    } else {
-        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
-    }
-}
+// handle user logout
+const handleLogout = () => {
+    authService.logout();
+    router.push('/login');
+};
 </script>
 
 <style scoped>
-.page-wrapper {
-    background: linear-gradient( 90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+.dashboard-wrapper {
+    /* no background here - each section sets its own full-width background */
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* ---- Hero section (Top) ---- */
@@ -280,6 +248,8 @@ const goToTest = () => {
     position: relative;
     text-align: center;
     padding: 50px 20px 20px;
+    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    width: 100%;
 }
 
 .hero-content {
@@ -422,218 +392,521 @@ const goToTest = () => {
     transform: scale(0.95);
 }
 
-/* ---- Courses section ---- */
-
+/* ---- Course section ---- */
 .course-section {
+    width: 100%;
+}
+
+.course-guest {
     display: flex;
     justify-content: center;
-    padding: 10px 5px;
+    align-items: center;
+    padding: 80px 24px;
 }
 
-.course-section h1 {
-    font-size: 2rem;
-    color: #ffe2a2;
+.course-guest-box {
     text-align: center;
-    background: linear-gradient(135deg, #ff4d8d, #e91e63);
-    border-radius: 15px;
-    margin-bottom: 8px;
+    color: #111827;
+    max-width: 480px;
 }
 
-.course-container {
-    width: 90%;
-}
-
-/* Course */
-
-.course-card {
-    background: white;
-    border-radius: 24px;
-    padding: 40px 50px;
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
-    margin-bottom: 20px;
-}
-
-/* Label */
-
-.label {
-    color: var(--primary-pink);
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+.course-guest-icon {
+    font-size: 52px;
+    color: #f43f7f;
+    opacity: 0.7;
+    margin-bottom: 16px;
     display: block;
-    margin-bottom: 20px;
 }
 
-/* Title */
-
-.title {
-    font-size: 42px;
-    font-weight: 900;
-    margin-bottom: 30px;
-    line-height: 1.2;
+.course-guest-box h2 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 12px;
 }
 
-/* Description */
-
-.description {
-    font-size: 18px;
-    line-height: 1.8;
-    max-width: 750px;
-    margin: auto;
-    color: var(--text-muted);
+.course-guest-box p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #6b7280;
+    margin-bottom: 32px;
 }
 
-/* ---- Features (lock) ---- */
+.course-login-btn {
+    display: inline-block;
+    background: #f43f7f;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 40px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 24px rgba(244, 63, 127, 0.25);
+}
+
+.course-login-btn:hover {
+    background: #d81b60;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(244, 63, 127, 0.35);
+}
+
+.course-teacher-link {
+    display: block;
+    margin-top: 16px;
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.course-teacher-link:hover {
+    color: #f43f7f;
+}
+
+/* logged in: grid of tiles */
+.course-auth {
+    padding: 48px 80px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+}
+
+.course-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.course-tile {
+    background: white;
+    border: 1.5px solid #f0f0f0;
+    border-radius: 20px;
+    padding: 32px 28px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    width: 260px;
+    flex-shrink: 0;
+}
+
+.course-tile:hover {
+    background: #fff5f8;
+    border-color: #f43f7f;
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(244, 63, 127, 0.12);
+}
+
+/* big icon sitting in the background of the tile */
+.tile-bg-icon {
+    position: absolute;
+    font-size: 100px;
+    color: #f43f7f;
+    opacity: 0.05;
+    right: -10px;
+    bottom: -10px;
+    pointer-events: none;
+}
+
+.tile-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tile-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #f43f7f;
+}
+
+.tile-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.tile-arrow {
+    font-size: 20px;
+    color: #f43f7f;
+    margin-top: 12px;
+    transition: transform 0.2s;
+}
+
+.course-tile:hover .tile-arrow {
+    transform: translateX(4px);
+}
+
+/* empty state */
+.course-empty {
+    text-align: center;
+    color: #6b7280;
+    padding: 60px 0;
+}
+
+.course-empty-icon {
+    font-size: 48px;
+    opacity: 0.4;
+    display: block;
+    margin-bottom: 12px;
+    color: #f43f7f;
+}
+
+.course-empty p {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+/* ---- Features section ---- */
 
 .features-wrapper {
     position: relative;
+    background: #ffffff;
+    padding: 80px 0 60px;
+    border-top: 1px solid #f0f0f0;
+    width: 100%;
 }
 
-.features {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    padding: 80px 60px;
+/* section header */
+.features-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 0 24px;
 }
 
+.features-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--primary-pink);
+    margin-bottom: 16px;
+}
+
+.features-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.15;
+    margin: 0;
+}
+
+/* lock overlay */
 .auth-overlay {
     position: absolute;
     inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
     z-index: 10;
 }
 
 .overlay-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    padding: 40px 50px 40px 50px;
-    border-radius: 32px;
+    background: white;
+    padding: 48px 52px;
+    border-radius: 24px;
     text-align: center;
-    max-width: 480px;
+    max-width: 440px;
     width: 90%;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.14);
 }
 
 .overlay-card h2 {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 800;
-    margin-bottom: 15px;
-    color: #1f2937;
+    margin-bottom: 12px;
+    color: #111827;
 }
 
 .overlay-sub {
-    font-size: 16px;
-    margin-bottom: 35px;
+    font-size: 15px;
+    margin-bottom: 32px;
     color: #6b7280;
+    line-height: 1.6;
 }
 
-/* ---- Card Base (Feature) ---- */
+/* ---- alternating rows ---- */
 
-.card {
-    flex: 1;
-    padding: 50px 40px;
-    border-radius: 32px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+.feature-row {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    min-height: 420px;
-    transition: all 0.35s ease;
-    cursor: pointer;
+    gap: 64px;
+    padding: 48px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* reverse: illustration on right */
+.feature-row.reverse {
+    flex-direction: row-reverse;
+}
+
+/* ---- illustration side ---- */
+
+.feature-visual {
+    flex: 1;
+    max-width: 480px;
+    border-radius: 28px;
+    padding: 40px;
+    min-height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
     overflow: hidden;
 }
 
-.card:hover {
-    transform: translateY(-12px) scale(1.02);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.15);
+/* subtle noise texture overlay */
+.feature-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: 28px;
 }
 
-/* title */
+.visual-green  { background: linear-gradient(145deg, #0d6b37, #0a5229); }
+.visual-pink   { background: linear-gradient(145deg, #f43f7f, #d81b60); }
+.visual-yellow { background: linear-gradient(145deg, #f5c842, #e8a800); }
 
-.card h1 {
-    font-size: 38px;
+/* the white card inside the illustration */
+.visual-inner {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 18px;
+    padding: 24px 26px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    position: relative;
+    z-index: 2;
+}
+
+/* small chip/badge at the top */
+.vi-chip {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+}
+
+/* flashcard styles */
+.vi-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #d1d5db;
+    margin-bottom: 6px;
+}
+
+.vi-card-word {
+    font-size: 20px;
     font-weight: 800;
-    margin-bottom: 15px;
+    color: #111827;
+    margin-bottom: 10px;
 }
 
-/* description */
-
-.card p {
-    font-size: 18px;
-    line-height: 1.7;
-    opacity: 0.9;
-    max-width: 85%;
+.vi-card-def {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 18px;
 }
 
-/* icon */
+.vi-nav {
+    display: flex;
+    gap: 6px;
+}
 
-.icon-wrapper {
-    width: 70px;
-    height: 70px;
-    border-radius: 20px;
+.vi-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: inline-block;
+}
+
+.vi-dot.active {
+    background: #111827;
+    width: 22px;
+    border-radius: 4px;
+}
+
+/* learning module styles */
+.vi-module-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 14px;
+}
+
+.vi-progress-wrap {
+    margin-bottom: 18px;
+}
+
+.vi-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    margin-bottom: 6px;
+}
+
+.vi-progress-track {
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.vi-progress-bar {
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(90deg, #f43f7f, #d81b60);
+    border-radius: 999px;
+}
+
+.vi-lessons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vi-lesson {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 25px;
-    backdrop-filter: blur(6px);
+    gap: 8px;
+    font-size: 13px;
+    color: #9ca3af;
+    font-weight: 500;
 }
 
-.icon-wrapper span {
-    font-size: 38px;
+.vi-lesson .material-symbols-outlined {
+    font-size: 16px;
 }
 
-/* Colors */
-
-.card.green {
-    background: linear-gradient(135deg, #0f7a3e, #0b5d30);
-    color: white;
+.vi-lesson.done {
+    color: #6b7280;
 }
 
-.card.pink {
-    background: linear-gradient(135deg, #ff4d8d, #e91e63);
-    color: white;
+.vi-lesson.done .material-symbols-outlined {
+    color: #10b981;
 }
 
-.card.yellow {
-    background: linear-gradient(135deg, #ffe2a2, #f1d18c);
-    color: #0f172a;
+.vi-lesson.active {
+    color: #111827;
+    font-weight: 700;
 }
 
-/* ---- divider ---- */
+.vi-lesson.active .material-symbols-outlined {
+    color: #f43f7f;
+}
+
+/* past exam styles */
+.vi-question {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 16px;
+    line-height: 1.45;
+}
+
+.vi-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vi-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #f9fafb;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    border: 1.5px solid #f3f4f6;
+}
+
+.vi-option .material-symbols-outlined {
+    font-size: 16px;
+    color: #d1d5db;
+}
+
+.vi-option.correct {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #065f46;
+}
+
+.vi-option.correct .material-symbols-outlined {
+    color: #10b981;
+}
+
+/* ---- text side ---- */
+
+.feature-text {
+    flex: 1;
+    max-width: 440px;
+}
+
+/* large muted number */
+.feat-num {
+    display: block;
+    font-size: 72px;
+    font-weight: 900;
+    color: #d0d0d0;
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: -2px;
+    user-select: none;
+}
+
+.feature-text h3 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 16px 0;
+    line-height: 1.15;
+}
+
+.feature-text p {
+    font-size: 17px;
+    line-height: 1.75;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ---- dividers ---- */
 
 .divider-text {
     margin-top: 20px;
     font-weight: 600;
     color: #9ca3af;
-}
-
-.divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: auto;
-    padding-top: 60px;
-    padding-bottom: 5px;
-    max-width: 1000px;
-    width: 70%;
-    color: var(--text-muted);
-    font-size: 15px;
-    letter-spacing: 1px;
-}
-
-.hero-divider {
-    width: 75%;
-    height: 3px;
-    margin: 40px auto;
-    border-radius: 999px;
-    background: #ffffff;
 }
 
 .course-divider {
@@ -644,16 +917,14 @@ const goToTest = () => {
     border-radius: 10px;
 }
 
-.divider::before,
-.divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--text-muted);
-}
-
-.divider span {
-    padding: 0 20px;
+/* ready for real image swap-in */
+.feature-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    position: relative;
+    z-index: 2;
 }
 
 /* ---- Effect ---- */
@@ -705,7 +976,110 @@ const goToTest = () => {
 
 /* ---- Responsive Design ---- */
 
-/* Mobile */
+/* tablet: 768px - 1024px */
+@media (max-width: 1024px) {
 
-@media (max-width: 768px) {}
+    /* hero */
+    .hero-section h1 { font-size: 72px; }
+    .hero-section h2 { font-size: 20px; }
+    .hero-section p  { font-size: 16px; }
+    .icon-1 { font-size: 80px; }
+    .icon-2 { font-size: 70px; }
+    .icon-3 { font-size: 140px; right: -30px; }
+
+    /* course */
+    .title       { font-size: 28px; }
+    .description { font-size: 16px; }
+    .course-auth { padding: 36px 40px; }
+
+    /* features */
+    .features-title { font-size: 36px; }
+
+    .feature-row {
+        gap: 40px;
+        padding: 36px 48px;
+    }
+
+    .feature-visual {
+        min-height: 280px;
+        padding: 28px;
+    }
+
+    .feat-num      { font-size: 52px; }
+    .feature-text h3 { font-size: 28px; }
+    .feature-text p  { font-size: 15px; }
+}
+
+/* mobile: below 768px */
+@media (max-width: 768px) {
+
+    /* hero */
+    .hero-section { padding: 40px 16px 20px; }
+    .hero-section h1 { font-size: 52px; }
+    .hero-section h2 { font-size: 17px; }
+    .hero-section p  { font-size: 14px; }
+
+    /* hide background icons so they don't overlap content */
+    .icon-1, .icon-2, .icon-3 { display: none; }
+
+    .hero-divider { width: 90%; margin: 24px auto; }
+
+    /* course */
+    .course-guest  { padding: 60px 20px; }
+    .course-guest-box h2 { font-size: 26px; }
+    .course-guest-box p  { font-size: 15px; }
+    .course-auth   { padding: 28px 20px; }
+    .course-grid   { justify-content: center; }
+    .course-tile   { width: 100%; max-width: 400px; }
+    .cta button    { font-size: 16px; padding: 12px 24px; }
+
+    /* features header */
+    .features-wrapper  { padding: 56px 0 40px; }
+    .features-header   { margin-bottom: 48px; }
+    .features-title    { font-size: 28px; }
+
+    /* rows: stack vertically on mobile */
+    .feature-row,
+    .feature-row.reverse {
+        flex-direction: column;
+        gap: 28px;
+        padding: 40px 20px;
+    }
+
+    /* illustration full width */
+    .feature-visual {
+        width: 100%;
+        max-width: 100%;
+        min-height: 240px;
+        padding: 24px;
+    }
+
+    /* text full width, centered */
+    .feature-text {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .feat-num        { font-size: 48px; }
+    .feature-text h3 { font-size: 24px; }
+    .feature-text p  { font-size: 15px; }
+
+    /* overlay */
+    .overlay-card    { padding: 28px 24px; }
+    .overlay-card h2 { font-size: 22px; }
+}
+
+/* small mobile: below 480px */
+@media (max-width: 480px) {
+
+    .hero-section h1  { font-size: 40px; }
+    .hero-section h2  { font-size: 15px; }
+    .features-title   { font-size: 24px; }
+
+    .feature-row,
+    .feature-row.reverse { padding: 32px 16px; }
+
+    .feat-num        { font-size: 40px; }
+    .feature-text h3 { font-size: 22px; }
+}
 </style>

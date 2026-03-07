@@ -1,4 +1,4 @@
-// manages flashcard sets, cards, and student progress
+// manages flashcard sets, cards, student progress, and recycle bin
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -15,6 +15,8 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     // student progress summary for current set
     const progress = ref(null)
 
+    const recycleBin = ref({ deleted_sets: [], deleted_cards: [] })
+    
     const loading = ref(false)
     const error = ref(null)
 
@@ -99,6 +101,17 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         }
     }
 
+    /**
+     * teacher: cards
+     **/
+
+    async function uploadImage(file) {
+        try {
+            const res = await flashcardService.uploadImage(file)
+            return res.data.url
+        } catch (err) { _setError(err); return null }
+    }
+
     // add a card to a set
     async function addCard(setId, data) {
         loading.value = true
@@ -159,7 +172,82 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         }
     }
 
-    
+    // recycle bin
+
+    async function fetchRecycleBin(courseId) {
+        loading.value = true
+        error.value = null
+        try {
+            const res = await flashcardService.getRecycleBin(courseId)
+            recycleBin.value = res.data
+        } catch (err) {
+            _setError(err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function restoreSet(setId) {
+        loading.value = true
+        error.value = null
+        try {
+            await flashcardService.restoreSet(setId)
+            // remove from recycle bin
+            recycleBin.value.deleted_sets = recycleBin.value.deleted_sets.filter(s => s.id !== setId)
+            return true
+        } catch (err) {
+            _setError(err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function restoreCard(cardId) {
+        loading.value = true
+        error.value = null
+        try {
+            await flashcardService.restoreCard(cardId)
+            recycleBin.value.deleted_cards = recycleBin.value.deleted_cards.filter(c => c.id !== cardId)
+            return true
+        } catch (err) {
+            _setError(err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function permanentDeleteSet(setId) {
+        loading.value = true
+        error.value = null
+        try {
+            await flashcardService.permanentDeleteSet(setId)
+            recycleBin.value.deleted_sets = recycleBin.value.deleted_sets.filter(s => s.id !== setId)
+            return true
+        } catch (err) {
+            _setError(err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function permanentDeleteCard(cardId) {
+        loading.value = true
+        error.value = null
+        try {
+            await flashcardService.permanentDeleteCard(cardId)
+            recycleBin.value.deleted_cards = recycleBin.value.deleted_cards.filter(c => c.id !== cardId)
+            return true
+        } catch (err) {
+            _setError(err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     /**
      * student
      */
@@ -216,15 +304,22 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         sets,
         currentSet,
         progress,
+        recycleBin,
         loading,
         error,
         fetchSets,
         createSet,
         updateSet,
         deleteSet,
+        uploadImage,
         addCard,
         updateCard,
         deleteCard,
+        fetchRecycleBin,
+        restoreSet,
+        restoreCard,
+        permanentDeleteSet,
+        permanentDeleteCard,
         studySet,
         markCard,
         fetchProgress,
