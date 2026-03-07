@@ -26,7 +26,7 @@ onMounted(async () => {
         if (authStore.isAdmin) {
             router.push('/admin');
         } else if (authStore.isTeacher) {
-            router.push('/dashboard');
+            router.push('/teacher');
         } else {
             router.push('/dashboard');
         }
