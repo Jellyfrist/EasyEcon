@@ -48,14 +48,10 @@ from app.schemas.learning import (
 
 from app.security import require_student, require_teacher
 
-# ==========================================
-# 1. Router สำหรับจัดการบทเรียน (/learning)
-# ==========================================
 router = APIRouter(prefix="/learning", tags=["learning"])
 
 # helper
 
-# no module
 def _get_module_or_404(module_id: int, db: Session) -> Module:
     m = db.get(Module, module_id)
     if not m:
@@ -140,11 +136,9 @@ def create_page(
     db: Session = Depends(get_db),
     teacher: User = Depends(require_teacher),
 ):
-    # 1. จัดการแปลง content_blocks ให้เป็น JSON ที่ถูกต้องก่อน
+
     blocks = [b.model_dump() for b in body.content_blocks] if body.content_blocks else []
     
-    # 2. 🚨 พระเอกอยู่ตรงนี้: เราสร้าง Dictionary ใหม่ เพื่อดึงเฉพาะค่าที่เราต้องการจริงๆ
-    # อะไรไม่มีในนี้ จะไม่ถูกส่งไปรบกวน Database เลยครับ!
     page_data = {
         "module_id": body.module_id,
         "title": body.title,
@@ -153,11 +147,10 @@ def create_page(
         "preview": body.preview,
         "is_published": body.is_published,
         "content_blocks": blocks,
-        "created_by_user_id": teacher.id,      # ใส่ไอดีครู
-        "last_edited_by_user_id": teacher.id   # ใส่ไอดีครู
+        "created_by_user_id": teacher.id,    
+        "last_edited_by_user_id": teacher.id   
     }
     
-    # 3. สร้าง Object และบันทึกลง Database
     page = LearningPage(**page_data)
     db.add(page)
     db.commit()
@@ -189,7 +182,6 @@ def update_page(
             b.model_dump() for b in body.content_blocks
         ]
         
-    # 🚨 เตะ topic_tag ทิ้งไปเช่นกัน
     data.pop("topic_tag", None)
 
     for field, value in data.items():
@@ -336,7 +328,6 @@ def get_my_quiz_result(
     return attempt
 
 # Student routes: Progress Tracking
-# 1. บันทึกสถานะเมื่อนักเรียนเรียนจบหน้านั้นๆ
 @router.post("/pages/{page_id}/complete", status_code=200)
 def complete_page(
     page_id: int,
@@ -349,7 +340,6 @@ def complete_page(
     '''
     page = _get_page_or_404(page_id, db)
     
-    # ค้นหาว่าเคยบันทึกไว้หรือยัง
     progress = (
         db.query(PageProgress)
         .filter(
@@ -359,7 +349,6 @@ def complete_page(
         .first()
     )
     
-    # ถ้ายังไม่เคยมี ให้สร้างใหม่
     if not progress:
         progress = PageProgress(
             student_id=student.id, 
@@ -368,14 +357,11 @@ def complete_page(
         )
         db.add(progress)
     else:
-        # ถ้ามีอยู่แล้วก็แค่อัปเดตสถานะ
         progress.is_completed = True
         
     db.commit()
     return {"status": "success", "message": "Page marked as completed"}
 
-
-# 2. ส่งข้อมูลสรุปให้หน้า Learning Dashboard
 @router.get("/modules/{module_id}/dashboard", response_model=ModuleDashboardResponse)
 def get_module_dashboard(
     module_id: int,
@@ -388,7 +374,6 @@ def get_module_dashboard(
     '''
     module = _get_module_or_404(module_id, db)
     
-    # ดึงเฉพาะหน้าที่ Publish แล้ว เรียงตาม order_index
     pages = sorted(
         [p for p in module.learning_pages if p.is_published], 
         key=lambda x: x.order_index
@@ -408,7 +393,6 @@ def get_module_dashboard(
             "lessons": []
         }
 
-    # ค้นหาว่านักเรียนคนนี้เรียนจบหน้าไหนไปแล้วบ้างใน Module นี้
     completed_records = (
         db.query(PageProgress.learning_page_id)
         .filter(
@@ -419,37 +403,31 @@ def get_module_dashboard(
         .all()
     )
     
-    # ดึงเฉพาะเลข ID ออกมาใส่ List เช่น [1, 2]
     completed_ids = [record[0] for record in completed_records]
     completed_count = len(completed_ids)
     
-    # คำนวณเปอร์เซ็นต์
     progress_percent = int((completed_count / total_count) * 100)
     
-    # ประมวลผลสถานะของแต่ละหัวข้อ
     lessons_data = []
-    is_next_active = True # ใช้กำหนดตัวถัดไปที่ยังไม่จบให้เป็น Active
+    is_next_active = True
     
     for page in pages:
         if page.id in completed_ids:
             status = "completed"
         elif is_next_active:
             status = "active"
-            is_next_active = False # ปิดธง เพื่อให้ตัวถัดไปกลายเป็น Locked
+            is_next_active = False 
         else:
             status = "locked"
             
         lessons_data.append({
             "id": page.id,
             "title": page.title,
-            # ใช้ preview เป็น subtitle หรือคำว่างถ้าไม่มี
             "subtitle": page.preview if page.preview else "เข้าสู่บทเรียนเพื่อดูเนื้อหา",
-            # map template_type เป็นคำที่อ่านง่ายขึ้น
             "type": "วิดีโอ" if page.template_type == "video_lesson" else "เนื้อหา",
             "status": status
         })
 
-    # ส่งคืนข้อมูลโครงสร้างเดียวกับที่ Vue.js คาดหวัง
     return {
         "chapterInfo": {
             "title": module.title,
@@ -462,13 +440,10 @@ def get_module_dashboard(
         "lessons": lessons_data
     }
 
+''' Teacher '''
 
-# ==========================================
-# 2. Router สำหรับ Dashboard ของครู (/teacher)
-# ==========================================
 teacher_router = APIRouter(prefix="/teacher", tags=["teacher_dashboard"])
 
-# Schema สำหรับ API ส่งกลับไปหน้า Teacher Dashboard
 class RecentActivityItem(BaseModel):
     id: int
     type: str
@@ -479,16 +454,11 @@ class RecentActivityItem(BaseModel):
 @teacher_router.get("/recent-activities", response_model=List[RecentActivityItem])
 def get_teacher_recent_activities(
     db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher) # บังคับว่าต้องเป็นครูเท่านั้น
+    teacher: User = Depends(require_teacher)
 ):
-    """
-    ดึงประวัติการสร้างเนื้อหาล่าสุดของคุณครูคนนี้ 
-    เพื่อไปแสดงในหน้า Teacher Dashboard (ส่วน Recent Activity)
-    """
-    # 1. ค้นหา Learning Pages ที่สร้างโดยครูคนนี้ เรียงจากใหม่ไปเก่า ดึงมาแค่ 10 อันล่าสุด
     recent_pages = (
         db.query(LearningPage)
-        .filter(LearningPage.created_by_user_id == teacher.id) # กรองเฉพาะของตัวเอง
+        .filter(LearningPage.created_by_user_id == teacher.id)
         .order_by(LearningPage.updated_at.desc())
         .limit(10)
         .all()
@@ -496,12 +466,11 @@ def get_teacher_recent_activities(
 
     activities = []
     for page in recent_pages:
-        # 2. แปลงข้อมูลให้ตรงกับที่ Frontend Vue ต้องการ
         status_text = "Published" if page.is_published else "Draft"
         activities.append(
             RecentActivityItem(
                 id=page.id,
-                type="lesson", # กำหนดเป็น lesson เพราะมาจากตาราง LearningPage
+                type="lesson",
                 title=page.title,
                 meta_info=f"Topic {page.order_index} • {status_text}",
                 updated_at=page.updated_at

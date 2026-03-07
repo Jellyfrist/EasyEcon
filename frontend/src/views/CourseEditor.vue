@@ -171,7 +171,6 @@ const handleDelete = async () => {
 </script>
 
 <style scoped>
-/* ================= Base Layout ================= */
 .page-wrapper {
   min-height: 100vh;
   background-color: #f8fafc;
@@ -195,7 +194,6 @@ const handleDelete = async () => {
 }
 .back-btn:hover { color: #0f172a; }
 
-/* 🚨 2-Column Layout 🚨 */
 .content-layout {
   max-width: 1100px;
   margin: 0 auto;
@@ -208,11 +206,10 @@ const handleDelete = async () => {
 
 @media (min-width: 900px) {
   .content-layout {
-    grid-template-columns: 6fr 4fr; /* แบ่งซ้าย 60% ขวา 40% */
+    grid-template-columns: 6fr 4fr;
   }
 }
 
-/* ================= Left Column (Form) ================= */
 .form-card {
   background-color: white;
   padding: 2.5rem;
@@ -252,7 +249,6 @@ textarea.input-field { resize: vertical; }
 
 .error-msg { color: #ef4444; font-size: 0.875rem; background: #fef2f2; border-radius: 12px; border: 1px solid #fee2e2; padding: 0.75rem 1rem; margin-bottom: 1rem; font-weight: 600; }
 
-/* ================= Right Column (Action Cards) ================= */
 .section-subtitle { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 1rem 0; }
 .action-list { display: flex; flex-direction: column; gap: 1rem; }
 
@@ -281,13 +277,11 @@ textarea.input-field { resize: vertical; }
 
 .card-right { display: flex; align-items: center; gap: 12px; }
 
-/* ตัวเลขบอกจำนวน */
 .badge { display: flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; }
 .badge-module { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
 .badge-flashcard { background-color: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; }
 .badge-exam { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
 
-/* ปุ่มกด + เล็กๆ */
 .btn-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background-color: #f8fafc; border: 1px solid #e2e8f0; color: #475569; cursor: pointer; transition: all 0.2s; }
 .btn-icon:hover:not(:disabled) { background-color: white; color: #0f172a; border-color: #cbd5e1; }
 .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }

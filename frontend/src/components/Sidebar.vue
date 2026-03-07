@@ -33,10 +33,9 @@ const router = useRouter();
 const route = useRoute();
 const modules = ref([]);
 
-// ดึงข้อมูลรายชื่อบทเรียน
 const fetchModules = async () => {
   try {
-    const courseId = 1; // อิงตามโปรเจกต์ Ezy-Econ
+    const courseId = 1;
     const res = await learningService.listModules(courseId);
     modules.value = res.data;
   } catch (error) {
@@ -44,7 +43,6 @@ const fetchModules = async () => {
   }
 };
 
-// เช็คว่าตอนนี้คลิกบทไหนอยู่ (ดูจาก Query Parameter หรือ ID)
 const activeModuleId = computed(() => {
   return Number(route.query.module_id) || (modules.value[0]?.id);
 });
@@ -103,7 +101,6 @@ onMounted(fetchModules);
   transition: all 0.2s;
 }
 
-/* สีแดงตามดีไซน์ image_224a66.png */
 .module-card.active {
   background-color: #fff1f2;
   border-color: #e63946;

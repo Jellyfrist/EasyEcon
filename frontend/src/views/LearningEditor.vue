@@ -205,7 +205,6 @@ const authorName = ref('Wannee (Baicha)');
 const isSaving = ref(false);
 const isLoading = ref(true);
 
-// ดึงค่าจาก URL Params ทั้งหมด
 const courseIdParam = route.params.courseId;
 const moduleIdParam = route.params.moduleId;
 const pageIdParam = route.params.pageId;
@@ -223,7 +222,6 @@ const lesson = ref({
   ]
 });
 
-// State สำหรับจัดการ Mini Quiz
 const quiz = ref({
   isEnabled: false,
   title: 'แบบทดสอบท้ายบท (Mini Quiz)',
@@ -238,7 +236,6 @@ const activeSection = computed(() => {
   return lesson.value.sections.find(s => s.id === activeSectionId.value);
 });
 
-// --- ระบบจัดการรูปภาพ (Base64) ---
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -262,7 +259,6 @@ const onImageUpload = async (e) => {
   e.target.value = '';
 };
 
-// ================= ระบบ Text Editor เพิ่มเติม =================
 const currentFormat = ref('P');
 
 const changeFormat = (event) => {
@@ -301,15 +297,12 @@ const handleKeydown = (e) => {
 };
 
 const execCmd = (command, value = null) => {
-  // 1. บังคับให้เคอร์เซอร์กลับไปอยู่ในกล่องข้อความก่อนเสมอ
   if (contentArea.value) {
     contentArea.value.focus();
   }
   
-  // 2. รันคำสั่ง จัดหน้า / ย้อนกลับ
   document.execCommand(command, false, value);
   
-  // 3. อัปเดตข้อมูลเก็บลงตัวแปร
   updateContent();
 };
 
@@ -319,16 +312,13 @@ const updateContent = () => {
   }
 };
 
-// --- จัดการ Sections (เนื้อหา) ---
 const setActiveSection = async (id) => {
-  // เซฟเนื้อหาเดิมก่อนเปลี่ยนแท็บ
   if (activeSection.value && contentArea.value) {
     activeSection.value.content = contentArea.value.innerHTML;
   }
   
   activeSectionId.value = id;
   
-  // รอให้หน้าเว็บวาดกล่องเสร็จ แล้วค่อยยัดเนื้อหาใหม่ลงไป
   await nextTick();
   if (contentArea.value && activeSection.value) {
     contentArea.value.innerHTML = activeSection.value.content || '';
@@ -350,7 +340,6 @@ const removeSection = (id) => {
   }
 };
 
-// ================= จัดการ Mini Quiz =================
 const toggleQuiz = () => {
   quiz.value.isEnabled = !quiz.value.isEnabled;
   if (quiz.value.isEnabled && quiz.value.questions.length === 0) {
@@ -374,7 +363,6 @@ const removeQuizQuestion = (index) => {
   }
 };
 
-// ================= โหลดข้อมูลบทเรียน =================
 const loadLessonData = async () => {
   if (!isEditMode.value) {
     isLoading.value = false;
@@ -432,7 +420,6 @@ const loadLessonData = async () => {
   }
 };
 
-// ================= บันทึกข้อมูลบทเรียน =================
 const saveLesson = async () => {
   if (!lesson.value.module_id || isNaN(lesson.value.module_id)) {
     alert("ไม่พบข้อมูล Module (บทเรียนหลัก)! กรุณาเข้าหน้านี้ผ่านหน้าจัดการคอร์สครับ");
@@ -504,88 +491,72 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 🎨 Layout & Main Containers */
 .editor-page { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.5rem 5rem; background-color: #f8fafc; min-height: 100vh; }
 .editor-layout { display: flex; gap: 2rem; align-items: flex-start; }
 .editor-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5rem; }
 
-/* 🍞 Breadcrumb Navigation */
 .breadcrumb-bar { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
 .breadcrumb-link:hover { color: #e91e63; text-decoration: underline; }
 .breadcrumb-current { font-weight: 600; color: #e91e63; }
 .breadcrumb-sep { font-size: 16px; opacity: 0.5; }
 
-/* 🛠 Toolbar Styling (อัปเกรดให้เลื่อนตามหน้าจอ) */
 .editor-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
   padding: 10px;
-  background: rgba(241, 245, 249, 0.95); /* ทำให้พื้นหลังกึ่งโปร่งใส */
-  backdrop-filter: blur(8px); /* เบลอพื้นหลังที่ถูกทับให้ดูพรีเมียม */
+  background: rgba(241, 245, 249, 0.95); 
+  backdrop-filter: blur(8px);
   border-radius: 8px;
   margin-bottom: 15px;
   border: 1px solid #e2e8f0;
   
-  /* 🚨 โค้ดพระเอก: สั่งให้แถบเครื่องมือลอยตามหน้าจอ (Sticky) */
   position: sticky;
-  top: 80px; /* กะระยะไม่ให้ชนกับแถบ Navbar หลักของเว็บ (ปรับตัวเลขได้ถ้ามันทับกัน) */
-  z-index: 40; /* ให้อยู่เหนือตัวหนังสือเสมอ */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* ใส่เงาบางๆ เวลาลอยทับเนื้อหาจะได้ดูมีมิติ */
+  top: 80px; 
+  z-index: 40; 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
 }
 
-/* 🔠 Font Size Selector */
 .size-select { height: 34px; padding: 0 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-weight: 500; color: #334155; cursor: pointer; outline: none; }
 .size-select:hover { border-color: #e91e63; }
 
-/* 📸 Special Button: Add Photo */
 .btn-image-upload { display: flex; align-items: center; gap: 6px; padding: 6px 12px !important; background: rgba(233, 30, 99, 0.1) !important; color: #e91e63 !important; font-weight: 600 !important; border: 1px solid rgba(233, 30, 99, 0.2) !important; }
 
-/* 🚨 บังคับขนาดและรูปแบบใน Editor */
 .rich-text-area { min-height: 350px; outline: none; padding: 10px 5px; }
 
-/* บังคับระยะห่างบรรทัด */
 .rich-text-area :deep(*) { line-height: 1.7 !important; }
 
-/* ทำลายสไตล์แปลกปลอม */
 .rich-text-area :deep(span), .rich-text-area :deep(font) { font-size: inherit !important; font-family: inherit !important; line-height: inherit !important; }
 
-/* กำหนดขนาด Heading */
 .rich-text-area :deep(h1) { font-size: 2.2rem !important; font-weight: 800; margin: 15px 0 10px 0; color: #0f172a; }
 .rich-text-area :deep(h2) { font-size: 1.7rem !important; font-weight: 700; margin: 15px 0 10px 0; color: #1e293b; }
 .rich-text-area :deep(h3) { font-size: 1.3rem !important; font-weight: 600; margin: 10px 0; color: #334155; }
 .rich-text-area :deep(p) { font-size: 1rem !important; margin: 8px 0; }
 
-/* 🚨 🌟 การเพิ่มรูปแล้วรูปไม่ล้น ✨ */
-/* ย้ายกฎรูปภาพมาอยู่ในกลุ่ม deep ของพื้นที่เนื้อหาหลักเพื่อความแน่นอน */
 .rich-text-area :deep(img) {
-  max-width: 100% !important; /* กว้างสุดไม่เกินภาชนะบรรจุ */
-  height: auto !important;     /* รักษาสัดส่วนภาพอัตโนมัติ */
+  max-width: 100% !important;
+  height: auto !important;     
   border-radius: 8px;
-  margin: 1.5em 0;           /* เพิ่มระยะขอบให้สวยงาม */
-  display: block;             /* ช่วยให้ margin ทำงานได้ดีที่สุด */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* เพิ่มเงานิดหน่อยให้ดูมีมิติ */
+  margin: 1.5em 0;          
+  display: block;          
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
 }
 
-/* 🗂 Sidebar & Section List */
 .editor-sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 1.5rem; }
 .sidebar-panel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
 .section-item { padding: 12px; background-color: #f8fafc; border-radius: 8px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; transition: all 0.2s; }
 .section-item:hover { background-color: #f1f5f9; transform: translateX(4px); }
 .section-item-active { background-color: #fdf2f8; color: #e91e63; border-color: #f472b6; font-weight: 600; }
 
-/* 🔘 Common Components */
 .panel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; }
 .btn-primary { width: 100%; background: #e91e63; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
 .btn-primary:hover:not(:disabled) { background: #d81b60; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* 🌀 Loading Spinner */
 .state-box { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 5rem; color: #64748b; }
 .spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #e91e63; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* 📱 Responsive */
 @media (max-width: 1024px) { .editor-layout { flex-direction: column; } .editor-sidebar { width: 100%; position: static; } }
 </style>

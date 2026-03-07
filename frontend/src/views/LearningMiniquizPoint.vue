@@ -44,10 +44,8 @@ const score = ref(0);
 const total = ref(10); 
 const accuracy = ref(0);
 
-// ตัวแปรเก็บเวลาจากหน้าก่อน (เป็นวินาที)
 const rawTimeSeconds = ref(0);
 
-// แปลงวินาที เป็นสไตล์ 02:45 นาที
 const formattedTime = computed(() => {
   const m = Math.floor(rawTimeSeconds.value / 60).toString().padStart(2, '0');
   const s = (rawTimeSeconds.value % 60).toString().padStart(2, '0');
@@ -57,13 +55,11 @@ const formattedTime = computed(() => {
 onMounted(async () => {
   const pageId = route.params.pageId;
   
-  // 1. ดึงเวลาที่ส่งมาจากหน้า LearningChapter
   if (route.query.time) {
     rawTimeSeconds.value = parseInt(route.query.time, 10);
   }
 
   try {
-    // 2. พยายามดึงคะแนนสอบจากระบบ
     const res = await learningService.getMyQuizResult(pageId);
     if (res.data && res.data.total_points > 0) {
       score.value = res.data.score || 0;
@@ -71,8 +67,6 @@ onMounted(async () => {
       accuracy.value = Math.round((score.value / total.value) * 100) || 0;
     }
   } catch (err) {
-    // 🚨 ทริคความฉลาด: ถ้าดึงคะแนนไม่สำเร็จ (อาจเป็นเพราะหน้านั้นมีแค่เนื้อหาให้อ่าน ไม่มีข้อสอบ)
-    // ระบบจะแจกคะแนนเต็ม 10/10 และความแม่นยำ 100% ให้เป็นกำลังใจนักเรียนเลย!
     console.warn("บทเรียนนี้ไม่มีแบบทดสอบ แจกคะแนนอ่านจบ 100%");
     score.value = 10;
     total.value = 10;

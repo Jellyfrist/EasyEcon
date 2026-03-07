@@ -40,11 +40,9 @@ class Course(Base):
         Integer, ForeignKey("users.id"), nullable=False, index=True
     )
 
-    # title and description
     title: Mapped[str] = mapped_column(String(50), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
 
-    # timestamps: set automatically on create and update
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP,
         nullable=False,
@@ -61,20 +59,16 @@ class Course(Base):
     relationships
     '''
 
-    # teacher
     teacher: Mapped["User"] = relationship(back_populates="courses")
 
-    # ordered lessons
     modules: Mapped[List["Module"]] = relationship(
         back_populates="course", cascade="all, delete-orphan"
     )
 
-    # flashcard (stand alone)
     flashcard_sets: Mapped[List["FlashcardSet"]] = relationship(
         back_populates="course", cascade="all, delete-orphan"
     )
 
-    # exam from past year or past semester
     exam_templates: Mapped[List["ExamTemplate"]] = relationship(
         back_populates="course", cascade="all, delete-orphan"
     )

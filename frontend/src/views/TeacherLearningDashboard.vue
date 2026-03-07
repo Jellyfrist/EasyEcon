@@ -128,7 +128,6 @@ const loadModules = async () => {
         const pagesRes = await learningService.listPages(mod.id);
         mod.learning_pages = pagesRes.data || [];
         
-        // 🚨 เพิ่มตัวแปรเช็กว่าแถบนี้กางอยู่หรือไม่ (ค่าเริ่มต้นให้หดไว้)
         mod.isExpanded = false; 
       } catch (err) {
         console.warn(`ดึงข้อมูลหน้าย่อยของโมดูล ${mod.id} ไม่สำเร็จ`, err);
@@ -151,7 +150,6 @@ onMounted(() => {
   loadModules()
 })
 
-// 🚨 ฟังก์ชันสำหรับสลับ กาง/หด แถบโมดูล
 const toggleModule = (mod) => {
   mod.isExpanded = !mod.isExpanded;
 }
@@ -223,13 +221,12 @@ const editLesson = (pageId, moduleId) => {
   border-radius: 20px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  overflow: hidden; /* ป้องกันเนื้อหาล้นเวลากาง */
+  overflow: hidden; 
   transition: all 0.2s ease;
 }
 
 .module-card:hover { border-color: #cbd5e1; }
 
-/* 🚨 แถบกดสำหรับกางเมนู */
 .module-header {
   display: flex;
   justify-content: space-between;
@@ -244,7 +241,6 @@ const editLesson = (pageId, moduleId) => {
 
 .module-header-left { display: flex; align-items: center; gap: 12px; }
 
-/* แอนิเมชันลูกศร */
 .chevron-icon { color: #94a3b8; font-size: 1.5rem; transition: transform 0.3s ease; }
 .chevron-icon.rotated { transform: rotate(90deg); color: #f43f5e; }
 
@@ -254,9 +250,8 @@ const editLesson = (pageId, moduleId) => {
 .btn-outline-primary { display: flex; align-items: center; gap: 6px; background-color: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
 .btn-outline-primary:hover { background-color: #e11d48; color: white; border-color: #e11d48; }
 
-/* 🚨 พื้นที่กางเนื้อหา */
 .module-content {
-  padding: 0 1.5rem 1.5rem 4rem; /* เว้นขอบซ้ายให้เยื้องเข้าไป */
+  padding: 0 1.5rem 1.5rem 4rem;
   border-top: 1px solid #f1f5f9;
   background-color: #fafbfc;
   animation: fadeIn 0.3s ease-out;

@@ -72,7 +72,7 @@ onMounted(async () => {
         progress_percent: res.chapterInfo.progressPercent,
         completed_pages: res.chapterInfo.completedCount,
         total_pages: res.chapterInfo.totalCount,
-        pages: res.lessons // ดึงโครงสร้างมาจาก API โดยตรงเลย
+        pages: res.lessons 
       };
     }
   } catch (error) {
@@ -82,7 +82,6 @@ onMounted(async () => {
 
 const goToLesson = (page) => {
   if (page.status !== 'locked') {
-    // สมมติว่า URL บทเรียนของนักเรียนคือ /course/:moduleId/lesson/:pageId
     router.push(`/course/${route.params.moduleId}/lesson/${page.id}`);
   }
 };

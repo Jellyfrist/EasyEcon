@@ -192,8 +192,6 @@ onUnmounted(() => {
     font-size: 1.8rem;
 }
 
-/* feature card color overrides (override global white card) */
-
 .feature-card.green {
     background: linear-gradient(135deg, #0f7a3e, #0b5d30);
     color: white;

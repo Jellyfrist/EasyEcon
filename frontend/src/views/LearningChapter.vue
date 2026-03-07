@@ -78,30 +78,25 @@ watch(
 
 const finishLesson = async () => {
   try {
-    // 1. ส่งข้อมูลไป Backend ว่าเรียนจบหน้านี้แล้ว
     await learningService.completePage(route.params.pageId);
     
-    // 2. ดึงรายการบทเรียนทั้งหมดใน Module นี้มาดู
     const moduleId = route.params.moduleId;
     const currentPageId = parseInt(route.params.pageId, 10);
     
     const res = await learningStore.fetchModuleDashboard(moduleId);
     const lessons = res.lessons || [];
     
-    // 3. หาตำแหน่งของหน้าปัจจุบันในลิสต์
     const currentIndex = lessons.findIndex(lesson => lesson.id === currentPageId);
     
     if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
-      // ⏭ ถ้าไม่ใช่หน้าสุดท้าย ให้พาไปหน้าถัดไปเลย!
+
       const nextPageId = lessons[currentIndex + 1].id;
       router.push(`/course/${moduleId}/lesson/${nextPageId}`);
     } else {
-      // 🏆 ถ้าเป็นหน้าสุดท้ายของบทนี้แล้ว ค่อยพาไปหน้าสรุปคะแนน
       router.push(`/course/${moduleId}/complete/learn/${route.params.pageId}?time=${timeSpent.value}`);
     }
   } catch (err) {
     console.error("เกิดข้อผิดพลาดในการเปลี่ยนหน้า:", err);
-    // กันเหนียว ถ้าเน็ตหลุดหรือมีปัญหา ให้เด้งกลับไปหน้า Dashboard 
     router.push(`/course/${route.params.moduleId}/dashboard`);
   }
 };

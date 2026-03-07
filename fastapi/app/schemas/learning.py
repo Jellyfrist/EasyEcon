@@ -31,7 +31,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # content block
 class ContentBlock(BaseModel):
     '''
@@ -91,6 +90,7 @@ class LearningPageCreate(BaseModel):
     content_blocks: List[ContentBlock] = []
     order_index: int = 0
     preview: Optional[str] = None
+
     # backend only tag for weakness linking -> dont shown to students
     topic_tag: Optional[str] = Field(None)
     is_published: bool = False
@@ -116,7 +116,7 @@ class LearningPageResponse(BaseModel):
     content_blocks: List[ContentBlock]
     order_index: int
     preview: Optional[str]
-    topic_tag: Optional[str]    # visible to teacher only
+    topic_tag: Optional[str]
     is_published: bool
     published_at: Optional[datetime]
     last_edited_by_user_id: Optional[int]
@@ -178,7 +178,6 @@ class MiniQuizResult(BaseModel):
 
 # dashboard response for student
 class ChapterInfo(BaseModel):
-    '''ข้อมูลสรุปภาพรวมของบทเรียนสำหรับแสดงด้านบนของ Dashboard'''
     title: str
     description: str
     progressPercent: int
@@ -187,14 +186,12 @@ class ChapterInfo(BaseModel):
     totalTime: str
 
 class LessonDashboardItem(BaseModel):
-    '''ข้อมูลของแต่ละหัวข้อย่อยพร้อมสถานะการเรียน'''
     id: int
     title: str
     subtitle: str
     type: str
-    status: str  # "completed" | "active" | "locked"
+    status: str 
 
 class ModuleDashboardResponse(BaseModel):
-    '''Response หลักที่รวมข้อมูลทั้งหมดสำหรับหน้า LearningDashboard.vue'''
     chapterInfo: ChapterInfo
     lessons: List[LessonDashboardItem]

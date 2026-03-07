@@ -150,7 +150,7 @@ const isCreating = ref(false);
 
 onMounted(() => {
   if (!courseId) {
-    alert("ไม่พบรหัสคอร์สเรียน กรุณาเข้าผ่านหน้าแดชบอร์ดคอร์สครับ");
+    alert("ไม่พบรหัสคอร์สเรียน กรุณาเข้าผ่านหน้าแดชบอร์ดคอร์ส");
     return;
   }
   loadModules();
@@ -166,7 +166,6 @@ const loadModules = async () => {
       try {
         const pagesRes = await learningService.listPages(mod.id);
         mod.learning_pages = pagesRes.data || [];
-        // 🚨 กำหนดค่าเริ่มต้นให้ทุกโมดูลพับอยู่
         mod.isExpanded = false; 
       } catch (err) {
         mod.learning_pages = [];
@@ -181,17 +180,14 @@ const loadModules = async () => {
   }
 };
 
-// 🚨 ฟังก์ชันสำหรับกาง/พับรายชื่อบทเรียน
 const toggleModuleLessons = (mod) => {
   mod.isExpanded = !mod.isExpanded;
 };
 
-// 🚨 นำทางไปหน้าสร้างบทเรียนใหม่
 const createNewLesson = (moduleId) => {
   router.push(`/learning/${courseId}/${moduleId}/edit`);
 };
 
-// 🚨 นำทางไปหน้าแก้ไขบทเรียนที่มีอยู่แล้ว
 const editLesson = (pageId, moduleId) => {
   router.push(`/learning/${courseId}/${moduleId}/edit/${pageId}`);
 };
@@ -221,7 +217,7 @@ const createModule = async () => {
 };
 
 const deleteModule = async (moduleId) => {
-  if (confirm("ยืนยันการลบโมดูลนี้ใช่หรือไม่? \n(เนื้อหาข้างในจะหายทั้งหมดและกู้คืนไม่ได้นะครับ)")) {
+  if (confirm("ยืนยันการลบโมดูลนี้ใช่หรือไม่? \n(เนื้อหาข้างในจะหายทั้งหมดและกู้คืนไม่ได้)")) {
     try {
       await learningService.deleteModule(moduleId);
       await loadModules();
@@ -300,7 +296,6 @@ const deleteContent = async (mod) => {
 .module-list { display: flex; flex-direction: column; gap: 1.5rem; animation: slideUp 0.4s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-/* 🚨 ตัวครอบทั้งหัวโมดูลและรายการบทเรียน */
 .module-card {
   border-radius: 16px;
   border: 1px solid #e2e8f0;
@@ -337,7 +332,6 @@ const deleteContent = async (mod) => {
 .btn-clear:hover { background-color: #fff7ed; border-color: #fed7aa; color: #f97316; }
 .btn-delete:hover { background-color: #fef2f2; border-color: #fecaca; color: #ef4444; }
 
-/* ================= 🚨 ส่วนแสดงบทเรียนย่อย (Lesson Dropdown) ================= */
 .lesson-dropdown {
   background-color: #f8fafc;
   border-top: 1px solid #e2e8f0;

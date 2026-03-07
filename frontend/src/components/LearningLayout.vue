@@ -24,19 +24,19 @@ import Sidebar from '@/components/Sidebar.vue';
 .learning-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* ให้หน้าเว็บสูงเต็มจอเสมอ */
+  min-height: 100vh;
 }
 
 .main-container {
   display: flex;
-  flex: 1; /* ให้ส่วนกลางขยายเต็มพื้นที่ที่เหลือระหว่าง Navbar กับ Footer */
-  overflow: hidden; /* ป้องกัน Scroll ซ้อนกัน */
+  flex: 1; 
+  overflow: hidden;
 }
 
 .content-area {
   flex: 1;
-  overflow-y: auto; /* ให้เลื่อนดูเนื้อหาบทเรียนได้ */
+  overflow-y: auto;
   background-color: #ffffff;
-  padding: 0; /* เราจะไปคุม Padding ในหน้าเนื้อหาแทนเพื่อให้เป๊ะตามดีไซน์ */
+  padding: 0; 
 }
 </style>
