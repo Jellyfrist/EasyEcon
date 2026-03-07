@@ -192,46 +192,19 @@ const { isAuthenticated } = useProtectedFeature();
 
 onMounted(async () => {
     try {
+        // this page is public - guests can see it too, no redirect needed
         if (authService.isAuthenticated()) {
-            myCourses.value = await learningService.getCourses();
-        }
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-// Lifecycle hook: runs when component is mounted
-onMounted(async () => {
-    try {
-        // We intentionally DO NOT redirect unauthenticated users.
-        // This page is accessible to both guests and logged-in users.
-
-        if (authService.isAuthenticated()) {
-            // STEP 1: Load cached user profile from localStorage (if available)
-            // This makes the UI feel faster before fetching fresh data.
-            const savedUser = localStorage.getItem('user_profile');
-            if (savedUser) {
-                user.value = JSON.parse(savedUser);
-            }
-
-            // STEP 2: Fetch the latest user data from backend API
-            // This ensures data consistency with the server.
-            const freshUser = await authService.getCurrentUser();
-
+            // get fresh user profile from backend
+            const freshUser = await authService.getProfile();
             if (freshUser) {
                 user.value = freshUser;
-
-                // Update localStorage cache with fresh data
-                localStorage.setItem('user_profile', JSON.stringify(freshUser));
             }
         }
     } catch (error) {
-        // If token is invalid or API fails,
-        // remove token but DO NOT redirect user away from this page.
-        console.error("Auth check failed:", error);
+        // if token is expired or invalid, clear it but stay on this page
+        console.error("auth check failed:", error);
         authService.removeToken();
     } finally {
-        // Stop loading spinner regardless of success/failure
         loading.value = false;
     }
 });
