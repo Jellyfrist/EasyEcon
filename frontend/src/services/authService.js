@@ -69,16 +69,14 @@ export class AuthError extends Error {
  * Store csrf_token and user profile after login.
  * JWT cookie is set by the backend — we never touch it here.
  */
+// ใน authService.js
 export function saveToken(csrfToken, userData) {
     if (csrfToken) localStorage.setItem("csrf_token", csrfToken);
-    if (userData) localStorage.setItem("user", JSON.stringify(userData));
+    if (userData) localStorage.setItem("user_profile", JSON.stringify(userData)); // ใช้ user_profile
 }
 
-/**
- * Get stored user profile.
- */
 export function getUser() {
-    const raw = localStorage.getItem("user");
+    const raw = localStorage.getItem("user_profile"); 
     if (!raw) return null;
     try { return JSON.parse(raw); }
     catch { return null; }
@@ -99,7 +97,7 @@ export function isAuthenticated() {
  */
 export function removeToken() {
     localStorage.removeItem("csrf_token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("user_profile");
 }
 
 // Auth API methods

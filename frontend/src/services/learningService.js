@@ -1,97 +1,77 @@
-// covers all /learning endpoints for teacher and student
-
+// services/learningService.js
 import api from './api'
 
 const learningService = {
 
-    /*
-        teacher-only endpoints:
-        - POST   /learning/modules              create a module inside a course
-        - PATCH  /learning/modules/{module_id}  update module title or order
-        - DELETE /learning/modules/{module_id}  delete module and all its pages
-    */
+    /* ==========================================
+       👨‍🏫 TEACHER ENDPOINTS
+       ========================================== */
 
-    // create a module inside a course
+    // Modules
     createModule(data) {
-        // data: { course_id, title, order_index }
         return api.post('/learning/modules', data)
     },
-
-    // update module title or order
     updateModule(moduleId, data) {
         return api.patch(`/learning/modules/${moduleId}`, data)
     },
-
-    // delete module and all its pages
     deleteModule(moduleId) {
         return api.delete(`/learning/modules/${moduleId}`)
     },
 
-
-    /*
-        teacher-only endpoints for learning pages:
-        - POST   /learning/pages               create a learning page inside a module
-        - GET    /learning/pages/{page_id}     get full page including topic_tag (teacher editor view)
-        - PATCH  /learning/pages/{page_id}     update page content, title, or publish status
-        - DELETE /learning/pages/{page_id}     delete a page
-    */
-
-    // create a learning page inside a module
-    createPage(data) {
-        // data: { module_id, title, content_blocks, template_type, topic_tag, ... }
-        return api.post('/learning/pages', data)
+    // Learning Pages
+    createPage(payload) {
+        return api.post('/learning/pages', payload)
     },
-
-    // get full page including topic_tag (teacher editor view)
+    // แก้ไขชื่อให้เป็นมาตรฐาน เพื่อให้ Store เรียกใช้งานได้ง่าย
     getPage(pageId) {
         return api.get(`/learning/pages/${pageId}`)
     },
-
-    // update page content, title, or publish status
-    updatePage(pageId, data) {
-        return api.patch(`/learning/pages/${pageId}`, data)
+    updatePage(pageId, payload) {
+        return api.patch(`/learning/pages/${pageId}`, payload)
     },
-
-    // delete a page
     deletePage(pageId) {
         return api.delete(`/learning/pages/${pageId}`)
     },
 
 
-    /*
-        student endpoints:
-        - GET /learning/modules?course_id={course_id}       list all modules for a course
-        - GET /learning/modules/{module_id}/pages           list published pages in a module (summary only, no content blocks)
-        - GET /learning/pages/{page_id}/study               get a page for studying (correct answers stripped from mini quiz)
-        - POST /learning/pages/mini-quiz                    submit mini quiz answers for a page
-        - GET  /learning/pages/{page_id}/my-quiz            get student's best or latest mini quiz result for a page
-    */
+    /* ==========================================
+       🎓 STUDENT ENDPOINTS
+       ========================================== */
 
-    // list all modules for a course
+    // ดึงรายการ Modules ทั้งหมดใน Course
     listModules(courseId) {
         return api.get('/learning/modules', { params: { course_id: courseId } })
     },
 
-    // list published pages in a module (summary only, no content blocks)
+    // ดึงรายการ Pages ทั้งหมดใน Module (เฉพาะที่ Published)
     listPages(moduleId) {
         return api.get(`/learning/modules/${moduleId}/pages`)
     },
 
-    // get a page for studying (correct answers stripped from mini quiz)
+    // ดึงข้อมูลภาพรวมความคืบหน้า (Progress) ของนักเรียนในโมดูลนั้นๆ
+    getModuleDashboard(moduleId) {
+        return api.get(`/learning/modules/${moduleId}/dashboard`)
+    },
+
+    // ดึงเนื้อหาหน้าบทเรียนสำหรับนักเรียน (ตัดเฉลย Quiz ออก)
     studyPage(pageId) {
         return api.get(`/learning/pages/${pageId}/study`)
     },
 
-    // submit mini quiz answers for a page
+    // บันทึกว่านักเรียนเรียนหน้านี้จบแล้ว
+    completePage(pageId) {
+        return api.post(`/learning/pages/${pageId}/complete`)
+    },
+
+    // ส่งคำตอบ Mini Quiz
     submitMiniQuiz(data) {
-        // data: { learning_page_id, answers: { q1: "A", q2: "..." } }
         return api.post('/learning/pages/mini-quiz', data)
     },
 
-    // get student's best or latest mini quiz result for a page
+    // ดูผลคะแนน Quiz ล่าสุดของนักเรียนในหน้านั้นๆ
     getMyQuizResult(pageId) {
         return api.get(`/learning/pages/${pageId}/my-quiz`)
-    },
+    }
 }
 
 export default learningService

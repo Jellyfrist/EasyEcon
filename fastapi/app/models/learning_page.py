@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from .module import Module
     from .user import User
     from .best_attempt import BestAttempt
+    from .page_progress import PageProgress
 
 
 class LearningPage(Base):
@@ -145,6 +146,12 @@ class LearningPage(Base):
     # mini quiz attempts: one row per (student, page), upsert on every retake
     quiz_attempts: Mapped[List["BestAttempt"]] = relationship(
         back_populates = "learning_page", cascade = "all, delete-orphan"
+    )
+
+    # student progress tracking
+    # เปลี่ยนชื่อตัวแปรให้ตรงกัน
+    page_progress: Mapped[list["PageProgress"]] = relationship(
+        back_populates="learning_page", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

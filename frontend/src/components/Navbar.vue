@@ -2,15 +2,28 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-left">
-                <router-link to="/dashboard" class="logo-box">
-                    <div class="logo-icon">
-                        <img src="@/assets/EasyEcon_logo_pink.png" alt="EasyEcon Logo" class="logo-icon" />
-                    </div>
-                    <div class="logo-text">
-                        <span>Easy</span>
-                        <span class="pink">Econ</span>
-                    </div>
-                </router-link>
+                <div v-if="authStore.isStudent">
+                    <router-link to="/dashboard" class="logo-box">
+                        <div class="logo-icon">
+                            <img src="@/assets/EasyEcon_logo_pink.png" alt="EasyEcon Logo" class="logo-icon" />
+                        </div>
+                        <div class="logo-text">
+                            <span>Easy</span>
+                            <span class="pink">Econ</span>
+                        </div>
+                    </router-link>
+                </div>
+                <div v-if="!authStore.isStudent">
+                    <router-link to="/teacher/dashboard" class="logo-box">
+                        <div class="logo-icon">
+                            <img src="@/assets/EasyEcon_logo_pink.png" alt="EasyEcon Logo" class="logo-icon" />
+                        </div>
+                        <div class="logo-text">
+                            <span>Easy</span>
+                            <span class="pink">Econ</span>
+                        </div>
+                    </router-link>
+                </div>
     
                 <div class="nav-item dropdown">
                     <button class="nav-link" @click.stop="toggleDropdown('tools')">
@@ -86,21 +99,35 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { authService } from '@/services/authService';
+import { useAuthStore } from '@/store/authStore'; 
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
 
 const searchQuery = ref('');
 const isSearchFocused = ref(false);
 const activeDropdown = ref(null);
 
-const isAuthenticated = ref(false);
-const currentUser = ref(null);
+// 🚨 จุดที่ต้องแก้: เปลี่ยนเป็น 'csrf_token' และ 'user' ตามที่คุณบันทึกไว้ใน authService
+const isAuthenticated = ref(!!localStorage.getItem('token') || !!localStorage.getItem('user_profile'));
+const currentUser = ref(JSON.parse(localStorage.getItem('user_profile')) || null);
 
-const checkUserStatus = () => {
-    isAuthenticated.value = authService.isAuthenticated();
+const checkUserStatus = async () => {
+    const hasToken = !!localStorage.getItem('csrf_token') || !!localStorage.getItem('user');
+    isAuthenticated.value = hasToken || authService.isAuthenticated();
+
     if (isAuthenticated.value) {
-        currentUser.value = authService.getUser();
+        try {
+            const user = await authService.getUser();
+            if (user) {
+                currentUser.value = user;
+                localStorage.setItem('user', JSON.stringify(user)); 
+            }
+        } catch (error) {
+            console.error("Token expired or invalid:", error);
+            await handleLogout(); 
+        }
     } else {
         currentUser.value = null;
     }
@@ -120,31 +147,39 @@ const toggleDropdown = (dropdown) => {
     activeDropdown.value = activeDropdown.value === dropdown ? null : dropdown;
 };
 
-// Close dropdown when clicking outside
 const closeDropdowns = (e) => {
     if (!e.target.closest('.dropdown') && !e.target.closest('.user-menu')) {
         activeDropdown.value = null;
     }
 };
 
-// Self-contained and safe logout function
+// Logout Function
 const handleLogout = async () => {
-    activeDropdown.value = null; // Close menu first
+    activeDropdown.value = null; 
+    
     isAuthenticated.value = false;
     currentUser.value = null;
-
-    // Call logout from authService
+    
     await authService.logout(true);
+    
+    // เปลี่ยนชื่อคำสั่งลบข้อมูลให้ตรงกัน
+    localStorage.removeItem('user');
+    localStorage.removeItem('csrf_token'); 
+    
+    router.push('/login');
 };
 
-// Watch for route changes (e.g., redirect from /login-success to /dashboard)
+// 2. [แก้บั๊ก Navbar ไม่เปลี่ยน] สั่งให้เช็คสถานะทุกครั้งที่ URL เปลี่ยน
 watch(() => route.path, () => {
-    checkUserStatus(); // Automatically update Navbar state
+    // ใส่ setTimeout เล็กน้อยเพื่อให้แน่ใจว่า authService เซฟ token ลงเครื่องเสร็จแล้วค่อยเช็ค
+    setTimeout(() => {
+        checkUserStatus();
+    }, 50); 
 });
 
 onMounted(() => {
     document.addEventListener('click', closeDropdowns);
-    checkUserStatus(); // Check authentication status on initial load
+    checkUserStatus(); 
 });
 
 onUnmounted(() => {

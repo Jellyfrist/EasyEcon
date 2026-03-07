@@ -175,3 +175,26 @@ class MiniQuizResult(BaseModel):
     attempt_count: int
     topic_stats: Dict[str, Any]
     weakness_report: List[Dict[str, Any]]
+
+# dashboard response for student
+class ChapterInfo(BaseModel):
+    '''ข้อมูลสรุปภาพรวมของบทเรียนสำหรับแสดงด้านบนของ Dashboard'''
+    title: str
+    description: str
+    progressPercent: int
+    completedCount: int
+    totalCount: int
+    totalTime: str
+
+class LessonDashboardItem(BaseModel):
+    '''ข้อมูลของแต่ละหัวข้อย่อยพร้อมสถานะการเรียน'''
+    id: int
+    title: str
+    subtitle: str
+    type: str
+    status: str  # "completed" | "active" | "locked"
+
+class ModuleDashboardResponse(BaseModel):
+    '''Response หลักที่รวมข้อมูลทั้งหมดสำหรับหน้า LearningDashboard.vue'''
+    chapterInfo: ChapterInfo
+    lessons: List[LessonDashboardItem]

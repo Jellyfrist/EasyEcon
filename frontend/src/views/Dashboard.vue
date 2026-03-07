@@ -29,7 +29,7 @@
                     If the user is NOT authenticated:
                     Show a public preview (beginner course teaser)
                 -->
-            <div v-if="!isAuthenticated" class="course-container">
+            <div v-if="!isLoggedIn" class="course-container">
                 <div class="course-card">
     
                     <span class="label">
@@ -81,9 +81,9 @@
                             {{ course.description }}
                         </p>
     
-                        <button class="btn-enter" @click="$router.push(`/learning/${course.id}`)">
-                                Enter Course
-                            </button>
+                        <button class="btn-enter" @click="$router.push(`/courses/${course.id}`)">
+                            Enter Course
+                        </button>
                     </div>
                 </div>
     
@@ -112,7 +112,7 @@
                     Blurred this section.
                 -->
     
-            <section class="features" :class="{ blurred: !isAuthenticated }">
+            <section class="features" :class="{ blurred: !isLoggedIn }">
     
                 <!-- Flashcards -->
                 <div class="card green" @click="goToFlashcards">
@@ -149,7 +149,7 @@
     
             </section>
     
-            <div v-if="!isAuthenticated" class="auth-overlay">
+            <div v-if="!isLoggedIn" class="auth-overlay">
                 <div class="overlay-card">
                     <h2>Unlock All Features</h2>
                     <p class="overlay-sub">
@@ -176,91 +176,94 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/authService';
+import learningService from '../services/learningService';
+import api from '../services/api'; // เรียกใช้ api โดนตรงเพื่อดึงข้อมูล Course
 
-// Import composable to check protected feature access
-import { useProtectedFeature } from '@/composables/useProtectedFeature';
-
-const router = useRouter(); // Router instance for programmatic navigation
-
-// Reactive state variables
-const user = ref(null); // Stores current user profile data
-const loading = ref(true); // Controls loading state while checking auth
-const myCourses = ref([]); // Stores user's enrolled courses (currently unused)
-
-// isAuthenticated can be used to conditionally render protected UI sections
-const { isAuthenticated } = useProtectedFeature();
+const router = useRouter(); 
+const user = ref(null); 
+const loading = ref(true); 
+const myCourses = ref([]); 
+const isLoggedIn = ref(false);
 
 onMounted(async () => {
-    try {
-        if (authService.isAuthenticated()) {
-            myCourses.value = await learningService.getCourses();
-        }
-    } catch (err) {
-        console.error(err);
-    }
-});
+    isLoggedIn.value = authService.isAuthenticated();
 
-// Lifecycle hook: runs when component is mounted
-onMounted(async () => {
-    try {
-        // We intentionally DO NOT redirect unauthenticated users.
-        // This page is accessible to both guests and logged-in users.
-
-        if (authService.isAuthenticated()) {
-            // STEP 1: Load cached user profile from localStorage (if available)
-            // This makes the UI feel faster before fetching fresh data.
-            const savedUser = localStorage.getItem('user_profile');
-            if (savedUser) {
-                user.value = JSON.parse(savedUser);
-            }
-
-            // STEP 2: Fetch the latest user data from backend API
-            // This ensures data consistency with the server.
-            const freshUser = await authService.getCurrentUser();
-
+    if (isLoggedIn.value) {
+        try {
+            // 1. ดึงข้อมูล User
+            const freshUser = await authService.getUser(); 
             if (freshUser) {
                 user.value = freshUser;
-
-                // Update localStorage cache with fresh data
-                localStorage.setItem('user_profile', JSON.stringify(freshUser));
+                localStorage.setItem('user', JSON.stringify(freshUser));
             }
+
+            // 2. ดึงข้อมูล "คอร์สเรียน (Course)" ทั้งหมด ไดนามิก 100%
+            // 🚨 ตรงนี้เราต้องยิงไปที่ API ดึงคอร์ส ไม่ใช่ไปดึง Module นะครับ!
+            // (ถ้า API Backend ของใบชาชื่ออื่น เช่น /users/me/courses ให้เปลี่ยนตรงนี้นะครับ)
+            const res = await api.get('/courses/browse/all');
+            
+            myCourses.value = res.data ? res.data : (res || []);
+            
+        } catch (error) {
+            console.error("Dashboard Error:", error);
+            if (error.response?.status === 401) {
+                authService.removeToken();
+                isLoggedIn.value = false;
+            }
+        } finally {
+            loading.value = false;
         }
-    } catch (error) {
-        // If token is invalid or API fails,
-        // remove token but DO NOT redirect user away from this page.
-        console.error("Auth check failed:", error);
-        authService.removeToken();
-    } finally {
-        // Stop loading spinner regardless of success/failure
+    } else {
         loading.value = false;
     }
 });
 
-// Handle user logout
-// Clears authentication state and redirects to login page
-const handleLogout = () => {
-    authService.logout();
-    router.push('/login');
-};
-
-// Navigation handlers for different features
-
-// Navigate to Flashcards study page
-// Note: ':pageId' should be replaced with a real dynamic value
+// นำทางไป Flashcards ของคอร์สแรก
 const goToFlashcards = () => {
-    router.push('/flashcards')
+    if (myCourses.value && myCourses.value.length > 0) {
+        router.push(`/flashcards/${myCourses.value[0].id}`);
+    } else {
+        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
+    }
 }
 
-// Navigate to Learning module page
-// Note: ':id' should be replaced with actual module ID
-const goToLearn = () => {
-    router.push('/learning')
+// นำทางไปบทเรียนแบบไดนามิก ป้องกัน Error 422 เด็ดขาด!
+const goToLearn = async () => {
+    if (!myCourses.value || myCourses.value.length === 0) {
+        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
+        return;
+    }
+    
+    // ดึง ID คอร์สแรกของนักเรียนคนนี้มาใช้
+    const firstCourseId = myCourses.value[0].id;
+    
+    try {
+        // ส่ง Course ID ไปให้ API อย่างถูกต้อง จะได้ไม่ติด 422 อีก
+        const res = await learningService.listModules(firstCourseId);
+        
+        if (res.data && res.data.length > 0) {
+            // ถ้าในคอร์สมี Module ให้พุ่งเข้า Module แรกสุดเลย
+            router.push({ 
+                name: 'LearningDashboard', 
+                params: { moduleId: res.data[0].id } 
+            });
+        } else {
+            // ถ้าคอร์สยังว่างเปล่า ไม่มี Module ให้ไปหน้าหลักของคอร์สนั้นแทน
+            router.push(`/courses/${firstCourseId}`);
+        }
+    } catch (error) {
+        console.error("Navigate Error:", error);
+        router.push(`/courses/${firstCourseId}`);
+    }
 }
 
-// Navigate to Test/Exam page
-// Note: ':moduleId' should be replaced with actual module ID
+// นำทางไปหน้ารวม (เพราะยังไม่มีหน้า Test แยก)
 const goToTest = () => {
-    router.push('/test')
+    if (myCourses.value && myCourses.value.length > 0) {
+        router.push(`/courses/${myCourses.value[0].id}`);
+    } else {
+        alert("คุณยังไม่ได้ลงทะเบียนคอร์สเรียนใดๆ");
+    }
 }
 </script>
 

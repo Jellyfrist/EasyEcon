@@ -1,4 +1,5 @@
-// manages modules, learning pages, and mini quiz attempts
+// store/learningStore.js
+// manages modules, learning pages, mini quiz attempts, and student progress
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -6,36 +7,40 @@ import learningService from '../services/learningService'
 
 export const useLearningStore = defineStore('learning', () => {
 
-    // list of modules for current course
+    // --- [State] ---
     const modules = ref([])
-
-    // list of pages for current module (summary only)
     const pages = ref([])
-
-    // currently opened page (full content)
     const currentPage = ref(null)
-
-    // student's mini quiz result for current page
     const quizResult = ref(null)
-
     const loading = ref(false)
     const error = ref(null)
 
+    // State สำหรับ Dashboard และ Progress Tracking ของนักเรียน
+    const chapterInfo = ref({
+        title: '',
+        description: '',
+        progressPercent: 0,
+        completedCount: 0,
+        totalCount: 0,
+        totalTime: '0 นาที'
+    })
+    const dashboardLessons = ref([]) // เก็บรายการบทเรียนพร้อมสถานะ (completed, active, locked)
+
+    // --- [Helper] ---
     function _setError(err) {
         error.value = err?.response?.data?.detail || err.message || 'something went wrong'
     }
 
     /**
-     * teacher: modules
-     * - create, update, delete modules
-     * - create, update, delete pages inside modules
+     * ==========================================
+     * 👨‍🏫 TEACHER ACTIONS
+     * ==========================================
      */
 
-    // create a module for a course
+    // สร้าง Module ใหม่
     async function createModule(data) {
         loading.value = true
         error.value = null
-        // add the new module to the list if creation is successful
         try {
             const res = await learningService.createModule(data)
             modules.value.push(res.data)
@@ -48,7 +53,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // update module title or order
+    // อัปเดตข้อมูล Module
     async function updateModule(moduleId, data) {
         loading.value = true
         error.value = null
@@ -65,7 +70,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // delete a module and all its pages
+    // ลบ Module
     async function deleteModule(moduleId) {
         loading.value = true
         error.value = null
@@ -81,12 +86,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    /**
-     * teacher: learning pages
-     * - create, update, delete pages inside modules
-     */
-
-    // create a learning page inside a module
+    // สร้างหน้าบทเรียน (Page)
     async function createPage(data) {
         loading.value = true
         error.value = null
@@ -102,11 +102,12 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // get full page including topic_tag (teacher editor view)
+    // ดึงข้อมูลหน้าบทเรียนสำหรับ Editor (Teacher)
     async function fetchPage(pageId) {
         loading.value = true
         error.value = null
         try {
+            // 🚨 แก้ไขจาก getPage เป็น getPage (ตามที่เราแก้ใน Service)
             const res = await learningService.getPage(pageId)
             currentPage.value = res.data
         } catch (err) {
@@ -116,14 +117,13 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // update page content, title, or publish status
+    // อัปเดตเนื้อหาหน้าบทเรียน
     async function updatePage(pageId, data) {
         loading.value = true
         error.value = null
         try {
             const res = await learningService.updatePage(pageId, data)
             currentPage.value = res.data
-            // update in pages list if present
             const idx = pages.value.findIndex(p => p.id === pageId)
             if (idx !== -1) pages.value[idx] = res.data
             return res.data
@@ -135,7 +135,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // delete a page
+    // ลบหน้าบทเรียน
     async function deletePage(pageId) {
         loading.value = true
         error.value = null
@@ -153,13 +153,12 @@ export const useLearningStore = defineStore('learning', () => {
     }
 
     /**
-     *  student:
-     * - fetch modules and pages for a course
-     * - study a page (fetch full content)
-     * - submit mini quiz answers and fetch quiz result
+     * ==========================================
+     * 🎓 STUDENT ACTIONS (Study & Dashboard)
+     * ==========================================
      */
 
-    // fetch all modules for a course (student view)
+    // ดึงรายการ Module ทั้งหมดของคอร์ส
     async function fetchModules(courseId) {
         loading.value = true
         error.value = null
@@ -173,7 +172,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // fetch published pages in a module (summary only, no content blocks)
+    // ดึงรายการหน้าบทเรียนย่อยใน Module
     async function fetchPages(moduleId) {
         loading.value = true
         error.value = null
@@ -187,7 +186,24 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // get a page for studying (correct answers stripped from mini quiz)
+    // ดึงข้อมูลภาพรวมความคืบหน้า (Dashboard)
+    async function fetchModuleDashboard(moduleId) {
+        loading.value = true
+        error.value = null
+        try {
+            const res = await learningService.getModuleDashboard(moduleId)
+            chapterInfo.value = res.data.chapterInfo
+            dashboardLessons.value = res.data.lessons
+            return res.data
+        } catch (err) {
+            _setError(err)
+            return null
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // ดึงเนื้อหาหน้าบทเรียนสำหรับนักเรียน (Study Mode)
     async function studyPage(pageId) {
         loading.value = true
         error.value = null
@@ -201,7 +217,35 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // submit mini quiz answers for a page, return quiz result
+    // บันทึกว่าเรียนจบหน้านี้แล้ว และอัปเดต UI ทันที
+    async function completePage(pageId) {
+        try {
+            await learningService.completePage(pageId)
+            
+            // อัปเดตสถานะในหน้า Dashboard โดยไม่ต้องรีโหลดหน้า
+            const lessonIndex = dashboardLessons.value.findIndex(l => l.id === parseInt(pageId))
+            if (lessonIndex !== -1 && dashboardLessons.value[lessonIndex].status !== 'completed') {
+                dashboardLessons.value[lessonIndex].status = 'completed'
+                chapterInfo.value.completedCount += 1
+                
+                // คำนวณเปอร์เซ็นต์ใหม่
+                if (chapterInfo.value.totalCount > 0) {
+                    chapterInfo.value.progressPercent = Math.round((chapterInfo.value.completedCount / chapterInfo.value.totalCount) * 100)
+                }
+
+                // ปลดล็อกบทถัดไป (ถ้ามี)
+                if (lessonIndex + 1 < dashboardLessons.value.length) {
+                    if (dashboardLessons.value[lessonIndex + 1].status === 'locked') {
+                        dashboardLessons.value[lessonIndex + 1].status = 'active'
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Failed to mark page as completed", err)
+        }
+    }
+
+    // ส่งคำตอบ Mini Quiz
     async function submitMiniQuiz(learningPageId, answers) {
         loading.value = true
         error.value = null
@@ -220,7 +264,7 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // get student's best or latest mini quiz result for a page
+    // ดึงคะแนน Quiz ล่าสุดของนักเรียน
     async function fetchMyQuizResult(pageId) {
         loading.value = true
         error.value = null
@@ -228,7 +272,6 @@ export const useLearningStore = defineStore('learning', () => {
             const res = await learningService.getMyQuizResult(pageId)
             quizResult.value = res.data
         } catch (err) {
-            // 404 means no attempt yet, not a real error
             if (err?.response?.status !== 404) _setError(err)
             quizResult.value = null
         } finally {
@@ -236,27 +279,46 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    // clear currently opened page and quiz result (e.g. when navigating away from study view)
+    /**
+     * ==========================================
+     * 🧹 CLEAN UP & UTILS
+     * ==========================================
+     */
+
     function clearCurrent() {
         currentPage.value = null
         quizResult.value = null
     }
 
-    // clear all learning data (e.g. when switching courses)
     function clearAll() {
         modules.value = []
         pages.value = []
         currentPage.value = null
         quizResult.value = null
+        chapterInfo.value = { 
+            title: '', 
+            description: '', 
+            progressPercent: 0, 
+            completedCount: 0, 
+            totalCount: 0, 
+            totalTime: '0 นาที' 
+        }
+        dashboardLessons.value = []
+        error.value = null
     }
 
     return {
+        // States
         modules,
         pages,
         currentPage,
         quizResult,
+        chapterInfo,
+        dashboardLessons,
         loading,
         error,
+        
+        // Actions
         createModule,
         updateModule,
         deleteModule,
@@ -266,6 +328,8 @@ export const useLearningStore = defineStore('learning', () => {
         deletePage,
         fetchModules,
         fetchPages,
+        fetchModuleDashboard,
+        completePage,
         studyPage,
         submitMiniQuiz,
         fetchMyQuizResult,

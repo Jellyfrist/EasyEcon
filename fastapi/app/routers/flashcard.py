@@ -1,316 +1,105 @@
-'''
-Teacher routes  (require_teacher):
-    POST   /flashcards/sets                       create a set
-    GET    /flashcards/sets?course_id=            list sets for a course
-    PATCH  /flashcards/sets/{set_id}              update set title/description
-    DELETE /flashcards/sets/{set_id}              delete set + all cards
-    POST   /flashcards/sets/{set_id}/cards        add a card
-    PATCH  /flashcards/cards/{card_id}            edit a card
-    DELETE /flashcards/cards/{card_id}            delete a card
-
-Student routes  (require_student):
-    GET    /flashcards/sets/{set_id}/study        get set + cards + my progress
-    POST   /flashcards/progress                   mark card known/learning
-    GET    /flashcards/sets/{set_id}/progress     my progress summary for a set
-'''
-
-from typing import List, Optional
+# app/routers/learning.py (ฉบับอัปเกรดสไตล์ Flashcard)
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
 from sqlalchemy.orm import Session
-
+from typing import List
 from app.db import get_db
-
-from app.models.flashcard import Flashcard, FlashcardProgress, FlashcardSet
+from app.models.learning_page import LearningPage
+from app.models.page_progress import PageProgress
 from app.models.user import User
-
-from app.schemas.flashcard import (
-    FlashcardCreate,
-    FlashcardProgressUpdate,
-    FlashcardResponse,
-    FlashcardStudentResponse,
-    FlashcardSetCreate,
-    FlashcardSetDetail,
-    FlashcardSetProgress,
-    FlashcardSetResponse,
-    FlashcardSetUpdate,
-    FlashcardUpdate,
-)
-
 from app.security import require_student, require_teacher
+from app.schemas.learning import LearningPageCreate, LearningPageUpdate, LearningPageResponse
 
-router = APIRouter(prefix="/flashcards", tags=["flashcards"])
+router = APIRouter(prefix="/learning", tags=["learning"])
 
+# --- Helper เหมือนแฟลชการ์ด ---
+def _get_page_or_404(page_id: int, db: Session) -> LearningPage:
+    page = db.get(LearningPage, page_id)
+    if not page:
+        raise HTTPException(status_code=404, detail="Learning page not found")
+    return page
 
-# helpers
-# not found flashcard set
-def _get_set_or_404(set_id: int, db: Session) -> FlashcardSet:
-    fs = db.get(FlashcardSet, set_id)
-    if not fs:
-        raise HTTPException(status_code = 404, detail = "Flashcard set not found")
-    return fs
+def _is_owner_or_403(page: LearningPage, user: User):
+    if page.created_by_user_id != user.id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not your lesson page")
 
-def _own_set_or_403(fs: FlashcardSet, teacher: User) -> None:
-    if fs.created_by_user_id != teacher.id and teacher.role != "admin":
-        raise HTTPException(status_code=403, detail="Not your flashcard set")
-
+''' 
+👨‍🏫 Teacher Routes: เหมือนหน้าจัดการ Flashcard Set
 '''
-teacher router
-'''
 
-# create a set
-@router.post("/sets", response_model=FlashcardSetResponse, status_code=201)
-def create_set(
-    body: FlashcardSetCreate,
+# 1. สร้างหน้าบทเรียนใหม่ (เหมือน create_set)
+@router.post("/pages", response_model=LearningPageResponse, status_code=201)
+def create_page(
+    body: LearningPageCreate,
     db: Session = Depends(get_db),
     teacher: User = Depends(require_teacher),
 ):
-    '''teacher creates a new flashcard topic for a course'''
-    fs = FlashcardSet(
+    page = LearningPage(
         **body.model_dump(),
-        created_by_user_id=teacher.id,
+        created_by_user_id=teacher.id
     )
-    db.add(fs)
+    db.add(page)
     db.commit()
-    db.refresh(fs)
-    result = FlashcardSetResponse.model_validate(fs)
-    result.card_count = 0
-    return result
+    db.refresh(page)
+    return page
 
-# list sets for a course
-@router.get("/sets", response_model=List[FlashcardSetResponse])
-def list_sets_teacher(
-    course_id: int,
+# 2. ดึงข้อมูลบทเรียนสำหรับ Editor (เหมือน get_cards)
+@router.get("/pages/{page_id}", response_model=LearningPageResponse)
+def get_page_for_editor(
+    page_id: int,
     db: Session = Depends(get_db),
     teacher: User = Depends(require_teacher),
 ):
-    '''list all flashcard sets that teacher created for a course'''
-    sets = (
-        db.query(FlashcardSet)
-        .filter(
-            FlashcardSet.course_id == course_id,
-            FlashcardSet.created_by_user_id == teacher.id,
-        )
-        .all()
-    )
-    results = []
-    for fs in sets:
-        r = FlashcardSetResponse.model_validate(fs)
-        r.card_count = len(fs.cards)
-        results.append(r)
-    return results
+    page = _get_page_or_404(page_id, db)
+    _is_owner_or_403(page, teacher)
+    return page
 
-# get all cards in a set (teacher only)
-@router.get("/sets/{set_id}/cards", response_model = List[FlashcardResponse])
-def list_cards_teacher(
-    set_id: int,
+# 3. อัปเดตเนื้อหา (เหมือน update_card)
+@router.patch("/pages/{page_id}", response_model=LearningPageResponse)
+def update_page(
+    page_id: int,
+    body: LearningPageUpdate,
     db: Session = Depends(get_db),
     teacher: User = Depends(require_teacher),
 ):
-    '''teacher fetches all cards in their set to populate the editor on page reload'''
-    fs = _get_set_or_404(set_id, db)
-    _own_set_or_403(fs, teacher)
-    return fs.cards
-
-# update set title/description
-@router.patch("/sets/{set_id}", response_model = FlashcardSetResponse)
-def update_set(
-    set_id: int,
-    body: FlashcardSetUpdate,
-    db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher),
-):
-    fs = _get_set_or_404(set_id, db)
-    _own_set_or_403(fs, teacher)
-    for field, value in body.model_dump(exclude_unset = True).items():
-        setattr(fs, field, value)
+    page = _get_page_or_404(page_id, db)
+    _is_owner_or_403(page, teacher)
+    
+    data = body.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        setattr(page, field, value)
+    
     db.commit()
-    db.refresh(fs)
-    r = FlashcardSetResponse.model_validate(fs)
-    r.card_count = len(fs.cards)
-    return r
-
-# delete set + all cards
-@router.delete("/sets/{set_id}", status_code=204)
-def delete_set(
-    set_id: int,
-    db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher),
-):
-    fs = _get_set_or_404(set_id, db)
-    _own_set_or_403(fs, teacher)
-    db.delete(fs)
-    db.commit()
-
-# add a card
-@router.post("/sets/{set_id}/cards", response_model = FlashcardResponse, status_code = 201)
-def add_card(
-    set_id: int,
-    body: FlashcardCreate,
-    db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher),
-):
-    '''teacher adds a card (term / definition / hint) to a set'''
-    fs = _get_set_or_404(set_id, db)
-    _own_set_or_403(fs, teacher)
-    card = Flashcard(set_id = set_id, **body.model_dump())
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-    return card
-
-# edit a card
-@router.patch("/cards/{card_id}", response_model = FlashcardResponse)
-def update_card(
-    card_id: int,
-    body: FlashcardUpdate,
-    db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher),
-):
-    card = db.get(Flashcard, card_id)
-    if not card:
-        raise HTTPException(status_code = 404, detail = "Card not found")
-    for field, value in body.model_dump(exclude_unset = True).items():
-        setattr(card, field, value)
-    db.commit()
-    db.refresh(card)
-    return card
-
-# delete a card
-@router.delete("/cards/{card_id}", status_code=204)
-def delete_card(
-    card_id: int,
-    db: Session = Depends(get_db),
-    teacher: User = Depends(require_teacher),
-):
-    card = db.get(Flashcard, card_id)
-    if not card:
-        raise HTTPException(status_code = 404, detail = "Card not found")
-    _own_set_or_403(card.flashcard_set, teacher)
-    db.delete(card)
-    db.commit()
+    db.refresh(page)
+    return page
 
 '''
-student route
+🎓 Student Routes: เหมือนหน้า Study Flashcard
 '''
 
-# get set + cards + my progress
-@router.get("/sets/{set_id}/study", response_model = FlashcardSetDetail)
-def study_set(
-    set_id: int,
+# 4. บันทึกสถานะการเรียนจบ (เหมือน update_progress)
+@router.post("/pages/{page_id}/complete", status_code=200)
+def mark_page_complete(
+    page_id: int,
     db: Session = Depends(get_db),
     student: User = Depends(require_student),
 ):
-    '''
-    - student opens a flashcard set to study
-    - returns all active cards with the student's current status injected
-    '''
-    fs = _get_set_or_404(set_id, db)
+    _get_page_or_404(page_id, db) # เช็คว่ามีหน้าจริงไหม
+    
+    progress = db.query(PageProgress).filter(
+        PageProgress.student_id == student.id,
+        PageProgress.learning_page_id == page_id
+    ).first()
 
-    # build a map of card_id -> status for this student
-    progress_map = {
-        p.flashcard_id: p.status
-        for p in db.query(FlashcardProgress).filter(
-            FlashcardProgress.student_id == student.id,
-            FlashcardProgress.flashcard_id.in_([c.id for c in fs.cards]),
-        ).all()
-    }
-
-    cards_with_status = [
-        FlashcardStudentResponse(
-            id = c.id,
-            term = c.term,
-            definition = c.definition,
-            hint = c.hint,
-            image_url = c.image_url,
-            order_index = c.order_index,
-            status = progress_map.get(c.id),  # none if not yet reviewed
-        )
-        for c in fs.cards
-        if c.is_active
-    ]
-
-    return FlashcardSetDetail(
-        id = fs.id,
-        course_id = fs.course_id,
-        created_by_user_id = fs.created_by_user_id,
-        title = fs.title,
-        description = fs.description,
-        created_at = fs.created_at,
-        updated_at = fs.updated_at,
-        card_count = len(cards_with_status),
-        cards = cards_with_status,
-    )
-
-# mark card known/learning
-@router.post("/progress", status_code=200)
-def update_progress(
-    body: FlashcardProgressUpdate,
-    db: Session = Depends(get_db),
-    student: User = Depends(require_student),
-):
-    '''
-    - student marks a card as 'known' or 'learning'
-    - upsert: one row per (student, card)
-    '''
-
-    if body.status not in ("known", "learning"):
-        raise HTTPException(status_code = 400, detail = "status must be 'known' or 'learning'")
-
-    progress = (
-        db.query(FlashcardProgress)
-        .filter(
-            FlashcardProgress.student_id == student.id,
-            FlashcardProgress.flashcard_id == body.flashcard_id,
-        )
-        .first()
-    )
-    if progress:
-        progress.status = body.status
-    else:
-        progress = FlashcardProgress(
-            student_id = student.id,
-            flashcard_id = body.flashcard_id,
-            status = body.status,
+    if not progress:
+        progress = PageProgress(
+            student_id=student.id,
+            learning_page_id=page_id,
+            is_completed=True
         )
         db.add(progress)
-
+    else:
+        progress.is_completed = True
+        
     db.commit()
-    return {"flashcard_id": body.flashcard_id, "status": body.status}
-
-# my progress summary for a set
-@router.get("/sets/{set_id}/progress", response_model = FlashcardSetProgress)
-def get_set_progress(
-    set_id: int,
-    db: Session = Depends(get_db),
-    student: User = Depends(require_student),
-):
-    '''
-    - returns a summary: how many cards are known / learning / not started
-    - show the 'X words learned' counter on the student dashboard
-    '''
-    fs = _get_set_or_404(set_id, db)
-    active_cards = [c for c in fs.cards if c.is_active]
-    card_ids = [c.id for c in active_cards]
-
-    progress_map = {
-        p.flashcard_id: p.status
-        for p in db.query(FlashcardProgress).filter(
-            FlashcardProgress.student_id == student.id,
-            FlashcardProgress.flashcard_id.in_(card_ids),
-        ).all()
-    }
-
-    known = sum(1 for cid in card_ids if progress_map.get(cid) == "known")
-    learning = sum(1 for cid in card_ids if progress_map.get(cid) == "learning")
-    not_started = len(card_ids) - known - learning
-
-    return FlashcardSetProgress(
-        set_id = set_id,
-        title = fs.title,
-        total_cards = len(card_ids),
-        known_count = known,
-        learning_count = learning,
-        not_started_count = not_started,
-    )
+    return {"status": "completed", "page_id": page_id}

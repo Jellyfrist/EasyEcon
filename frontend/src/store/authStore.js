@@ -37,7 +37,8 @@ export const useAuthStore = defineStore("auth", {
         isStudent: (state) => state.user?.role === "student",
 
         // matches backend require_teacher: role "teacher" OR "admin"
-        isTeacher: (state) => ["teacher", "admin"].includes(state.user?.role),
+        // isTeacher: (state) => ["teacher", "admin"].includes(state.user?.role),
+        isTeacher: (state) => state.user?.role === "teacher",
 
         isAdmin: (state) => state.user?.role === "admin",
 
@@ -87,10 +88,21 @@ export const useAuthStore = defineStore("auth", {
             this.clearError();
 
             try {
+                // 1. ยิงล็อกอินเพื่อรับ Token (Cookie)
                 const data = await login(usernameOrEmail, password);
-                // data = { csrf_token, user: { id, username, email, role, full_name } }
-                this._setUser(data.user);
-                return { success: true, data };
+
+                // 2. เช็คว่า Backend ใจดีส่งข้อมูล user มาพร้อม Token เลยไหม?
+                if (data && data.user) {
+                    this._setUser(data.user);
+                } else {
+                    // 3. 🚨 ถ้าไม่ส่งมา (มีแค่ Token) ให้บังคับดึง Profile ทันที!
+                    // ฟังก์ชัน refreshUser ของใบชาเขียนไว้ดีมากแล้ว เรียกใช้ได้เลยครับ
+                    await this.refreshUser();
+                }
+
+                // สำคัญมาก: ส่งข้อมูลกลับไปให้ Component คุยต่อ
+                // เราส่ง this.user ไปด้วย เพื่อให้หน้า Login.vue เอาไปเช็ค Role ได้ชัวร์ๆ
+                return { success: true, user: this.user }; 
             } catch (error) {
                 this.setError(error.message);
                 return { success: false, error };

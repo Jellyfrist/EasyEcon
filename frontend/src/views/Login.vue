@@ -90,10 +90,16 @@ const login = async () => {
     try {
         const result = await authStore.login(email.value, password.value);
 
+        // ใช้เช็คว่าเป็นใคร
+        // console.log("👉 ข้อมูลจาก Store:", authStore.user);
+        // console.log("👉 ระบบมองว่าเป็นครูไหม:", authStore.isTeacher);
         // Redirect based on the role
         if (result.success) {
             if (authStore.isAdmin) {
                 router.push('/admin');
+            } else if (authStore.isTeacher) {
+                // router.push('/teacher/dashboard');
+                router.push('/teacher');
             } else {
                 router.push('/dashboard');
             }

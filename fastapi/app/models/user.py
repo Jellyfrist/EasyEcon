@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .exam_attempt import ExamAttempt
     from .exam_session import ExamSession
     from .exam_template import ExamTemplate
+    from .page_progress import PageProgress
 
 class User(Base):
     __tablename__ = "users"
@@ -79,6 +80,16 @@ class User(Base):
         foreign_keys = "ExamSession.launched_by_user_id",
     )
 
+    progress_records: Mapped[List["PageProgress"]] = relationship(
+        back_populates = "student", # หรือ "student" (ต้องไปเช็คฝั่งนู้นว่าเรียกเราว่าอะไร)
+        # foreign_keys="PageProgress.user_id", # ถ้าตารางลูกมีเชื่อมหลายตัว อาจจะต้องใส่บรรทัดนี้ด้วยครับ
+    )
+
+    progress_records: Mapped[List["PageProgress"]] = relationship(
+        back_populates="student",
+        foreign_keys="PageProgress.student_id"
+    )
+    
     # student: flashcard, mini quiz attempts, best mini quiz attempt, exam attempts
     flashcard_progress: Mapped[List["FlashcardProgress"]] = relationship(
         back_populates = "student",
