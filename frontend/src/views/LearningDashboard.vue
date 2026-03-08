@@ -27,7 +27,7 @@
         >
           <div class="sidebar-item-text">
             <span class="sidebar-item-num">
-              Module {{ index + 1 }}
+              <span class="material-symbols-outlined">book</span>
               <span v-if="mod.id == moduleId" class="in-progress-tag">In Progress</span>
             </span>
             <h4 class="sidebar-item-title">{{ mod.title }}</h4>
@@ -63,10 +63,10 @@
         <section class="hero-section">
           <div class="hero-text">
             <h1 class="hero-title">
-              Module {{ currentModuleIndex + 1 }}: {{ dashboardData.module?.title }}
+              {{ dashboardData.module?.title }}
             </h1>
             <p class="hero-desc">
-              {{ dashboardData.module?.description || 'Explore the core concepts of this module and build your understanding step by step.' }}
+              {{ 'Explore the core concepts of this module and build your understanding step by step.' }}
             </p>
           </div>
 
@@ -136,17 +136,19 @@
           </div>
         </div>
 
-        <!-- post test banner -->
-        <div class="posttest-banner">
-          <div class="banner-text">
-            <h2>Ready for the end-of-module assessment?</h2>
-            <p>Complete all lessons to unlock the Post-test for Module {{ currentModuleIndex + 1 }}.</p>
+        <!--
+          post test banner
+          <div class="posttest-banner">
+            <div class="banner-text">
+              <h2>Ready for the end-of-module assessment?</h2>
+              <p>Complete all lessons to unlock the Post-test!</p>
+            </div>
+            <button class="banner-btn" disabled>
+              Unlock Assessment
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
           </div>
-          <button class="banner-btn" disabled>
-            Unlock Assessment
-            <span class="material-symbols-outlined">arrow_forward</span>
-          </button>
-        </div>
+        -->
 
       </div>
     </main>
@@ -628,51 +630,54 @@ const goToLesson = (pageId) => {
   cursor: not-allowed;
 }
 
-/* post test banner */
-.posttest-banner {
-  background: linear-gradient(135deg, #ed4081 0%, #d13570 100%);
-  border-radius: 20px;
-  padding: 2.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-  gap: 2rem;
-  box-shadow: 0 8px 24px rgba(237,64,129,0.25);
-}
+/*
 
-.banner-text h2 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin: 0 0 0.6rem;
-  line-height: 1.3;
-}
+  /* post test banner
+  .posttest-banner {
+    background: linear-gradient(135deg, #ed4081 0%, #d13570 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    gap: 2rem;
+    box-shadow: 0 8px 24px rgba(237,64,129,0.25);
+  }
 
-.banner-text p {
-  margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.88;
-  font-weight: 500;
-  max-width: 480px;
-  line-height: 1.55;
-}
+  .banner-text h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0 0 0.6rem;
+    line-height: 1.3;
+  }
 
-.banner-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: white;
-  color: #ed4081;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 99px;
-  font-weight: 800;
-  font-size: 0.95rem;
-  cursor: not-allowed;
-  opacity: 0.85;
-  flex-shrink: 0;
-  font-family: inherit;
-}
+  .banner-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.88;
+    font-weight: 500;
+    max-width: 480px;
+    line-height: 1.55;
+  }
+
+  .banner-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: #ed4081;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 99px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: not-allowed;
+    opacity: 0.85;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+*/
 
 /* loading */
 .loading-state {
