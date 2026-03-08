@@ -75,7 +75,7 @@
                 </div>
                 <div>
                   <div class="cd-stat-num">{{ store.currentCourse.exam_template_count ?? 0 }}</div>
-                  <div class="cd-stat-lbl">Exam Templates</div>
+                  <div class="cd-stat-lbl">Exams</div>
                 </div>
               </div>
             </div>
@@ -90,7 +90,7 @@
             <div class="cd-banners">
     
               <!-- modules -->
-              <div class="cd-banner cd-green" @click="router.push(`/courses/${courseId}/modules`)">
+              <div class="cd-banner cd-green" @click="router.push({ name: 'ModulesList', params: { courseId: courseId } })">
                 <div class="cd-banner-left">
                   <div class="cd-b-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -162,7 +162,7 @@
                     <span class="cd-b-tag">Practice test</span>
                     <h3 class="cd-b-title">Exams</h3>
                     <p class="cd-b-desc">Practice with past midterm and final exam question banks to build confidence.</p>
-                    <span class="cd-b-badge">{{ store.currentCourse.exam_template_count ?? 0 }} templates</span>
+                    <span class="cd-b-badge">{{ store.currentCourse.exam_template_count ?? 0 }} exams</span>
                   </div>
                 </div>
                 <div class="cd-banner-right">

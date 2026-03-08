@@ -144,7 +144,10 @@
                 </div>
 
                 <!-- modules card -->
-                <div class="ce-action-card ce-action-card-disabled">
+                <div
+                    class="ce-action-card"
+                    @click="router.push({ name: 'TeacherLearningDashboard', params: { courseId: courseId } })"
+                >
                     <div class="ce-action-top">
                         <div class="ce-action-icon ce-icon-amber">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -152,13 +155,15 @@
                                 <path d="M7 7H13M7 10H13M7 13H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                             </svg>
                         </div>
-                        <span class="ce-coming-soon">Coming soon</span>
                     </div>
                     <h3 class="ce-action-title">Modules</h3>
                     <p class="ce-action-desc">Ordered lessons with mini quizzes.</p>
                     <div class="ce-action-footer">
                         <span class="ce-count-pill">{{ store.currentCourse?.module_count ?? 0 }} modules</span>
-                        <button class="ce-action-new" disabled>+ New Module</button>
+                        <button
+                            class="ce-action-new"
+                            @click.stop="router.push({ name: 'LearningModule', params: { courseId: courseId } })"
+                        >+ New Module</button>
                     </div>
                 </div>
 
