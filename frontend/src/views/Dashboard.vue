@@ -113,25 +113,7 @@
                 <!-- row 2: text left, illustration right -->
                 <div class="feature-row reverse">
                     <div class="feature-visual visual-pink">
-                        <!-- swap: replace inner content with <img src="@/assets/module-preview.png" class="feature-img" /> -->
-                        <div class="visual-inner">
-                            <div class="vi-chip">Module 1</div>
-                            <div class="vi-module-title">Introduction to Economics</div>
-                            <div class="vi-progress-wrap">
-                                <div class="vi-progress-label">
-                                    <span>Progress</span><span>45%</span>
-                                </div>
-                                <div class="vi-progress-track">
-                                    <div class="vi-progress-bar"></div>
-                                </div>
-                            </div>
-                            <div class="vi-lessons">
-                                <div class="vi-lesson done"><span class="material-symbols-outlined">check_circle</span> What is Economics?</div>
-                                <div class="vi-lesson done"><span class="material-symbols-outlined">check_circle</span> Supply & Demand</div>
-                                <div class="vi-lesson active"><span class="material-symbols-outlined">play_circle</span> Market Equilibrium</div>
-                                <div class="vi-lesson"><span class="material-symbols-outlined">radio_button_unchecked</span> Elasticity</div>
-                            </div>
-                        </div>
+                        <img src="@/assets/Dashboard_learning.png" class="feature-img" />
                     </div>
                     <div class="feature-text">
                         <span class="feat-num">02</span>
