@@ -3,19 +3,25 @@
     
         <!-- top bar -->
         <div class="editor-topbar">
-            <router-link :to="backLink" class="back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </router-link>
-            <h1 class="topbar-title">
-                {{ isEditMode ? 'Edit Flashcard Set' : 'Create a new flashcard set' }}
-            </h1>
+            <div class="topbar-left">
+                <!-- breadcrumb -->
+                <nav class="topbar-breadcrumb">
+                    <router-link :to="{ name: 'Teacher' }" class="crumb-link">Dashboard</router-link>
+                    <span class="crumb-sep">/</span>
+                    <router-link :to="{ name: 'CoursesEditor', params: { courseId } }" class="crumb-link">Edit Course</router-link>
+                    <span class="crumb-sep">/</span>
+                    <router-link :to="backLink" class="crumb-link">Flashcard Sets</router-link>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-current">{{ isEditMode ? 'Edit Set' : 'Create Set' }}</span>
+                </nav>
+                <h1 class="topbar-title">
+                    {{ isEditMode ? 'Edit Flashcard Set' : 'Create a new flashcard set' }}
+                </h1>
+            </div>
             <div class="topbar-actions">
                 <button class="btn-light" :disabled="store.loading || !setForm.title.trim()" @click="saveSet">
-                  {{ isEditMode ? 'Save' : 'Create' }}
-                </button>
-                <button v-if="!isEditMode" class="btn-primary-pill" :disabled="store.loading || !setForm.title.trim()" @click="saveAndStudy">
-                  Create and practice
-                </button>
+                        {{ isEditMode ? 'Save' : 'Create' }}
+                    </button>
             </div>
         </div>
     
@@ -43,8 +49,8 @@
                 <div class="row-header">
                     <span class="row-num">{{ idx + 1 }}</span>
                     <button class="row-delete-btn" title="delete" @click="cardToDelete = card">
-                    <span class="material-symbols-outlined">delete</span>
-                  </button>
+                        <span class="material-symbols-outlined">delete</span>
+                      </button>
                 </div>
     
                 <!-- term + definition + image -->
@@ -62,19 +68,19 @@
                         <div v-if="card.image_url" class="img-preview-wrap">
                             <img :src="card.image_url" class="img-preview" alt="image" />
                             <button class="img-remove-btn" @click="removeImage(card)">
-                        <span class="material-symbols-outlined">close</span>
-                      </button>
+                            <span class="material-symbols-outlined">close</span>
+                          </button>
                         </div>
                         <label v-else class="img-upload-label">
-                      <span class="material-symbols-outlined">image</span>
-                      <span>Image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        class="file-input"
-                        @change="e => onImageChange(e, card)"
-                      />
-                    </label>
+                          <span class="material-symbols-outlined">image</span>
+                          <span>Image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="file-input"
+                            @change="e => onImageChange(e, card)"
+                          />
+                        </label>
                     </div>
                 </div>
     
@@ -90,8 +96,8 @@
                 <div class="row-header">
                     <span class="row-num">{{ localCards.length + 1 }}</span>
                     <button class="row-delete-btn" @click="showAddForm = false">
-                    <span class="material-symbols-outlined">close</span>
-                  </button>
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
                 </div>
                 <div class="row-body">
                     <div class="input-col">
@@ -106,14 +112,14 @@
                         <div v-if="newCardForm.image_url" class="img-preview-wrap">
                             <img :src="newCardForm.image_url" class="img-preview" alt="preview" />
                             <button class="img-remove-btn" @click="newCardForm.image_url = ''">
-                        <span class="material-symbols-outlined">close</span>
-                      </button>
+                            <span class="material-symbols-outlined">close</span>
+                          </button>
                         </div>
                         <label v-else class="img-upload-label">
-                      <span class="material-symbols-outlined">image</span>
-                      <span>Image</span>
-                      <input type="file" accept="image/*" class="file-input" @change="onNewImageChange" />
-                    </label>
+                          <span class="material-symbols-outlined">image</span>
+                          <span>Image</span>
+                          <input type="file" accept="image/*" class="file-input" @change="onNewImageChange" />
+                        </label>
                     </div>
                 </div>
                 <div class="hint-row">
@@ -123,9 +129,9 @@
                 <!-- add button inside the new card row -->
                 <div class="new-card-footer">
                     <button class="btn-add-confirm" :disabled="store.loading || !newCardForm.term.trim() || !newCardForm.definition.trim()" @click="addCard">
-                    <span class="material-symbols-outlined">add</span>
-                    Add card
-                  </button>
+                        <span class="material-symbols-outlined">add</span>
+                        Add card
+                      </button>
                 </div>
             </div>
     
@@ -138,9 +144,9 @@
     
         <!-- add card button -->
         <button v-if="setReady" class="add-card-btn" @click="openAddCard">
-              <span class="material-symbols-outlined">add</span>
-              Add a card
-            </button>
+                  <span class="material-symbols-outlined">add</span>
+                  Add a card
+                </button>
     
         <!-- delete confirm modal -->
         <div v-if="cardToDelete" class="modal-overlay" @click.self="cardToDelete = null">
@@ -150,8 +156,8 @@
                 <div class="modal-actions">
                     <button class="btn-cancel" @click="cardToDelete = null">Cancel</button>
                     <button class="btn-delete" :disabled="store.loading" @click="doDeleteCard">
-                    {{ store.loading ? 'Deleting...' : 'Delete' }}
-                  </button>
+                        {{ store.loading ? 'Deleting...' : 'Delete' }}
+                      </button>
                 </div>
             </div>
         </div>
@@ -337,6 +343,8 @@ async function doDeleteCard() {
     display: flex;
     flex-direction: column;
     padding-bottom: 5rem;
+    background: #f8f9fb;
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* top bar */
@@ -344,42 +352,59 @@ async function doDeleteCard() {
 .editor-topbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 2.5rem;
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--card-border);
+    padding: 0.85rem 2.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e8edf3;
     position: sticky;
     top: 0;
     z-index: 10;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.back-btn {
+.topbar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+/* breadcrumb */
+
+.topbar-breadcrumb {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: var(--white);
-    border: 1px solid var(--card-border);
-    color: var(--text-main);
-    text-decoration: none;
-    flex-shrink: 0;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
+    gap: 0.4rem;
+    font-size: 0.75rem;
 }
 
-.back-btn:hover {
-    background: var(--gray-light);
-    transform: translateX(-2px);
+.crumb-link {
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+.crumb-link:hover {
+    color: #ed4081;
+}
+
+.crumb-sep {
+    color: #cbd5e1;
+    font-size: 0.7rem;
+}
+
+.crumb-current {
+    color: #475569;
+    font-weight: 600;
 }
 
 .topbar-title {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--text-main);
-    flex: 1;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    margin: 0;
 }
 
 .topbar-actions {
@@ -914,6 +939,11 @@ async function doDeleteCard() {
 @media (max-width: 700px) {
     .editor-topbar {
         padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .topbar-breadcrumb {
+        display: none;
     }
     .meta-section {
         padding: 1rem;
