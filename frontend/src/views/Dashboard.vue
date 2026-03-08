@@ -23,20 +23,8 @@
         <!-- ================ COURSE SECTION ================= -->
         <section class="course-section">
 
-            <!-- not logged in: pink background with login prompt -->
-            <div v-if="!isAuthenticated" class="course-guest">
-                <div class="course-guest-box">
-                    <span class="material-symbols-outlined course-guest-icon">lock</span>
-                    <h2>Start Learning Today</h2>
-                    <p>Log in to see the courses your professor has enrolled you in.</p>
-                    <router-link to="/login" class="course-login-btn">Log In</router-link>
-                    <router-link to="/teacher" class="course-teacher-link">I'm a professor</router-link>
-                </div>
-            </div>
-
             <!-- logged in: grid of course tiles -->
-            <div v-else class="course-auth">
-
+            <div v-if="isAuthenticated" class="course-auth">
                 <!-- loading state -->
                 <div v-if="store.loading" class="course-empty">
                     <span class="material-symbols-outlined course-empty-icon">hourglass_top</span>
@@ -105,7 +93,6 @@
                 <!-- row 1: illustration left, text right -->
                 <div class="feature-row">
                     <div class="feature-visual visual-pink">
-                        <!-- swap: replace inner content with <img src="@/assets/exam-preview.png" class="feature-img" /> -->
                         <div class="visual-inner">
                             <div class="vi-chip">Question 3 of 10</div>
                             <div class="vi-question">What happens to price when supply increases?</div>
@@ -125,7 +112,7 @@
 
                 <!-- row 2: text left, illustration right -->
                 <div class="feature-row reverse">
-                    <div class="feature-visual visual-green">
+                    <div class="feature-visual visual-pink">
                         <!-- swap: replace inner content with <img src="@/assets/module-preview.png" class="feature-img" /> -->
                         <div class="visual-inner">
                             <div class="vi-chip">Module 1</div>
@@ -155,22 +142,9 @@
 
                 <!-- row 3: illustration left, text right -->
                 <div class="feature-row">
-                    <div class="feature-visual visual-yellow">
+                    <div class="feature-visual visual-pink">
                         <!-- swap: replace inner content with <img src="@/assets/flashcard-preview.png" class="feature-img" /> -->
-                        <div class="visual-inner">
-                            <div class="vi-chip">Flashcard</div>
-                            <div class="vi-card">
-                                <div class="vi-card-label">Term</div>
-                                <div class="vi-card-word">Supply &amp; Demand</div>
-                                <div class="vi-card-def">The relationship between the quantity of a good producers want to sell and what consumers want to buy.</div>
-                            </div>
-                            <div class="vi-nav">
-                                <span class="vi-dot active"></span>
-                                <span class="vi-dot"></span>
-                                <span class="vi-dot"></span>
-                                <span class="vi-dot"></span>
-                            </div>
-                        </div>
+                        <img src="@/assets/Dashboard_flashcard.png" class="feature-img" />
                     </div>
                     <div class="feature-text">
                         <span class="feat-num">03</span>
@@ -397,40 +371,6 @@ const handleLogout = () => {
     width: 100%;
 }
 
-.course-guest {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 80px 24px;
-}
-
-.course-guest-box {
-    text-align: center;
-    color: #111827;
-    max-width: 480px;
-}
-
-.course-guest-icon {
-    font-size: 52px;
-    color: #f43f7f;
-    opacity: 0.7;
-    margin-bottom: 16px;
-    display: block;
-}
-
-.course-guest-box h2 {
-    font-size: 36px;
-    font-weight: 800;
-    margin-bottom: 12px;
-}
-
-.course-guest-box p {
-    font-size: 17px;
-    line-height: 1.6;
-    color: #6b7280;
-    margin-bottom: 32px;
-}
-
 .course-login-btn {
     display: inline-block;
     background: #f43f7f;
@@ -588,7 +528,7 @@ const handleLogout = () => {
 
 .features-eyebrow {
     display: inline-block;
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -661,8 +601,8 @@ const handleLogout = () => {
 .feature-visual {
     flex: 1;
     max-width: 480px;
-    border-radius: 28px;
-    padding: 40px;
+    border-radius: 0px;
+    padding: 20px;
     min-height: 340px;
     display: flex;
     align-items: center;
@@ -682,8 +622,9 @@ const handleLogout = () => {
 }
 
 .visual-green  { background: linear-gradient(145deg, #0d6b37, #0a5229); }
-.visual-pink   { background: linear-gradient(145deg, #f43f7f, #d81b60); }
-.visual-yellow { background: linear-gradient(145deg, #f5c842, #e8a800); }
+.visual-pink   { background: linear-gradient(145deg, #ff649a, #fc4d8d); }
+.visual-yellow { background: linear-gradient(145deg, #f5ca0b, #efb001); }
+.visual-gray   { background: linear-gradient(145deg, #bec7da, #b2bfd1); }
 
 /* the white card inside the illustration */
 .visual-inner {
@@ -879,7 +820,7 @@ const handleLogout = () => {
     display: block;
     font-size: 72px;
     font-weight: 900;
-    color: #d0d0d0;
+    color: var(--primary-pink);
     line-height: 1;
     margin-bottom: 4px;
     letter-spacing: -2px;
@@ -922,7 +863,7 @@ const handleLogout = () => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 0px;
     position: relative;
     z-index: 2;
 }
