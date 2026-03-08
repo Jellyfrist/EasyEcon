@@ -5,7 +5,6 @@
 
     <template v-else>
 
-      <!-- Header -->
       <div class="header">
         <button class="back-btn" @click="$router.back()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -16,7 +15,6 @@
         </div>
       </div>
 
-      <!-- Empty -->
       <div v-if="attempts.length === 0" class="empty-state">
         <div class="empty-icon">📭</div>
         <p>You haven't taken this exam yet.</p>
@@ -24,12 +22,11 @@
 
       <template v-else>
 
-        <!-- Best attempt summary -->
-        <div :class="['best-card', best.passed ? 'pass' : 'fail']">
+        <div v-if="best" :class="['best-card', best.passed ? 'pass' : 'fail']">
           <div class="best-left">
             <p class="best-label">Best Attempt</p>
-            <p class="best-score">{{ best.score_pct.toFixed(1) }}<span class="best-unit">%</span></p>
-            <p class="best-raw">{{ best.score }} / {{ best.max_score }} pts</p>
+            <p class="best-score">{{ Number(best.score_pct || 0).toFixed(1) }}<span class="best-unit">%</span></p>
+            <p class="best-raw">{{ best.score || 0 }} / {{ best.max_score || 0 }} pts</p>
           </div>
           <div class="best-right">
             <span :class="['result-chip', best.passed ? 'pass' : 'fail']">
@@ -40,7 +37,6 @@
           </div>
         </div>
 
-        <!-- Attempt list -->
         <div class="card">
           <h2 class="card-title">All Attempts</h2>
           <div class="attempt-list">
@@ -56,7 +52,7 @@
 
               <div class="attempt-score-wrap">
                 <div class="attempt-pct-row">
-                  <span class="attempt-pct">{{ attempt.score_pct.toFixed(1) }}%</span>
+                  <span class="attempt-pct">{{ Number(attempt.score_pct || 0).toFixed(1) }}%</span>
                   <span :class="['result-chip-sm', attempt.passed ? 'pass' : 'fail']">
                     {{ attempt.passed ? 'Pass' : 'Fail' }}
                   </span>
@@ -68,7 +64,7 @@
                     :class="barClass(attempt.score_pct)"
                   ></div>
                 </div>
-                <span class="attempt-raw">{{ attempt.score }} / {{ attempt.max_score }} pts</span>
+                <span class="attempt-raw">{{ attempt.score || 0 }} / {{ attempt.max_score || 0 }} pts</span>
               </div>
 
               <div class="attempt-meta">
@@ -102,7 +98,7 @@ const router = useRouter()
 const sessionId = route.params.sessionId
 
 // --- State ---
-const attempts  = ref([])   // ExamAttemptResponse[]
+const attempts  = ref([])   
 const isLoading = ref(false)
 const error     = ref(null)
 
@@ -121,27 +117,9 @@ async function loadAttempts() {
   }
 }
 
-// ─── MOCK (remove when API is ready) ───────────────────────────────────────
-function loadMock() {
-  attempts.value = [
-    {
-      id: 99,  student_id: 1, session_id: Number(sessionId),
-      score: 28, max_score: 50, score_pct: 56.0, passed: false, percentile: 30,
-      topic_stats: {}, weakness_report: [],
-      started_at: '2025-03-01T09:00:00', submitted_at: '2025-03-01T10:10:00',
-    },
-    {
-      id: 101, student_id: 1, session_id: Number(sessionId),
-      score: 38, max_score: 50, score_pct: 76.0, passed: true, percentile: 82,
-      topic_stats: {}, weakness_report: [],
-      started_at: '2025-03-05T09:00:00', submitted_at: '2025-03-05T10:22:00',
-    },
-  ]
-}
-
-onMounted(() => loadMock())   // <- swap to loadAttempts() before deploy
-// onMounted(() => loadAttempts())
-// ───────────────────────────────────────────────────────────────────────────
+onMounted(() => {
+  loadAttempts()
+})
 
 // --- Computed ---
 // newest first
@@ -149,9 +127,10 @@ const sortedAttempts = computed(() =>
   [...attempts.value].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
 )
 
-const best = computed(() =>
-  [...attempts.value].sort((a, b) => b.score_pct - a.score_pct)[0]
-)
+const best = computed(() => {
+  if (!attempts.value.length) return null
+  return [...attempts.value].sort((a, b) => (b.score_pct || 0) - (a.score_pct || 0))[0]
+})
 
 // --- Helpers ---
 function formatTime(dt) {
