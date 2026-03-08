@@ -125,69 +125,22 @@ const attempt   = ref(null)
 const isLoading = ref(false)
 const error     = ref(null)
 
-/* ==================== MOCK ==================== */
-async function loadMock() {
-  await new Promise(r => setTimeout(r, 300))
-
-  attempt.value = {
-    id: Number(attemptId),
-    session_id: 1,
-    score: 38,
-    max_score: 50,
-    score_pct: 76,
-    passed: true,
-    percentile: 72,
-    submitted_at: '2025-03-01T11:42:00',
-
-    // topic_stats: { [topicName]: { correct, total } | number }
-    topic_stats: {
-      'Demand & Supply':       { correct: 8,  total: 10 },
-      'Price Elasticity':      { correct: 6,  total: 10 },
-      'Market Equilibrium':    { correct: 9,  total: 10 },
-      'Consumer & Producer Surplus': { correct: 7, total: 10 },
-      'Market Structures':     { correct: 8,  total: 10 },
-    },
-
-    // weakness_report: Array — ข้อที่ทำผิด + link บทเรียน
-    weakness_report: [
-      {
-        topic: 'Price Elasticity',
-        question_text: 'If the price elasticity of demand for a good is -0.3, the good is considered?',
-        linked_learning_page_id: 42,
-      },
-      {
-        topic: 'Consumer & Producer Surplus',
-        question_text: 'When two goods are substitutes, a rise in the price of one will decrease demand for the other.',
-        linked_learning_page_id: 57,
-      },
-      {
-        topic: 'Market Structures',
-        question_text: null,
-        linked_learning_page_id: null,
-      },
-    ],
+// --- Load ---
+async function loadAttempt() {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await examService.getAttempt(attemptId)
+    attempt.value = res.data ?? res
+  } catch (err) {
+    console.error('Failed to load attempt', err)
+    error.value = err?.response?.data?.detail ?? 'Failed to load result.'
+  } finally {
+    isLoading.value = false
   }
 }
 
-onMounted(() => {  loadMock() })
-/* ==================== END MOCK ==================== */
-
-// // --- Load ---
-// async function loadAttempt() {
-//   isLoading.value = true
-//   error.value = null
-//   try {
-//     const res = await examService.getAttempt(attemptId)
-//     attempt.value = res.data ?? res
-//   } catch (err) {
-//     console.error('Failed to load attempt', err)
-//     error.value = err?.response?.data?.detail ?? 'Failed to load result.'
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
-
-// onMounted(() => {  loadAttempt() })
+onMounted(() => {  loadAttempt() })
 
 // --- Circle progress ---
 const circumference = 2 * Math.PI * 52  // r=52
