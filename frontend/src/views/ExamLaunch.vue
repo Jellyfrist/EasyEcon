@@ -1,48 +1,52 @@
 <template>
   <div class="page">
 
-    <!-- Header -->
-    <div class="header">
-      <div class="header-left">
-        <button class="back-btn" @click="$router.back()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-        </button>
-        <div>
-          <p class="breadcrumb">{{ template?.title ?? `Template #${templateId}` }}</p>
-          <h1 class="page-title">Launch Exam Session</h1>
-        </div>
-      </div>
-    </div>
+    <!-- Page Card: gradient header + summary bar -->
+    <div class="page-card">
 
-    <!-- Loading template -->
-    <div v-if="isLoadingTemplate" class="loading-state">
-      Loading template...
-    </div>
-
-    <template v-else>
-
-      <!-- Template summary -->
-      <div class="template-summary">
-        <div class="summary-item">
-          <span class="summary-label">Type</span>
-          <span :class="['exam-type-badge', template?.exam_type]">{{ examTypeLabels[template?.exam_type] ?? template?.exam_type }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Questions</span>
-          <span class="summary-value">{{ template?.question_count ?? '—' }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Total Points</span>
-          <span class="summary-value">{{ template?.total_points ?? '—' }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Time Limit</span>
-          <span class="summary-value">{{ template?.time_limit_minutes ? `${template.time_limit_minutes} min` : 'No limit' }}</span>
+      <div class="header">
+        <div class="header-left">
+          <button class="back-btn" @click="$router.back()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          <div class="header-text">
+            <p class="breadcrumb">{{ template?.title ?? `Template #${templateId}` }}</p>
+            <h1 class="page-title">Launch Exam Session</h1>
+          </div>
         </div>
       </div>
 
-      <!-- Launch Form -->
-      <div class="form-card">
+      <!-- Loading template -->
+      <div v-if="isLoadingTemplate" class="loading-state">
+        Loading template...
+      </div>
+
+      <!-- Template summary bar (inside page-card) -->
+      <template v-else>
+        <div class="template-summary">
+          <div class="summary-item">
+            <span class="summary-label">Type</span>
+            <span :class="['exam-type-badge', template?.exam_type]">{{ examTypeLabels[template?.exam_type] ?? template?.exam_type }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Questions</span>
+            <span class="summary-value">{{ template?.question_count ?? '—' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Total Points</span>
+            <span class="summary-value">{{ template?.total_points ?? '—' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Time Limit</span>
+            <span class="summary-value">{{ template?.time_limit_minutes ? `${template.time_limit_minutes} min` : 'No limit' }}</span>
+          </div>
+        </div>
+      </template>
+
+    </div>
+
+    <!-- Launch Form -->
+    <div v-if="!isLoadingTemplate" class="form-card">
 
         <div class="section-header">
           <h2>Session Settings</h2>
@@ -112,7 +116,10 @@
         </div>
 
         <!-- Error -->
-        <div v-if="error" class="error-banner">⚠️ {{ error }}</div>
+        <div v-if="error" class="error-banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          {{ error }}
+        </div>
 
         <!-- Actions -->
         <div class="form-actions">
@@ -127,8 +134,7 @@
           </button>
         </div>
 
-      </div>
-    </template>
+    </div>
 
   </div>
 </template>
@@ -194,8 +200,8 @@ async function launch() {
   try {
     // Build payload — only include non-null optional fields
     const payload = {
-      template_id: Number(templateId),   // required
-      title: form.value.title,           // required
+      template_id: Number(templateId),
+      title: form.value.title,
     }
     
     if (form.value.instructions) {
@@ -229,121 +235,320 @@ async function launch() {
 </script>
 
 <style scoped>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* Page wrapper */
 .page {
-  font-family: 'Sarabun', sans-serif;
   min-height: 100vh;
-  padding: 32px;
-  max-width: 760px;
+  padding: 2rem;
+  max-width: 860px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* Header */
+/* Page card + gradient header */
+.page-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(237, 64, 129, 0.22);
+}
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+  gap: 1rem;
+  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
+  padding: 1.5rem 1.75rem;
+  position: relative;
+  overflow: hidden;
 }
-.header-left { display: flex; align-items: center; gap: 14px; }
+
+.header::before {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  right: 60px; bottom: -50px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .back-btn {
-  width: 38px; height: 38px;
-  border: 1.5px solid #dde1ea; background: #fff;
-  border-radius: 10px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #555; transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: var(--white);
+  cursor: pointer;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+  transition: all 0.18s ease;
 }
-.back-btn:hover { background: #f0f1f5; }
-.breadcrumb { font-size: 12px; color: #9399aa; margin-bottom: 2px; }
-.page-title { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 22px; font-weight: 700; color: #1a1d2e; }
 
-/* Template Summary */
+.back-btn:hover {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.7);
+}
+
+.breadcrumb {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+/* Template summary bar  (inside page-card, white bg) */
 .template-summary {
-  display: flex; gap: 12px; flex-wrap: wrap;
-  background: #fff; border: 1px solid #e8eaf2;
-  border-radius: 14px; padding: 18px 22px;
-  margin-bottom: 20px;
+  display: flex;
+  gap: 0;
+  background: var(--white);
+  border-top: 1px solid rgba(237, 64, 129, 0.12);
 }
-.summary-item { display: flex; flex-direction: column; gap: 4px; min-width: 90px; }
-.summary-label { font-size: 11px; font-weight: 600; color: #9399aa; text-transform: uppercase; letter-spacing: 0.05em; }
-.summary-value { font-size: 15px; font-weight: 600; color: #1a1d2e; }
 
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 1rem 1.25rem;
+  border-right: 1px solid var(--card-border);
+}
+
+.summary-item:last-child { border-right: none; }
+
+.summary-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Exam type badge */
 .exam-type-badge {
-  display: inline-block;
-  font-size: 11px; font-weight: 600; padding: 3px 10px;
-  border-radius: 999px; white-space: nowrap; width: fit-content;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  width: fit-content;
 }
+
 .exam-type-badge.midterm { background: #eff6ff; color: #2563eb; }
-.exam-type-badge.final   { background: #fef3c7; color: #d97706; }
-.exam-type-badge.summer  { background: #f0fdf4; color: #16a34a; }
-.exam-type-badge.quiz    { background: #faf5ff; color: #7c3aed; }
+.exam-type-badge.final { background: var(--light-yellow); color: #92400e; }
+.exam-type-badge.summer { background: var(--light-green); color: var(--forest-green); }
+.exam-type-badge.quiz { background: #faf5ff; color: #7c3aed; }
 
-/* Form Card */
+/* Form card */
 .form-card {
-  background: #fff; border: 1px solid #e8eaf2;
-  border-radius: 14px; padding: 28px;
-  display: flex; flex-direction: column; gap: 22px;
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
-.section-header h2 { font-size: 16px; font-weight: 700; color: #1a1d2e; margin-bottom: 4px; }
-.section-header p  { font-size: 13px; color: #7c82a0; }
 
-.form-row { display: flex; gap: 16px; }
-.two-col .form-group { flex: 1; min-width: 0; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
+.section-header {
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--gray-light);
+}
 
-label { font-size: 13px; font-weight: 600; color: #3a3d52; }
-.required { color: #dc2626; }
-.hint { font-size: 12px; color: #9399aa; }
+.section-header h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
 
+.section-header p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* form-group: override global to remove bottom margin, use gap from parent */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0;
+}
+
+.required { color: var(--primary-pink); }
+
+.hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Local input override (tighter than global) */
 .input-field {
-  border: 1.5px solid #e2e5ef; border-radius: 9px;
-  padding: 9px 13px; font-size: 14px;
-  font-family: 'Sarabun', sans-serif; color: #1a1d2e;
-  outline: none; transition: border-color 0.15s; background: #fdfdff; width: 100%;
+  padding: 0.6rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: var(--gray-light);
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.18s ease;
+  width: 100%;
 }
-.input-field:focus { border-color: #1a1d2e; }
-textarea.input-field { resize: vertical; }
 
+.input-field:focus {
+  border-color: var(--primary-pink);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
+}
+
+textarea.input-field { resize: vertical; line-height: 1.5; }
+
+/* 2-col row */
+.form-row { display: flex; gap: 1rem; }
+.two-col .form-group { flex: 1; min-width: 0; }
+
+/* Error banner */
 .error-banner {
-  background: #fef2f2; border: 1px solid #fca5a5;
-  border-radius: 9px; padding: 12px 16px;
-  font-size: 13.5px; color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #b91c1c;
 }
 
+/* Form actions */
 .form-actions {
-  display: flex; justify-content: flex-end; gap: 10px;
-  padding-top: 4px; border-top: 1px solid #f0f1f5;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--gray-light);
+  margin-top: 0.25rem;
 }
 
-/* Buttons */
+/* Buttons  (mirror ExamDashboard) */
 .btn-primary {
-  background: #1a1d2e; color: #fff;
-  border: none; border-radius: 10px;
-  padding: 10px 22px; font-size: 14px;
-  font-family: 'Sarabun', sans-serif; font-weight: 500;
-  cursor: pointer; display: flex; align-items: center; gap: 7px;
-  transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--primary-pink);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1.375rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
-.btn-primary:hover:not(:disabled) { background: #2d3251; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .btn-ghost {
-  background: transparent; color: #555;
-  border: 1.5px solid #e2e5ef; border-radius: 10px;
-  padding: 10px 20px; font-size: 14px;
-  font-family: 'Sarabun', sans-serif;
-  cursor: pointer; transition: background 0.15s;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
-.btn-ghost:hover { background: #f7f8fc; }
 
+.btn-ghost:hover {
+  background: var(--gray-light);
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+/* Loading state */
 .loading-state {
-  text-align: center; padding: 60px;
-  color: #7c82a0; font-size: 14px;
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
+/* Responsive */
 @media (max-width: 600px) {
-  .page { padding: 20px 16px; }
+  .page { padding: 1rem; }
   .form-row { flex-direction: column; }
-  .template-summary { gap: 16px; }
+  .template-summary { flex-wrap: wrap; }
+  .summary-item { min-width: 45%; border-right: none; border-bottom: 1px solid var(--card-border); }
 }
 </style>
