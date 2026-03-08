@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import Base, engine
-from app.routers import auth, course, flashcard, learning, exam, admin, user
+from app.routers import auth, course, flashcard, learning, exam, admin, user, search
 from app.env_detector import should_auto_create_tables
 import logging
 import os
@@ -135,6 +135,7 @@ fastapi_app.include_router(learning.teacher_router, prefix=api_prefix)
 fastapi_app.include_router(exam.router,      prefix=api_prefix)
 fastapi_app.include_router(admin.router,     prefix=api_prefix)
 fastapi_app.include_router(user.router,      prefix=api_prefix)
+fastapi_app.include_router(search.router,    prefix=api_prefix)
 
 
 @fastapi_app.exception_handler(JWTError)
