@@ -43,6 +43,20 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         }
     }
 
+    // list all active sets for a course (student view: sees all teachers' sets)
+    async function browseSets(courseId) {
+        loading.value = true
+        error.value = null
+        try {
+            const res = await flashcardService.browseSets(courseId)
+            sets.value = res.data
+        } catch (err) {
+            _setError(err)
+        } finally {
+            loading.value = false
+        }
+    }
+
     // create a flashcard set for a course
     async function createSet(data) {
         loading.value = true
@@ -308,6 +322,7 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         loading,
         error,
         fetchSets,
+        browseSets,
         createSet,
         updateSet,
         deleteSet,
