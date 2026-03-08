@@ -1,116 +1,121 @@
 <template>
-  <div class="dashboard-page">
-    
-    <main class="main-container">
-      
-      <div class="hero-section">
-        
-        <div class="welcome-box">
-          <h1 class="greeting">
-            {{ greeting }}, <span class="highlight-name">{{ authStore.fullName || 'Teacher' }}</span> 👋
-          </h1>
-          <p class="subtitle">Welcome back to your teaching dashboard.</p>
-          
-          <button class="btn-primary mt-action" @click="router.push('/teacher/courses/create')">
-            <span class="material-symbols-outlined">add</span> Create New Course
-          </button>
-        </div>
+    <div class="t-page">
 
-        <div class="stats-card">
-          <h2 class="stats-title">You currently manage</h2>
-          
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value text-rose">{{ courseStore.courses.length }}</div>
-              <div class="stat-label">Courses</div>
+        <!-- hero header -->
+        <div class="t-hero">
+            <div class="t-hero-glow"></div>
+            <div class="t-hero-inner">
+                <div class="t-hero-text">
+                    <span class="t-hero-label">{{ greeting }}</span>
+                    <h1 class="t-hero-title">{{ authStore.fullName }}</h1>
+                    <p class="t-hero-desc">Welcome back to your teaching dashboard.</p>
+                </div>
+                <button class="t-create-btn" @click="router.push('/teacher/courses/create')">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                        <path d="M7.5 2V13M2 7.5H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    New Course
+                </button>
             </div>
-            
-            <div class="divider"></div>
-            
-            <div class="stat-item">
-              <div class="stat-value text-emerald">{{ totalFlashcardSets }}</div>
-              <div class="stat-label">Flashcard Sets</div>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div class="stat-item">
-              <div class="stat-value text-blue">{{ totalExams }}</div>
-              <div class="stat-label">Exam Templates</div>
-            </div>
-          </div>
-        </div>
-        
-      </div>
-
-      <div class="courses-section">
-        <h2 class="section-title">My Courses</h2>
-
-        <div v-if="courseStore.loading" class="state-container">
-          <div class="spinner"></div>
-          <p>กำลังโหลดข้อมูลคอร์สเรียน...</p>
         </div>
 
-        <div v-else-if="courseStore.error" class="error-box">
-          <span class="material-symbols-outlined">error</span>
-          <div class="error-text">
-            <p>{{ courseStore.error }}</p>
-            <button class="btn-outline-red mt-2" @click="courseStore.fetchMyCourses()">Try Again</button>
-          </div>
-        </div>
+        <!-- main content -->
+        <div class="t-content">
 
-        <div v-else-if="courseStore.courses.length === 0" class="empty-state">
-          <span class="material-symbols-outlined empty-icon">school</span>
-          <h3 class="empty-title">No courses yet</h3>
-          <p class="empty-desc">Create your first course to get started.</p>
-          <button class="btn-primary mt-4" @click="router.push('/teacher/courses/create')">
-            <span class="material-symbols-outlined">add</span> Create Course
-          </button>
-        </div>
-
-        <div v-else class="course-grid">
-          
-          <div v-for="course in courseStore.courses" :key="course.id" class="course-card">
-            <div class="course-card-content">
-              
-              <div class="course-header">
-                <span class="course-label">Course Overview</span>
-              </div>
-              
-              <h3 class="course-title">{{ course.title }}</h3>
-              <p class="course-desc">{{ course.description || 'No description provided for this course.' }}</p>
-
-              <div class="badges-row">
-                <span class="badge badge-module">
-                  <span class="material-symbols-outlined icon-xs">view_module</span> 
-                  {{ course.module_count ?? 0 }} modules
+            <!-- section title row -->
+            <div class="t-section-header">
+                <h2 class="t-section-title">My Courses</h2>
+                <span v-if="courseStore.courses.length > 0" class="t-course-count">
+                    {{ courseStore.courses.length }} {{ courseStore.courses.length === 1 ? 'course' : 'courses' }}
                 </span>
-                <span class="badge badge-flashcard">
-                  <span class="material-symbols-outlined icon-xs">style</span> 
-                  {{ course.flashcard_set_count ?? 0 }} sets
-                </span>
-                <span class="badge badge-exam">
-                  <span class="material-symbols-outlined icon-xs">quiz</span> 
-                  {{ course.exam_template_count ?? 0 }} exams
-                </span>
-              </div>
-              
             </div>
 
-            <div class="course-card-action">
-              <button class="btn-edit-course" @click="router.push(`/teacher/courses/${course.id}/edit`)">
-                <span class="material-symbols-outlined icon-sm">edit</span> Manage Course
-              </button>
+            <!-- loading -->
+            <div v-if="courseStore.loading" class="t-state-box">
+                <div class="t-spinner"></div>
+                <p>Loading courses...</p>
             </div>
-            
-          </div>
-          
+
+            <!-- error -->
+            <div v-else-if="courseStore.error" class="t-state-card">
+                <div class="t-state-icon t-icon-red">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.75"/>
+                        <path d="M11 7V11.5M11 14.5V15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <p class="t-state-msg">{{ courseStore.error }}</p>
+                <button class="t-btn t-btn-primary" @click="courseStore.fetchMyCourses()">Try Again</button>
+            </div>
+
+            <!-- empty -->
+            <div v-else-if="courseStore.courses.length === 0" class="t-state-card">
+                <div class="t-state-icon t-icon-neutral">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="5" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.75"/>
+                        <path d="M8 5V4C8 2.9 8.9 2 10 2H14C15.1 2 16 2.9 16 4V5" stroke="currentColor" stroke-width="1.75"/>
+                        <path d="M9 12H15M9 15H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3 class="t-state-title">No courses yet</h3>
+                <p class="t-state-msg">Create your first course to get started.</p>
+                <button class="t-btn t-btn-primary" @click="router.push('/teacher/courses/create')">
+                    + Create Course
+                </button>
+            </div>
+
+            <!-- course grid -->
+            <div v-else class="t-course-grid">
+                <div
+                    v-for="course in courseStore.courses"
+                    :key="course.id"
+                    class="t-course-card"
+                >
+                    <div class="t-course-card-top">
+                        <div class="t-course-initial">{{ course.title.charAt(0).toUpperCase() }}</div>
+                        <span class="t-course-label">Course</span>
+                    </div>
+
+                    <h3 class="t-course-title">{{ course.title }}</h3>
+                    <p class="t-course-desc">{{ course.description || 'No description provided.' }}</p>
+
+                    <div class="t-course-meta">
+                        <span class="t-meta-pill">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <rect x="1" y="2.5" width="8" height="6" rx="1.25" stroke="currentColor" stroke-width="1.25"/>
+                                <rect x="3" y="1" width="8" height="6" rx="1.25" stroke="currentColor" stroke-width="1.25"/>
+                            </svg>
+                            {{ course.flashcard_set_count ?? 0 }} sets
+                        </span>
+                        <span class="t-meta-pill">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.25"/>
+                                <path d="M3.5 4H8.5M3.5 6H7M3.5 8H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                            </svg>
+                            {{ course.module_count ?? 0 }} modules
+                        </span>
+                        <span class="t-meta-pill">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M3 1H9C9.6 1 10 1.4 10 2V11L8 10L6 11L4 10L2 11V2C2 1.4 2.4 1 3 1Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+                            </svg>
+                            {{ course.exam_template_count ?? 0 }} exams
+                        </span>
+                    </div>
+
+                    <button
+                        class="t-btn t-btn-edit"
+                        @click="router.push(`/teacher/courses/${course.id}/edit`)"
+                    >
+                        Manage Course
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <path d="M5 10L9 6.5L5 3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
         </div>
-
-      </div>
-
-    </main>
-  </div>
+    </div>
 </template>
 
 <script setup>
@@ -123,278 +128,359 @@ const router = useRouter()
 const authStore = useAuthStore()
 const courseStore = useCourseStore()
 
-// Greeting based on time of day
+// greeting based on time of day
 const greeting = computed(() => {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good Morning'
-  if (hour < 18) return 'Good Afternoon'
-  return 'Good Evening'
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good Morning,'
+    if (hour < 18) return 'Good Afternoon,'
+    return 'Good Evening,'
 })
 
-// Sum all flashcard_set_count from each course in the list
-const totalFlashcardSets = computed(() =>
-  courseStore.courses.reduce((sum, c) => sum + (c.flashcard_set_count ?? 0), 0)
-)
-
-// Sum all exam_template_count from each course in the list
-const totalExams = computed(() =>
-  courseStore.courses.reduce((sum, c) => sum + (c.exam_template_count ?? 0), 0)
-)
-
-// Load teacher's own courses on mount
+// load teacher's own courses on mount
+// store.fetchMyCourses -> GET /courses (teacher, returns CourseResponse with counts)
 onMounted(async () => {
-  await courseStore.fetchMyCourses()
+    await courseStore.fetchMyCourses()
 })
 </script>
 
 <style scoped>
-/* ================= Base Styles ================= */
-.dashboard-page {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Prompt', sans-serif;
+/* ---- page shell ---- */
+.t-page {
+    min-height: 100vh;
+    background: #f8f9fb;
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
 }
 
-.material-symbols-outlined { vertical-align: middle; }
-.main-container { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
-
-/* ================= 1. Hero Section (Welcome & Stats) ================= */
-.hero-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 4rem;
+/* ---- hero header ---- */
+.t-hero {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #130610 0%, #3b0d21 55%, #130610 100%);
+    padding: 4.5rem 6vw 4rem;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
-@media (min-width: 900px) {
-  .hero-section {
-    flex-direction: row;
+.t-hero-glow {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 55% 90% at 75% 50%, rgba(233, 30, 99, 0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 35% 60% at 15% 30%, rgba(255, 77, 141, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.t-hero-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.t-hero-label {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #f06292;
+    background: rgba(233, 30, 99, 0.15);
+    border: 1px solid rgba(233, 30, 99, 0.35);
+    border-radius: 4px;
+    padding: 0.22rem 0.7rem;
+    margin-bottom: 1.2rem;
+}
+
+.t-hero-title {
+    font-size: clamp(1.75rem, 3.5vw, 2.8rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+}
+
+.t-hero-desc {
+    font-size: 0.975rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.75;
+    max-width: 560px;
+    margin: 0;
+}
+
+/* ---- header create button ---- */
+.t-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 1.3rem;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+    position: relative;
+    z-index: 2;
+}
+
+.t-create-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ---- main content ---- */
+.t-content {
+
+
+    padding: 2.25rem 3rem 4rem;
+}
+
+/* ---- section header ---- */
+.t-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.t-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.t-course-count {
+    font-size: 0.775rem;
+    font-weight: 600;
+    background: #fce7ef;
+    color: #ed4081;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+/* ---- state boxes ---- */
+.t-state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 4rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.t-spinner {
+    width: 32px;
+    height: 32px;
+    border: 2.5px solid #e2e8f0;
+    border-top-color: #ed4081;
+    border-radius: 50%;
+    animation: t-spin 0.7s linear infinite;
+}
+
+@keyframes t-spin { to { transform: rotate(360deg); } }
+
+.t-state-card {
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.t-state-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+}
+
+.t-icon-red { background: #fff1f2; color: #e11d48; }
+.t-icon-neutral { background: #f1f5f9; color: #64748b; }
+
+.t-state-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.t-state-msg {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* ---- shared button ---- */
+.t-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.t-btn-primary {
+    background: #ed4081;
+    color: #ffffff;
+}
+
+.t-btn-primary:hover {
+    background: #d13570;
+    box-shadow: 0 4px 12px rgba(237, 64, 129, 0.3);
+    transform: translateY(-1px);
+}
+
+/* ---- course grid ---- */
+.t-course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ---- course card ---- */
+.t-course-card {
+    background: #ffffff;
+    border: 1.5px solid #e8edf3;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.t-course-card:hover {
+    border-color: #ffc7db;
+    border-color: #ffc7db;
+    box-shadow: 0 6px 20px rgba(237, 64, 129, 0.1);
+    transform: translateY(-2px);
+}
+
+.t-course-card-top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-  }
+    margin-bottom: 0.5rem;
 }
 
-.welcome-box {
-  flex: 1;
+.t-course-initial {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #ed4081, #d13570);
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.02em;
 }
 
-.greeting {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -1px;
+.t-course-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
-.highlight-name { color: #f43f5e; }
-.subtitle { color: #64748b; font-size: 1.1rem; margin: 0; font-weight: 500; }
-.mt-action { margin-top: 1.5rem; }
-
-/* Stats Card */
-.stats-card {
-  background: white;
-  border-radius: 24px;
-  padding: 2rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-  min-width: 400px;
+.t-course-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
 }
 
-.stats-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #334155;
-  margin: 0 0 1.5rem 0;
+.t-course-desc {
+    font-size: 0.825rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.55;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.stats-grid {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ---- meta pills ---- */
+.t-course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    margin: 0.25rem 0;
 }
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  flex: 1;
+.t-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 3px 9px;
+    border-radius: 999px;
 }
 
-.stat-value {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 0.25rem;
+/* ---- card edit button ---- */
+.t-btn-edit {
+    background: #f8fafc;
+    color: #374151;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.55rem 1rem;
+    font-size: 0.825rem;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.25rem;
+    border-radius: 9px;
 }
 
-.stat-label { color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-.text-rose { color: #f43f5e; }
-.text-emerald { color: #10b981; }
-.text-blue { color: #3b82f6; }
-
-.divider { width: 1px; height: 50px; background-color: #e2e8f0; }
-
-@media (max-width: 600px) {
-  .stats-card { min-width: 100%; }
-  .stats-grid { flex-direction: column; gap: 1rem; }
-  .divider { width: 100%; height: 1px; }
-  .stat-item { flex-direction: row; justify-content: space-between; width: 100%; }
-  .stat-value { font-size: 1.75rem; }
+.t-btn-edit:hover {
+    border-color: #ffc7db;
+    background: #f1f5f9;
+    border-color: #ffc7db;
+    color: #ed4081;
 }
 
-/* ================= 2. Courses Section ================= */
-.section-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 1.5rem 0;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 1rem;
+/* ---- responsive ---- */
+@media (max-width: 768px) {
+    .t-hero { padding: 2.5rem 1.25rem 2rem; }
+    .t-hero-inner { flex-direction: column; align-items: flex-start; }
+    .t-create-btn { width: 100%; justify-content: center; }
+    .t-content { padding: 1.5rem 1.25rem 3rem; }
+    .t-course-grid { grid-template-columns: 1fr; }
 }
-
-/* Grid Layout */
-.course-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  animation: slideUp 0.4s ease-out;
-}
-
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Course Card */
-.course-card {
-  background-color: white;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.course-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-4px);
-}
-
-.course-card-content { padding: 1.75rem; flex: 1; }
-
-.course-label {
-  display: inline-block;
-  background-color: #f1f5f9;
-  color: #64748b;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.course-title {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
-}
-
-.course-desc {
-  color: #64748b;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin: 0 0 1.5rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Badges */
-.badges-row { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.badge-module { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
-.badge-flashcard { background-color: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; }
-.badge-exam { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
-.icon-xs { font-size: 14px; }
-
-/* Card Action Area */
-.course-card-action {
-  padding: 1.25rem 1.75rem;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-}
-
-/* ================= Buttons ================= */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: #f43f5e;
-  color: white;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 99px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
-  transition: all 0.2s;
-}
-
-.btn-primary:hover { background-color: #e11d48; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.3); }
-
-.btn-edit-course {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: #10b981;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-edit-course:hover { background-color: #059669; }
-.icon-sm { font-size: 18px; }
-
-.btn-outline-red { background: white; border: 1px solid #fecaca; color: #ef4444; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-.btn-outline-red:hover { background: #fef2f2; border-color: #ef4444; }
-
-/* ================= States ================= */
-.state-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 0; color: #64748b; font-weight: 600; }
-.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #f43f5e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-.error-box { background-color: #fef2f2; color: #ef4444; padding: 1.5rem; border-radius: 16px; border: 1px solid #fee2e2; display: flex; align-items: flex-start; gap: 12px; font-weight: 600; }
-.error-text p { margin: 0 0 8px 0; }
-
-.empty-state { text-align: center; padding: 5rem 2rem; background-color: white; border-radius: 24px; border: 2px dashed #cbd5e1; }
-.empty-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-.empty-title { font-size: 1.5rem; font-weight: 800; color: #334155; margin: 0 0 0.5rem 0; }
-.empty-desc { color: #64748b; font-size: 1rem; margin: 0; }
 </style>
