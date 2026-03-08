@@ -63,7 +63,7 @@
                 </form>
     
                 <p class="terms-text">
-                    By clicking Sign Up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                    By clicking Sign Up, you agree to our <a>Terms of Service</a> and <a>Privacy Policy</a>.
                 </p>
             </div>
         </div>
@@ -120,7 +120,14 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 .page-wrapper {
     display: flex;
-    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 /* --- Form Section --- */
@@ -131,7 +138,9 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px;
+    padding: clamp(16px, 3vh, 40px) clamp(16px, 3vw, 40px);
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .form-container {
@@ -146,13 +155,13 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     background: #f1f3f7;
     padding: 4px;
     border-radius: 12px;
-    margin-bottom: 30px;
+    margin-bottom: clamp(12px, 2vh, 30px);
 }
 
 .nav-item {
     flex: 1;
     text-align: center;
-    padding: 10px;
+    padding: clamp(6px, 1vh, 10px);
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
@@ -169,14 +178,14 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 .form-header h2 {
     color: #111827;
-    font-size: 24px;
-    margin-bottom: 5px;
+    font-size: clamp(18px, 2.5vh, 24px);
+    margin-bottom: 4px;
 }
 
 .form-header p {
     color: #6b7280;
     font-size: 14px;
-    margin-bottom: 25px;
+    margin-bottom: clamp(12px, 2vh, 25px);
 }
 
 /* Social Buttons */
@@ -184,8 +193,8 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 .social-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 25px;
+    gap: clamp(6px, 1vh, 10px);
+    margin-bottom: clamp(12px, 2vh, 25px);
 }
 
 .social-btn {
@@ -193,7 +202,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 12px;
+    padding: clamp(8px, 1.2vh, 12px);
     border: 1px solid #e5e7eb;
     background: white;
     border-radius: 12px;
@@ -212,7 +221,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 .divider {
     display: flex;
     align-items: center;
-    margin: 25px 0;
+    margin: clamp(8px, 1.2vh, 25px) 0;
     color: #9ca3af;
     font-size: 12px;
     text-transform: uppercase;
@@ -234,12 +243,12 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 /* Form Elements */
 
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: clamp(10px, 1.5vh, 18px);
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-weight: 600;
     font-size: 14px;
     color: #374151;
@@ -247,11 +256,11 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 input {
     width: 100%;
-    padding: 12px 16px;
+    padding: clamp(8px, 1.2vh, 12px) 16px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     background: #f9fafb;
-    font-size: 16px;
+    font-size: 15px;
     box-sizing: border-box;
 }
 
@@ -279,7 +288,7 @@ input:focus {
 
 .btn-signup {
     width: 100%;
-    padding: 14px;
+    padding: clamp(10px, 1.5vh, 14px);
     background: var(--forest-green);
     color: white;
     border: none;
@@ -287,7 +296,7 @@ input:focus {
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
     box-shadow: 0 4px 10px rgba(10, 112, 60, 0.2);
 }
 
@@ -304,7 +313,7 @@ input:focus {
     font-size: 11px;
     color: #9ca3af;
     text-align: center;
-    margin-top: 25px;
+    margin-top: clamp(12px, 1.8vh, 25px);
     line-height: 1.5;
 }
 
@@ -318,6 +327,11 @@ input:focus {
 @media (max-width: 768px) {
     .hero-section {
         display: none;
+    }
+
+    .form-section {
+        align-items: flex-start;
+        padding-top: clamp(24px, 5vh, 60px);
     }
 }
 </style>
