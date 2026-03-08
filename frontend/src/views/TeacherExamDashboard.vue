@@ -87,7 +87,7 @@
           </div>
         </div>
 
-        <button class="btn-green" @click="launchExam(exam)">
+        <button class="btn-primary" @click="launchExam(exam)">
             Launch Exam
         </button>
 
@@ -140,7 +140,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 
-
 const router = useRouter()
 const route = useRoute()
 const courseId = computed(() => route.params.courseId)
@@ -170,61 +169,32 @@ const stats = computed(() => ({
 }))
 
 // --- Data ---
-// Mock data — replace with API call
-const exams = ref([
-  {
-    id: 1, title: 'สอบกลางภาค เศรษฐศาสตร์จุลภาค', exam_type: 'midterm',
-    academic_year: '2025', term: 'Semester 1', question_count: 30,
-    total_points: 100, is_published: true,
-  },
-  {
-    id: 2, title: 'สอบปลายภาค เศรษฐศาสตร์จุลภาค', exam_type: 'final',
-    academic_year: '2025', term: 'Semester 1', question_count: 50,
-    total_points: 150, is_published: false,
-  },
-  {
-    id: 3, title: 'Quiz ครั้งที่ 1 - อุปสงค์อุปทาน', exam_type: 'midterm',
-    academic_year: '2025', term: 'Semester 1', question_count: 10,
-    total_points: 20, is_published: true,
-  },
-])
+const exams = ref([]) 
 
-// const exams = ref([])
+async function loadExams() {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await examService.listTemplates(courseId.value)
+    exams.value = res.data ?? res
+  } catch (err) {
+    console.error('Failed to load exams', err)
+    error.value = 'Failed to load exams, please try again'
+  } finally {
+    isLoading.value = false
+  }
+}
 
-// async function loadExams() {
-//   isLoading.value = true
-//   error.value = null
-//   try {
-//     const res = await examService.listTemplates(courseId.value)
-//     exams.value = res.data ?? res
-//   } catch (err) {
-//     console.error('Failed to load exams', err)
-//     error.value = 'load exams failed,please try again'
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
-
-// onMounted(() => {
-//   loadExams()
-// })
+onMounted(() => {
+  loadExams()
+})
 
 // --- Computed ---
 const filteredExams = computed(() => {
   return exams.value.filter(e => {
-
-    const matchType =
-      filterType.value === 'all' ||
-      e.exam_type === filterType.value
-
-    const matchStatus =
-      filterStatus.value === 'all' ||
-      e.is_published === (filterStatus.value === 'public')
-
-    const matchSearch =
-      !searchQuery.value ||
-      e.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-
+    const matchType = filterType.value === 'all' || e.exam_type === filterType.value
+    const matchStatus = filterStatus.value === 'all' || e.is_published === (filterStatus.value === 'public')
+    const matchSearch = !searchQuery.value || e.title.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchType && matchStatus && matchSearch
   })
 })
@@ -253,7 +223,7 @@ async function togglePublish(exam) {
   } catch (err) {
     console.error('Failed to toggle publish', err)
     if (idx !== -1) exams.value[idx].is_published = original
-    error.value = 'Can not save update, please try again.'
+    error.value = 'Cannot save update, please try again.'
   }
 }
 
@@ -272,7 +242,7 @@ async function deleteExam() {
     deletingExam.value = null
   } catch (err) {
     console.error('Failed to delete exam', err)
-    error.value = 'Can not delete exam, please try again.'
+    error.value = 'Cannot delete exam, please try again.'
   } finally {
     isDeleting.value = false
   }

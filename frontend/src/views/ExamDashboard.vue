@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard">
 
-    <!-- Header -->
     <div class="header">
       <div class="header-left">
         <button class="back-btn" @click="$router.back()">
@@ -14,7 +13,6 @@
       </div>
     </div>
 
-    <!-- Filters -->
     <div class="filters">
       <div class="search-box">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -36,16 +34,13 @@
       </div>
     </div>
 
-    <!-- Loading -->
     <div v-if="isLoading" class="loading-state">Loading exams...</div>
 
-    <!-- Empty -->
     <div v-else-if="filteredSessions.length === 0" class="empty-state">
       <div class="empty-icon">📋</div>
       <p>No exams available in this course.</p>
     </div>
 
-    <!-- Session List -->
     <div v-else class="session-list">
       <div
         v-for="session in filteredSessions"
@@ -53,7 +48,6 @@
         class="session-card"
         :class="{ 'is-open': session.is_open, 'is-closed': !session.is_open }"
       >
-        <!-- Left -->
         <div class="session-left">
           <div class="type-badge" :class="session.exam_type ?? 'midterm'">
             {{ examTypeLabels[session.exam_type] ?? session.exam_type }}
@@ -77,13 +71,12 @@
           </div>
         </div>
 
-        <!-- Right -->
         <div class="session-right">
-          <!-- My attempt badge -->
-          <div v-if="myAttemptMap[session.id]" class="my-result">
-            <span :class="['score-chip', myAttemptMap[session.id].passed ? 'pass' : 'fail']">
-              {{ myAttemptMap[session.id].score_pct.toFixed(1) }}%
-              · {{ myAttemptMap[session.id].passed ? 'Passed' : 'Failed' }}
+          
+          <div v-if="getMyAttempt(session.id)" class="my-result">
+            <span :class="['score-chip', getMyAttempt(session.id)?.passed ? 'pass' : 'fail']">
+              {{ Number(getMyAttempt(session.id)?.score_pct || 0).toFixed(1) }}%
+              · {{ getMyAttempt(session.id)?.passed ? 'Passed' : 'Failed' }}
             </span>
           </div>
 
@@ -96,11 +89,11 @@
             class="btn-primary"
             @click="openExam(session)"
           >
-            {{ myAttemptMap[session.id] ? 'Retake' : 'Start Exam' }}
+            {{ getMyAttempt(session.id) ? 'Retake' : 'Start Exam' }}
           </button>
 
           <button
-            v-else-if="myAttemptMap[session.id]"
+            v-else-if="getMyAttempt(session.id)"
             class="btn-ghost"
             @click="viewResult(session)"
           >
@@ -114,12 +107,7 @@
       </div>
     </div>
 
-    <!-- Error -->
     <div v-if="error" class="error-banner">⚠️ {{ error }}</div>
-
-    <button class="btn-primary" @click="$router.push({ name: 'ExamHistory', params: { sessionId: 'current' } })">
-        View all my exam history
-    </button>
 
   </div>
 </template>
@@ -134,8 +122,8 @@ const router = useRouter()
 const courseId = computed(() => route.params.courseId)
 
 // --- State ---
-const sessions = ref([])   // ExamSessionResponse[]
-const myAttempts = ref([])   // ExamAttemptResponse[] — latest per session
+const sessions = ref([])
+const myAttempts = ref([])  
 const isLoading = ref(false)
 const error = ref(null)
 const searchQuery = ref('')
@@ -149,7 +137,7 @@ const examTypeLabels = {
   quiz: 'Quiz',
 }
 
-// --- Load ---
+// --- Load (API จริง 100%) ---
 async function loadSessions() {
   isLoading.value = true
   error.value = null
@@ -157,20 +145,21 @@ async function loadSessions() {
     const res  = await examService.listOpenSessions(courseId.value)
     sessions.value = res.data ?? res
 
-    // For each session, fetch student's own attempts (fire-and-forget per session)
-    await Promise.allSettled(
-      sessions.value.map(async s => {
-        try {
-          const r = await examService.getMyAttempts(s.id)
-          const attempts = r.data ?? r
-          if (attempts?.length) {
-            // Keep the latest attempt per session
-            const latest = attempts.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
-            myAttempts.value.push({ ...latest, session_id: s.id })
-          }
-        } catch { /* session has no attempts yet */ }
-      })
-    )
+    const attemptsPromises = sessions.value.map(s => examService.getMyAttempts(s.id).catch(() => null))
+    const results = await Promise.all(attemptsPromises)
+
+    const collectedAttempts = []
+    results.forEach((r, index) => {
+      if (!r) return
+      const attempts = r.data ?? r
+      if (attempts && attempts.length > 0) {
+
+        const latest = attempts.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
+        collectedAttempts.push({ ...latest, session_id: sessions.value[index].id })
+      }
+    })
+    myAttempts.value = collectedAttempts
+
   } catch (err) {
     console.error('Failed to load sessions', err)
     error.value = err?.response?.data?.detail ?? 'Failed to load exams.'
@@ -179,51 +168,11 @@ async function loadSessions() {
   }
 }
 
-// ─── MOCK (remove when API is ready) ───────────────────────────────────────
-function loadMock() {
-  sessions.value = [
-    {
-      id: 1, title: 'Midterm 2025 — Microeconomics', exam_type: 'midterm',
-      time_limit_minutes: 90, max_attempts: 1, is_open: true, is_active: true,
-      available_from: '2025-03-01T09:00:00', available_until: '2025-03-01T12:00:00',
-    },
-    {
-      id: 2, title: 'Final Exam 2025', exam_type: 'final',
-      time_limit_minutes: 120, max_attempts: 1, is_open: false, is_active: false,
-      available_from: '2025-05-10T09:00:00', available_until: '2025-05-10T12:00:00',
-    },
-    {
-      id: 3, title: 'Quiz 1 — Demand & Supply', exam_type: 'quiz',
-      time_limit_minutes: 30, max_attempts: 2, is_open: true, is_active: true,
-      available_from: null, available_until: null,
-    },
-    {
-      id: 4, title: 'Quiz 2 — Elasticity', exam_type: 'quiz',
-      time_limit_minutes: 30, max_attempts: 2, is_open: true, is_active: true,
-      available_from: null, available_until: null,
-    },
-  ]
-  myAttempts.value = [
-    {
-      id: 101, session_id: 3, student_id: 1,
-      score: 18, max_score: 20, score_pct: 90, passed: true,
-      percentile: 88, topic_stats: {}, weakness_report: [],
-      started_at: '2025-02-10T10:00:00', submitted_at: '2025-02-10T10:28:00',
-    },
-  ]
-}
-
-onMounted(() => loadMock())   // <- swap to loadSessions() before deploy
-//onMounted(() => loadSessions())
-// ───────────────────────────────────────────────────────────────────────────
-
-// --- Computed ---
-
-// map session_id -> latest attempt for quick lookup
-const myAttemptMap = computed(() => {
-  return Object.fromEntries(myAttempts.value.map(a => [a.session_id, a]))
+onMounted(() => {
+  loadSessions()
 })
 
+// --- Computed ---
 const filteredSessions = computed(() => {
   return sessions.value.filter(s => {
     const matchType = filterType.value === 'all' || s.exam_type === filterType.value
@@ -237,6 +186,11 @@ const filteredSessions = computed(() => {
 })
 
 // --- Helpers ---
+
+function getMyAttempt(sessionId) {
+  return myAttempts.value.find(a => a.session_id === sessionId)
+}
+
 function attemptsUsed(session) {
   return myAttempts.value.filter(a => a.session_id === session.id).length
 }
@@ -258,7 +212,7 @@ function openExam(session) {
   router.push({ name: 'ExamSession', params: { sessionId: session.id } })
 }
 function viewResult(session) {
-  const attempt = myAttemptMap.value[session.id]
+  const attempt = getMyAttempt(session.id)
   if (attempt) router.push({ name: 'ExamResult', params: { attemptId: attempt.id } })
 }
 </script>

@@ -217,7 +217,7 @@ async function launch() {
     const session = res.data ?? res
 
     // Navigate to session results page (or back to dashboard)
-    router.push({ name: 'TeacherExamDashboard', params: { courseId: route.params.courseId ?? template.value?.module_id } })
+    router.push({ name: 'TeacherExamDashboard', params: { courseId: route.params.courseId ?? template.value?.course_id } })
 
   } catch (err) {
     console.error('Failed to launch session', err)

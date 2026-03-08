@@ -5,9 +5,8 @@
 
     <template v-else-if="attempt">
 
-      <!-- Header -->
       <div class="header">
-        <button class="back-btn" @click="$router.back()">
+        <button class="back-btn" @click="$router.push({ name: 'ExamHistory', params: { sessionId: attempt.session_id } })">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         </button>
         <div>
@@ -16,15 +15,14 @@
         </div>
       </div>
 
-      <!-- Score Summary Bar -->
       <div class="summary-bar">
         <div class="summary-item">
-          <span class="summary-val" :class="attempt.passed ? 'green' : 'red'">{{ attempt.score_pct.toFixed(1) }}%</span>
+          <span class="summary-val" :class="attempt.passed ? 'green' : 'red'">{{ Number(attempt.score_pct || 0).toFixed(1) }}%</span>
           <span class="summary-label">Score</span>
         </div>
         <div class="divider"></div>
         <div class="summary-item">
-          <span class="summary-val">{{ attempt.score }} / {{ attempt.max_score }}</span>
+          <span class="summary-val">{{ attempt.score || 0 }} / {{ attempt.max_score || 0 }}</span>
           <span class="summary-label">Points</span>
         </div>
         <div class="divider"></div>
@@ -41,8 +39,7 @@
         </div>
       </div>
 
-      <!-- Topic Breakdown -->
-      <div v-if="topicEntries.length" class="card">
+      <div v-if="topicEntries && topicEntries.length" class="card">
         <h2 class="card-title">Topic Breakdown</h2>
         <div class="topic-grid">
           <div
@@ -70,8 +67,7 @@
         </div>
       </div>
 
-      <!-- Weakness Report -->
-      <div v-if="groupedWeakness.length" class="card">
+      <div v-if="groupedWeakness && groupedWeakness.length" class="card">
         <h2 class="card-title">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
           Questions to Review
@@ -90,29 +86,38 @@
                   <span :class="['q-type-badge', w.type ?? 'multiple_choice']">
                     {{ typeLabel(w.type) }}
                   </span>
-                  <p class="weakness-q-text">{{ w.question_text }}</p>
+                  <p class="weakness-q-text">{{ w.question_text || 'No question text available.' }}</p>
                 </div>
 
                 <div v-if="w.correct_answer" class="answer-row">
-                  <span class="answer-label">Correct answer:</span>
+                  <span class="answer-label">คำตอบที่ถูกต้อง:</span>
                   <span class="answer-val">{{ w.correct_answer }}</span>
                 </div>
 
-                <router-link
-                  v-if="w.linked_learning_page_id"
-                  :to="`/learn/${w.linked_learning_page_id}`"
-                  class="review-link"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                  Review lesson
-                </router-link>
+                <div v-if="w.explanation" class="explanation-box">
+                  <span class="explanation-label">💡 เฉลย / คำอธิบาย:</span>
+                  <p class="explanation-text">{{ w.explanation }}</p>
+                </div>
+
+                <div v-if="w.linked_learning_page_id" class="action-row">
+                  <router-link
+                    :to="`/learn/${w.linked_learning_page_id}`"
+                    class="review-link"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    ทบทวนเนื้อหา 
+                    <span v-if="w.page_number" class="page-ref-text">
+                      (ดูเพิ่มเติมที่หน้า: {{ w.page_number }})
+                    </span>
+                  </router-link>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- No weakness -->
       <div v-else-if="!attempt.weakness_report?.length" class="perfect-card">
         <span class="perfect-icon">🏆</span>
         <p class="perfect-text">No weak areas found. Great performance!</p>
@@ -122,12 +127,11 @@
 
     <div v-if="error" class="error-banner">⚠️ {{ error }}</div>
 
-    <!-- Actions -->
     <div class="actions-row">
-        <button class="btn-ghost" @click="$router.push({ name: 'ExamDashboard', params: { courseId: 'current' } })">
+        <button class="btn-ghost" @click="$router.push({ name: 'ExamSession', params: { sessionId: attempt.session_id } })">
             Back to Exam session
         </button>
-        <button class="btn-primary" @click="$router.push({ name: 'ExamHistory', params: { sessionId: 'current' } })">
+        <button class="btn-primary" @click="$router.push({ name: 'ExamHistory', params: { sessionId: attempt?.session_id || 'current' } })">
             View all my exam history
         </button>
     </div>
@@ -137,14 +141,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 
 const route = useRoute()
+const router = useRouter()
 const attemptId = route.params.attemptId
 
 // --- State ---
-const attempt   = ref(null)   // ExamAttemptResponse
+const attempt   = ref(null)   
 const isLoading = ref(false)
 const error     = ref(null)
 
@@ -163,72 +168,19 @@ async function loadAttempt() {
   }
 }
 
-// ─── MOCK (remove when API is ready) ───────────────────────────────────────
-function loadMock() {
-  attempt.value = {
-    id: 101,
-    student_id: 1,
-    session_id: 1,
-    score: 38,
-    max_score: 50,
-    score_pct: 76.0,
-    passed: true,
-    percentile: 82,
-    topic_stats: {
-      'Demand & Supply':  { correct: 4, total: 5 },
-      'Elasticity':       { correct: 3, total: 5 },
-      'Market Structure': { correct: 2, total: 4 },
-      'Cost Theory':      { correct: 5, total: 5 },
-      'Game Theory':      { correct: 2, total: 3 },
-    },
-    weakness_report: [
-      {
-        topic: 'Market Structure',
-        question_text: 'Which market structure features many sellers with differentiated products?',
-        type: 'multiple_choice',
-        correct_answer: 'Monopolistic competition',
-        linked_learning_page_id: 12,
-      },
-      {
-        topic: 'Elasticity',
-        question_text: 'If price elasticity of demand is -2, demand is considered?',
-        type: 'multiple_choice',
-        correct_answer: 'Elastic',
-        linked_learning_page_id: 7,
-      },
-      {
-        topic: 'Elasticity',
-        question_text: 'A monopolist always produces at the socially optimal output level.',
-        type: 'true_false',
-        correct_answer: 'False',
-        linked_learning_page_id: 8,
-      },
-      {
-        topic: 'Game Theory',
-        question_text: 'Explain the concept of Nash Equilibrium in your own words.',
-        type: 'short_answer',
-        correct_answer: null,
-        linked_learning_page_id: 20,
-      },
-    ],
-    started_at:   '2025-03-01T09:00:00',
-    submitted_at: '2025-03-01T10:22:00',
-  }
-}
-
-onMounted(() => loadMock())   // <- swap to loadAttempt() before deploy
-//onMounted(() => loadAttempt())
-// ───────────────────────────────────────────────────────────────────────────
+onMounted(() => {
+  loadAttempt()
+})
 
 // --- Computed ---
 const topicEntries = computed(() => {
-  if (!attempt.value?.topic_stats) return []
+  if (!attempt.value || !attempt.value.topic_stats) return []
   return Object.entries(attempt.value.topic_stats)
 })
 
 // Group weakness_report by topic
 const groupedWeakness = computed(() => {
-  if (!attempt.value?.weakness_report?.length) return []
+  if (!attempt.value || !attempt.value.weakness_report || !attempt.value.weakness_report.length) return []
   const map = {}
   for (const w of attempt.value.weakness_report) {
     const topic = w.topic ?? w.topic_tag ?? 'Unknown'
@@ -394,5 +346,44 @@ function typeLabel(type) { return TYPE_LABELS[type] ?? 'Q' }
   .summary-bar { padding: 16px; gap: 0; }
   .summary-val { font-size: 18px; }
   .topic-grid  { grid-template-columns: 1fr 1fr; }
+}
+
+.explanation-box {
+  background: #f8fafc;
+  border-left: 3px solid #3b82f6;
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 6px;
+}
+.explanation-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 6px;
+  display: block;
+}
+.explanation-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.action-row {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+}
+.review-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: #2563eb;
+  text-decoration: none; width: fit-content;
+  background: #eff6ff; padding: 6px 12px; border-radius: 6px;
+  transition: background 0.2s;
+}
+.review-link:hover { background: #dbeafe; }
+
+.page-ref-text {
+  color: #1d4ed8;
+  font-weight: 700;
 }
 </style>

@@ -261,14 +261,27 @@
               <span class="badge badge-yellow">{{ q.points || 1 }} pt</span>
             </p>
 
-            <p class="font-semibold mb-2">{{ q.question_text }}</p>
+            <p class="font-semibold mb-2" v-html="q.text || '<em>(ยังไม่ได้พิมพ์คำถาม)</em>'"></p>
 
-            <ul class="preview-options">
-              <li v-for="(o,oi) in q.options" :key="oi" class="preview-option">
-                <span class="option-letter">{{ ['A','B','C','D'][oi] || oi + 1 }}</span>
-                {{ o.text }}
-              </li>
-            </ul>
+            <template v-if="q.type === 'multiple_choice'">
+              <ul class="preview-options">
+                <li v-for="(o,oi) in q.options" :key="oi" class="preview-option">
+                  <span class="option-letter">{{ ['A','B','C','D'][oi] || oi + 1 }}</span>
+                  {{ o || '(ยังไม่ได้พิมพ์ตัวเลือก)' }}
+                </li>
+              </ul>
+            </template>
+
+            <template v-else-if="q.type === 'true_false'">
+              <ul class="preview-options">
+                <li class="preview-option"><span class="option-letter">T</span> True (ถูก)</li>
+                <li class="preview-option"><span class="option-letter">F</span> False (ผิด)</li>
+              </ul>
+            </template>
+
+            <template v-else>
+               <div style="margin-top: 12px; border-bottom: 2px dashed #cbd5e1; height: 30px; width: 100%;"></div>
+            </template>
 
           </div>
 
@@ -400,7 +413,7 @@ const lastSavedText = computed(() => {
 function buildPayload() {
 
   return {
-    module_id: courseId || null,
+    course_id: courseId || null,
 
     title: title.value,
     description: description.value || null,
@@ -532,7 +545,7 @@ async function deleteExam() {
   try {
     const res = await examStore.deleteTemplate(templateId)
     if (!res) throw new Error(examStore.error || 'Delete failed')
-    router.push({ name: 'CourseExams', params: { courseId } })
+    router.push({ name: 'TeacherExamDashboard', params: { courseId } })
 
   } catch (err) {
     error.value = err.message

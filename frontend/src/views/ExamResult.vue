@@ -5,7 +5,6 @@
 
     <template v-else-if="attempt">
 
-      <!-- Header -->
       <div class="header">
         <div>
           <p class="breadcrumb">Attempt #{{ attempt.id }}</p>
@@ -13,7 +12,6 @@
         </div>
       </div>
 
-      <!-- Score Hero -->
       <div :class="['score-hero', attempt.passed ? 'pass' : 'fail']">
         <div class="score-circle">
           <svg class="circle-svg" viewBox="0 0 120 120">
@@ -26,8 +24,8 @@
             />
           </svg>
           <div class="circle-inner">
-            <span class="score-pct">{{ attempt.score_pct.toFixed(1) }}%</span>
-            <span class="score-raw">{{ attempt.score }} / {{ attempt.max_score }}</span>
+            <span class="score-pct">{{ Number(attempt.score_pct || 0).toFixed(1) }}%</span>
+            <span class="score-raw">{{ attempt.score || 0 }} / {{ attempt.max_score || 0 }}</span>
           </div>
         </div>
         <div class="hero-info">
@@ -47,8 +45,7 @@
         </div>
       </div>
 
-      <!-- Topic Stats -->
-      <div v-if="topicEntries.length" class="card">
+      <div v-if="topicEntries && topicEntries.length" class="card">
         <h2 class="card-title">Topic Breakdown</h2>
         <div class="topic-list">
           <div v-for="[topic, stat] in topicEntries" :key="topic" class="topic-row">
@@ -67,7 +64,6 @@
         </div>
       </div>
 
-      <!-- Weakness Report -->
       <div v-if="attempt.weakness_report?.length" class="card">
         <h2 class="card-title">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
@@ -88,10 +84,9 @@
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="actions-row">
-        <button class="btn-ghost" @click="$router.push({ name: 'ExamDashboard', params: { courseId: 'current' } })">
-          Back to Exams
+        <button class="btn-ghost" @click="$router.push({ name: 'ExamHistory', params: { sessionId: attempt.session_id } })">
+          Back to History
         </button>
         <button class="btn-primary" @click="$router.push({ name: 'ExamAnalysis', params: { attemptId: attempt.id } })">
           View Full Analysis →
@@ -115,7 +110,7 @@ const router = useRouter()
 const attemptId = route.params.attemptId
 
 // --- State ---
-const attempt   = ref(null)   // ExamAttemptResponse
+const attempt   = ref(null)   
 const isLoading = ref(false)
 const error     = ref(null)
 
@@ -134,47 +129,20 @@ async function loadAttempt() {
   }
 }
 
-// ─── MOCK (remove when API is ready) ───────────────────────────────────────
-function loadMock() {
-  attempt.value = {
-    id: 101,
-    student_id: 1,
-    session_id: 1,
-    score: 38,
-    max_score: 50,
-    score_pct: 76.0,
-    passed: true,
-    percentile: 82,
-    topic_stats: {
-      'Demand & Supply':  { correct: 4, total: 5 },
-      'Elasticity':       { correct: 3, total: 5 },
-      'Market Structure': { correct: 2, total: 4 },
-      'Cost Theory':      { correct: 5, total: 5 },
-      'Game Theory':      { correct: 2, total: 3 },
-    },
-    weakness_report: [
-      { topic: 'Market Structure', question_text: 'Which market structure features many sellers with differentiated products?', linked_learning_page_id: 12 },
-      { topic: 'Elasticity',       question_text: 'If price elasticity of demand is -2, demand is considered?',                linked_learning_page_id: 7  },
-    ],
-    started_at:   '2025-03-01T09:00:00',
-    submitted_at: '2025-03-01T10:22:00',
-  }
-}
-
-onMounted(() => loadMock())   // <- swap to loadAttempt() before deploy
-// onMounted(() => loadAttempt())
-// ───────────────────────────────────────────────────────────────────────────
+onMounted(() => {
+  loadAttempt()
+})
 
 // --- Circle progress ---
 const circumference = 2 * Math.PI * 52  // r=52
 const dashOffset = computed(() => {
   if (!attempt.value) return circumference
-  return circumference - (attempt.value.score_pct / 100) * circumference
+  return circumference - ((attempt.value.score_pct || 0) / 100) * circumference
 })
 
 // --- Topic Stats ---
 const topicEntries = computed(() => {
-  if (!attempt.value?.topic_stats) return []
+  if (!attempt.value || !attempt.value.topic_stats) return []
   return Object.entries(attempt.value.topic_stats)
 })
 

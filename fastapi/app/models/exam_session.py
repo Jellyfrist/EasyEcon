@@ -87,7 +87,7 @@ class ExamSession(Base):
     @property
     def is_open(self) -> bool:
         '''True if the session is currently accepting submissions.'''
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(tzinfo=None)
         if not self.is_active:
             return False
         if self.available_from and now < self.available_from:

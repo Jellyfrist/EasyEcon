@@ -42,7 +42,7 @@ Exam Template
 
 # create template
 class ExamTemplateCreate(BaseModel):
-    module_id: Optional[int] = None
+    course_id: Optional[int] = None
     title: str
     description: Optional[str] = None
     exam_type: str = Field("midterm", description = "midterm | final")
@@ -78,7 +78,7 @@ class ExamTemplateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    module_id: Optional[int]
+    course_id: Optional[int]
     created_by_user_id: int
     title: str
     description: Optional[str]

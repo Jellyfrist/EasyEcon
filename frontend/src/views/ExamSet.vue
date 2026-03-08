@@ -5,7 +5,6 @@
 
     <template v-else-if="session">
 
-      <!-- Header -->
       <div class="header">
         <button class="back-btn" @click="$router.back()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -16,7 +15,6 @@
         </div>
       </div>
 
-      <!-- Info Cards -->
       <div class="info-grid">
         <div class="info-card">
           <div class="info-icon">⏱</div>
@@ -29,7 +27,7 @@
           <div class="info-icon">📝</div>
           <div>
             <p class="info-label">Questions</p>
-            <p class="info-value">{{ session.questions.length }} questions</p>
+            <p class="info-value">{{ session.questions?.length || 0 }} questions</p>
           </div>
         </div>
         <div class="info-card">
@@ -48,7 +46,6 @@
         </div>
       </div>
 
-      <!-- Instructions -->
       <div v-if="session.instructions" class="instructions-card">
         <h2 class="section-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -57,7 +54,6 @@
         <p class="instructions-text">{{ session.instructions }}</p>
       </div>
 
-      <!-- Bottom CTA -->
       <div class="cta-bar">
         <div class="cta-left">
           <p class="cta-hint">
@@ -107,40 +103,20 @@ async function loadSession() {
   }
 }
 
-// ─── MOCK (remove when API is ready) ───────────────────────────────────────
-function loadMock() {
-  session.value = {
-    id: 1,
-    title: 'Midterm 2025 — Microeconomics',
-    instructions: 'Closed book. No calculators. Answer all questions. You have 90 minutes to complete the exam. Make sure to review your answers before submitting.',
-    time_limit_minutes: 90,
-    questions: [
-      { id: 'q1', type: 'multiple_choice', text: 'Which of the following best describes a normal good?', points: 2, options: ['A','B','C','D'] },
-      { id: 'q2', type: 'multiple_choice', text: 'If the price elasticity of demand is -2, demand is considered?', points: 2, options: ['A','B','C','D'] },
-      { id: 'q3', type: 'true_false', text: 'A monopolist always produces at the socially optimal output level.', points: 1 },
-      { id: 'q4', type: 'true_false', text: 'In perfect competition, economic profit is zero in the long run.', points: 1 },
-      { id: 'q5', type: 'short_answer', text: 'The law of ________ states that as price rises, quantity demanded falls.', points: 2 },
-      { id: 'q6', type: 'short_answer', text: 'A market with a single seller is called a ________.', points: 2 },
-      { id: 'q7', type: 'short_answer', text: 'Explain the difference between fixed costs and variable costs.', points: 4 },
-      { id: 'q8', type: 'multiple_choice', text: 'Which market structure features many sellers with differentiated products?', points: 2, options: ['A','B','C','D'] },
-      { id: 'q9', type: 'short_answer', text: 'Define consumer surplus and illustrate with an example.', points: 4 },
-      { id: 'q10', type: 'multiple_choice', text: 'The Nash equilibrium is a concept in which branch of economics?', points: 2, options: ['A','B','C','D'] },
-    ],
-  }
-}
-
-onMounted(() => loadMock())   // <- swap to loadSession() before deploy
-//onMounted(() => loadSession())
+onMounted(() => {
+    loadSession()
+})
 
 // ───────────────────────────────────────────────────────────────────────────
 
 // --- Computed ---
+
 const totalPoints = computed(() =>
-  session.value?.questions.reduce((s, q) => s + (q.points ?? 1), 0) ?? 0
+  session.value?.questions?.reduce((s, q) => s + (q.points ?? 1), 0) ?? 0
 )
 
 const questionTypeSummary = computed(() => {
-  if (!session.value?.questions.length) return '—'
+  if (!session.value?.questions?.length) return '—'
   const counts = {}
   for (const q of session.value.questions) {
     const label = questionTypeLabel(q.type)
