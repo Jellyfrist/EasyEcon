@@ -2,6 +2,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-left">
+                <!-- Logo: route to each role dashboard -->
                 <div v-if="authStore.isStudent">
                     <router-link to="/dashboard" class="logo-box">
                         <div class="logo-icon">
@@ -13,8 +14,8 @@
                         </div>
                     </router-link>
                 </div>
-                <div v-if="!authStore.isStudent">
-                    <router-link to="/teacher/dashboard" class="logo-box">
+                <div v-else-if="authStore.isTeacher">
+                    <router-link to="/teacher" class="logo-box">
                         <div class="logo-icon">
                             <img src="@/assets/EasyEcon_logo_pink.png" alt="EasyEcon Logo" class="logo-icon" />
                         </div>
@@ -24,69 +25,179 @@
                         </div>
                     </router-link>
                 </div>
-    
-                <div class="nav-item dropdown">
+                <div v-else-if="authStore.isAdmin">
+                    <router-link to="/admin" class="logo-box">
+                        <div class="logo-icon">
+                            <img src="@/assets/EasyEcon_logo_pink.png" alt="EasyEcon Logo" class="logo-icon" />
+                        </div>
+                        <div class="logo-text">
+                            <span>Easy</span>
+                            <span class="pink">Econ</span>
+                        </div>
+                    </router-link>
+                </div>
+
+                <!-- Study Tools --
+                <div class="nav-item dropdown" v-if="!authStore.isAdmin">
                     <button class="nav-link" @click.stop="toggleDropdown('tools')">
-                            Study tools
-                            <span class="material-symbols-outlined">expand_more</span>
-                        </button>
+                        Study tools
+                        <span class="material-symbols-outlined">expand_more</span>
+                    </button>
                     <div v-if="activeDropdown === 'tools'" class="dropdown-menu">
-                        <router-link to="/flashcards" class="dropdown-item" @click="activeDropdown = null">Flashcards</router-link>
-                        <router-link to="/learning" class="dropdown-item" @click="activeDropdown = null">Learn</router-link>
-                        <router-link to="/test" class="dropdown-item" @click="activeDropdown = null">Practice Tests</router-link>
+                        <template v-if="authStore.isStudent">
+                            <router-link to="/flashcards" class="dropdown-item" @click="activeDropdown = null">Flashcards</router-link>
+                            <router-link to="/learning" class="dropdown-item" @click="activeDropdown = null">Learn</router-link>
+                            <router-link to="/test" class="dropdown-item" @click="activeDropdown = null">Practice Tests</router-link>
+                        </template>
+                        <template v-else-if="authStore.isTeacher">
+                            <router-link to="/teacher/flashcards" class="dropdown-item" @click="activeDropdown = null">Flashcards</router-link>
+                            <router-link to="/teacher/learning" class="dropdown-item" @click="activeDropdown = null">Learn</router-link>
+                            <router-link to="/teacher/test" class="dropdown-item" @click="activeDropdown = null">Practice Tests</router-link>
+                        </template>
                     </div>
                 </div>
+                -->
             </div>
-    
-            <div class="nav-center">
-                <div class="search-box">
+
+            <div class="nav-center" v-if="!authStore.isAdmin">
+                <div class="search-box" v-click-outside="closeSearch">
                     <span class="material-symbols-outlined search-icon">search</span>
-                    <input type="text" placeholder="Search flashcard sets, learning topics, tests..." v-model="searchQuery" @focus="isSearchFocused = true" @blur="isSearchFocused = false" />
+                    <input
+                        type="text"
+                        placeholder="Search flashcard sets, learning topics, tests..."
+                        v-model="searchQuery"
+                        @focus="isSearchFocused = true"
+                        @input="onSearchInput"
+                        @keydown.escape="closeSearch"
+                    />
+
+                    <!-- Dropdown results -->
+                    <div v-if="isSearchFocused && searchQuery.length > 0" class="search-dropdown">
+
+                        <!-- Loading -->
+                        <div v-if="isSearching" class="search-loading">
+                            <span class="material-symbols-outlined spinning">progress_activity</span>
+                            Searching...
+                        </div>
+
+                        <!-- No results -->
+                        <div v-else-if="searchResults.total === 0 && !isSearching" class="search-empty">
+                            No results for "{{ searchQuery }}"
+                        </div>
+
+                        <!-- Results by category -->
+                        <template v-else>
+                            <div v-if="searchResults.courses.length" class="search-group">
+                                <div class="search-group-label">
+                                    <span class="material-symbols-outlined">school</span> Courses
+                                </div>
+                                <div
+                                    v-for="item in searchResults.courses"
+                                    :key="`course-${item.id}`"
+                                    class="search-item"
+                                    @mousedown="goToResult(item)"
+                                >
+                                    {{ item.title }}
+                                    <span v-if="item.description" class="search-item-desc">{{ item.description }}</span>
+                                </div>
+                            </div>
+
+                            <div v-if="searchResults.flashcards.length" class="search-group">
+                                <div class="search-group-label">
+                                    <span class="material-symbols-outlined">style</span> Flashcards
+                                </div>
+                                <div
+                                    v-for="item in searchResults.flashcards"
+                                    :key="`flash-${item.id}`"
+                                    class="search-item"
+                                    @mousedown="goToResult(item)"
+                                >
+                                    {{ item.title }}
+                                </div>
+                            </div>
+
+                            <div v-if="searchResults.learning.length" class="search-group">
+                                <div class="search-group-label">
+                                    <span class="material-symbols-outlined">menu_book</span> Learning
+                                </div>
+                                <div
+                                    v-for="item in searchResults.learning"
+                                    :key="`learn-${item.id}`"
+                                    class="search-item"
+                                    @mousedown="goToResult(item)"
+                                >
+                                    {{ item.title }}
+                                </div>
+                            </div>
+
+                            <div v-if="searchResults.exams.length" class="search-group">
+                                <div class="search-group-label">
+                                    <span class="material-symbols-outlined">quiz</span> Practice Tests
+                                </div>
+                                <div
+                                    v-for="item in searchResults.exams"
+                                    :key="`exam-${item.id}`"
+                                    class="search-item"
+                                    @mousedown="goToResult(item)"
+                                >
+                                    {{ item.title }}
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-    
+
             <div class="nav-right">
-    
-                <div v-if="isAuthenticated" class="user-menu">
-    
+                <div v-if="authStore.isAuthenticated" class="user-menu">
                     <div class="user-info" @click.stop="toggleDropdown('user')">
-    
-                        <span class="material-symbols-outlined dropdown-arrow pink">
-                                expand_more
-                            </span>
-    
+                        <span class="material-symbols-outlined dropdown-arrow pink">expand_more</span>
+
                         <div class="user-meta">
-                            <div class="user-name">{{ fullName }}</div>
-                            <div class="user-email">{{ email }}</div>
+                            <div class="user-name">
+                                <span v-if="authStore.isAdmin">Admin</span>
+                                <span v-else>{{ authStore.fullName }}</span>
+                            </div>
+                            <div class="user-email" v-if="!authStore.isAdmin">{{ authStore.email }}</div>
                         </div>
-    
+
                         <div class="user-avatar">
-                            {{ userInitials }}
+                            <span v-if="authStore.isAdmin" class="material-symbols-outlined">shield_person</span>
+                            <span v-else>{{ userInitials }}</span>
                         </div>
                     </div>
-    
+
                     <div v-if="activeDropdown === 'user'" class="dropdown-menu dropdown-right">
-    
-                        <router-link to="/profile" class="dropdown-item" @click="activeDropdown = null">
-                            <span class="material-symbols-outlined">person</span> Profile
-                        </router-link>
-                        <router-link to="/my-courses" class="dropdown-item" @click="activeDropdown = null">
-                            <span class="material-symbols-outlined">school</span> My Courses
-                        </router-link>
-                        <router-link to="/settings" class="dropdown-item" @click="activeDropdown = null">
-                            <span class="material-symbols-outlined">settings</span> Settings
-                        </router-link>
-    
+                        <!-- Student -->
+                        <template v-if="authStore.isStudent">
+                            <router-link to="/courses" class="dropdown-item" @click="activeDropdown = null">
+                                <span class="material-symbols-outlined">school</span> Courses
+                            </router-link>
+                            <router-link to="/settings" class="dropdown-item" @click="activeDropdown = null">
+                                <span class="material-symbols-outlined">settings</span> Settings
+                            </router-link>
+                        </template>
+
+                        <!-- Student -->
+                        <template v-if="authStore.isTeacher">
+                            <router-link to="/teacher/courses" class="dropdown-item" @click="activeDropdown = null">
+                                <span class="material-symbols-outlined">school</span> Courses
+                            </router-link>
+                            <router-link to="/settings" class="dropdown-item" @click="activeDropdown = null">
+                                <span class="material-symbols-outlined">settings</span> Settings
+                            </router-link>
+                        </template>
+
                         <div class="dropdown-divider"></div>
-    
+
                         <button @click="handleLogout" class="dropdown-item logout">
-                                <span class="material-symbols-outlined">logout</span>
-                                Log out
-                            </button>
+                            <span class="material-symbols-outlined">logout</span>
+                            Log out
+                        </button>
                     </div>
                 </div>
-    
-                <!-- If the user is NOT authenticated: Show Log in button -->
+
+                <!--If not authenticated -->
                 <router-link v-else to="/login" class="btn-login">
                     Log in
                 </router-link>
@@ -97,49 +208,25 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { authService } from '@/services/authService';
-import { useAuthStore } from '@/store/authStore'; 
+import { useRoute, useRouter } from 'vue-router';
+import { useAuthStore } from '@/store/authStore';
 
-const router = useRouter();
+const router = useRouter()
 const route = useRoute();
 const authStore = useAuthStore();
 
-const searchQuery = ref('');
-const isSearchFocused = ref(false);
 const activeDropdown = ref(null);
 
-// 🚨 จุดที่ต้องแก้: เปลี่ยนเป็น 'csrf_token' และ 'user' ตามที่คุณบันทึกไว้ใน authService
-const isAuthenticated = ref(!!localStorage.getItem('token') || !!localStorage.getItem('user_profile'));
-const currentUser = ref(JSON.parse(localStorage.getItem('user_profile')) || null);
-
-const checkUserStatus = async () => {
-    const hasToken = !!localStorage.getItem('csrf_token') || !!localStorage.getItem('user');
-    isAuthenticated.value = hasToken || authService.isAuthenticated();
-
-    if (isAuthenticated.value) {
-        try {
-            const user = await authService.getUser();
-            if (user) {
-                currentUser.value = user;
-                localStorage.setItem('user', JSON.stringify(user)); 
-            }
-        } catch (error) {
-            console.error("Token expired or invalid:", error);
-            await handleLogout(); 
-        }
-    } else {
-        currentUser.value = null;
-    }
-};
-
-// Computed Properties
-const fullName = computed(() => currentUser.value?.username || 'Student');
-const email = computed(() => currentUser.value?.email || 'No email');
-
+// userInitials
 const userInitials = computed(() => {
-    if (!currentUser.value?.username) return 'U';
-    return currentUser.value.username.substring(0, 2).toUpperCase();
+    if (authStore.isAdmin) return '';
+
+    const name = authStore.fullName
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0]?.[0]?.toUpperCase() ?? '?';
 });
 
 // Dropdown
@@ -153,38 +240,90 @@ const closeDropdowns = (e) => {
     }
 };
 
-// Logout Function
+// Logout
 const handleLogout = async () => {
-    activeDropdown.value = null; 
-    
-    isAuthenticated.value = false;
-    currentUser.value = null;
-    
-    await authService.logout(true);
-    
-    // เปลี่ยนชื่อคำสั่งลบข้อมูลให้ตรงกัน
-    localStorage.removeItem('user');
-    localStorage.removeItem('csrf_token'); 
-    
-    router.push('/login');
+    activeDropdown.value = null;
+    await authStore.logout(true);
 };
 
-// 2. [แก้บั๊ก Navbar ไม่เปลี่ยน] สั่งให้เช็คสถานะทุกครั้งที่ URL เปลี่ยน
+// Search
+const searchQuery = ref('')
+const isSearchFocused = ref(false)
+const isSearching = ref(false)
+const searchResults = ref({ courses: [], flashcards: [], learning: [], exams: [], total: 0 })
+
+let debounceTimer = null
+
+const onSearchInput = () => {
+    clearTimeout(debounceTimer)
+    if (searchQuery.value.trim().length < 1) {
+        searchResults.value = { courses: [], flashcards: [], learning: [], exams: [], total: 0 }
+        return
+    }
+    isSearching.value = true
+    debounceTimer = setTimeout(() => fetchSearch(), 350)
+}
+
+const fetchSearch = async () => {
+    try {
+        const endpoint = authStore.isTeacher
+            ? `${BACKEND_URL}/search/teacher`
+            : `${BACKEND_URL}/search/student`
+
+        const { data } = await axios.get(endpoint, {
+            params: { q: searchQuery.value.trim() }
+        })
+        searchResults.value = data
+    } catch (err) {
+        console.error('Search error:', err)
+    } finally {
+        isSearching.value = false
+    }
+}
+
+const goToResult = (item) => {
+    closeSearch()
+
+    if (authStore.isStudent) {
+        const routes = {
+            course:    `/courses/${item.id}`,
+            flashcard: `/flashcards/${item.course_id}`,
+            learning:  `/courses/${item.course_id}/modules`,
+            exam:      `/exam/${item.course_id}`,
+        }
+        router.push(routes[item.type] ?? '/dashboard')
+
+    } else if (authStore.isTeacher) {
+        const routes = {
+            course:    `/teacher/courses/${item.id}/edit`,
+            flashcard: `/teacher/flashcards/${item.course_id}`,
+            learning:  `/teacher/learning/${item.course_id}`,
+            exam:      `/teacher/exam/${item.course_id}`,
+        }
+        router.push(routes[item.type] ?? '/teacher')
+    }
+}
+
+const closeSearch = () => {
+    isSearchFocused.value = false
+    searchQuery.value = ''
+    searchResults.value = { courses: [], flashcards: [], learning: [], exams: [], total: 0 }
+}
+
+// Route watch
 watch(() => route.path, () => {
-    // ใส่ setTimeout เล็กน้อยเพื่อให้แน่ใจว่า authService เซฟ token ลงเครื่องเสร็จแล้วค่อยเช็ค
-    setTimeout(() => {
-        checkUserStatus();
-    }, 50); 
+    authStore.refreshUser();
 });
 
 onMounted(() => {
     document.addEventListener('click', closeDropdowns);
-    checkUserStatus(); 
+    authStore.refreshUser();
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', closeDropdowns);
 });
+
 </script>
 
 <style scoped>
@@ -415,11 +554,11 @@ onUnmounted(() => {
 }
 
 /* Center Section - Search */
-
 .nav-center {
     flex: 1;
     max-width: 40%;
     margin: 0 20px;
+    position: relative; /* ย้าย relative มาไว้ที่นี่แทน */
 }
 
 .search-box {
@@ -430,6 +569,23 @@ onUnmounted(() => {
     padding: 10px 16px;
     border-radius: 24px;
     transition: all 0.2s;
+    /* ลบ position: relative ออกจากที่นี่ */
+}
+
+.search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;        /* กว้างเท่า .nav-center เป๊ะ */
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--card-border);
+    padding: 8px;
+    z-index: 200;
+    max-height: 420px;
+    overflow-y: auto;
+    animation: slideDown 0.2s ease-out;
 }
 
 .search-box:focus-within {
