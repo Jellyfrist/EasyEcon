@@ -1,4 +1,4 @@
-name: "Test"
+name: "fast-vue1"
 services:
   fastapi:
     build: fastapi

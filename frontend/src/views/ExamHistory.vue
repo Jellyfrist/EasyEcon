@@ -6,17 +6,25 @@
     <template v-else>
 
       <div class="header">
-        <button class="back-btn" @click="$router.back()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-        </button>
-        <div>
-          <p class="breadcrumb">Session #{{ sessionId }}</p>
-          <h1 class="page-title">My Attempts</h1>
+        <div class="header-left">
+          <button class="back-btn" @click="$router.back()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          <div class="header-text">
+            <p class="breadcrumb">Session #{{ sessionId }}</p>
+            <h1 class="page-title">My Attempts</h1>
+          </div>
         </div>
       </div>
 
       <div v-if="attempts.length === 0" class="empty-state">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            <line x1="12" y1="17" x2="12" y2="17"/>
+          </svg>
+        </div>
         <p>You haven't taken this exam yet.</p>
       </div>
 
@@ -30,7 +38,14 @@
           </div>
           <div class="best-right">
             <span :class="['result-chip', best.passed ? 'pass' : 'fail']">
-              {{ best.passed ? '🎉 Passed' : '❌ Failed' }}
+              <template v-if="best.passed">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Passed
+              </template>
+              <template v-else>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                Failed
+              </template>
             </span>
             <p class="best-meta" v-if="best.percentile != null">Percentile: {{ best.percentile.toFixed(0) }}th</p>
             <p class="best-meta">{{ formatTime(best.submitted_at) }}</p>
@@ -83,7 +98,7 @@
       </template>
     </template>
 
-    <div v-if="error" class="error-banner">⚠️ {{ error }}</div>
+    <div v-if="error" class="error-banner">ERROR: {{ error }}</div>
 
   </div>
 </template>
@@ -117,9 +132,7 @@ async function loadAttempts() {
   }
 }
 
-onMounted(() => {
-  loadAttempts()
-})
+onMounted(() => { loadAttempts() })
 
 // --- Computed ---
 // newest first
@@ -153,122 +166,328 @@ function viewAnalysis(attempt) {
 </script>
 
 <style scoped>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* Page wrapper */
 .page {
-  font-family: 'Sarabun', sans-serif;
-  min-height: 100vh;
-  padding: 32px;
   max-width: 680px;
   margin: 0 auto;
-  display: flex; flex-direction: column; gap: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* Header */
-.header { display: flex; align-items: center; gap: 14px; }
+/*  Header */
+.header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 8px 24px rgba(237, 64, 129, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  right: 60px; bottom: -50px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .back-btn {
-  width: 38px; height: 38px; flex-shrink: 0;
-  border: 1.5px solid #dde1ea; background: #fff;
-  border-radius: 10px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #555; transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: white;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
 }
-.back-btn:hover { background: #f0f1f5; }
-.breadcrumb { font-size: 12px; color: #9399aa; margin-bottom: 2px; }
-.page-title { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 22px; font-weight: 700; color: #1a1d2e; }
 
-/* Best Card */
-.best-card {
-  border-radius: 16px; padding: 26px 28px;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-  border: 1.5px solid;
+.back-btn:hover {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.7);
 }
-.best-card.pass { background: #f0fdf4; border-color: #86efac; }
-.best-card.fail { background: #fef2f2; border-color: #fca5a5; }
+
+.breadcrumb {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+
+.page-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Best Attempt Card */
+.best-card {
+  border-radius: var(--radius-lg);
+  padding: 1.625rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1.5px solid;
+  box-shadow: var(--shadow-sm);
+}
+.best-card.pass {
+  background: var(--light-green);
+  border-color: #86efac;
+}
+.best-card.fail {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
 
 .best-left  { display: flex; flex-direction: column; gap: 4px; }
-.best-label { font-size: 11.5px; font-weight: 700; color: #9399aa; text-transform: uppercase; letter-spacing: 0.05em; }
-.best-score { font-size: 48px; font-weight: 800; color: #1a1d2e; line-height: 1; }
-.best-unit  { font-size: 24px; }
-.best-raw   { font-size: 13px; color: #7c82a0; }
 
-.best-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-.best-meta  { font-size: 12.5px; color: #7c82a0; }
-
-.result-chip {
-  font-size: 13px; font-weight: 700; padding: 5px 16px; border-radius: 999px;
+.best-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.result-chip.pass { background: #dcfce7; color: #16a34a; }
+
+.best-score {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+.best-unit { font-size: 1.5rem; }
+
+.best-raw {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.best-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.best-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Result chips */
+.result-chip {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.result-chip.pass { background: var(--light-green);  color: var(--forest-green); }
 .result-chip.fail { background: #fecaca; color: #dc2626; }
 
-/* Card */
-.card {
-  background: #fff; border: 1px solid #e8eaf2;
-  border-radius: 14px; padding: 22px 24px;
-  display: flex; flex-direction: column; gap: 14px;
+.result-chip-sm {
+  font-size: 0.69rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
 }
-.card-title { font-size: 14px; font-weight: 700; color: #1a1d2e; }
+.result-chip-sm.pass { background: var(--light-green);  color: var(--forest-green); }
+.result-chip-sm.fail { background: #fecaca; color: #dc2626; }
 
-/* Attempt List */
-.attempt-list { display: flex; flex-direction: column; gap: 0; }
+/* All-Attempts card */
+.card {
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.375rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Attempt rows */
+.attempt-list { display: flex; flex-direction: column; }
+
 .attempt-row {
-  display: flex; align-items: center; gap: 16px;
-  padding: 14px 0; border-bottom: 1px solid #f0f1f5;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--gray-light);
 }
 .attempt-row:last-child { border-bottom: none; }
 
 .attempt-num {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  width: 52px; flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 52px;
+  flex-shrink: 0;
 }
-.num-label { font-size: 10px; color: #9399aa; text-transform: uppercase; letter-spacing: 0.05em; }
-.num-val   { font-size: 20px; font-weight: 800; color: #1a1d2e; }
-
-.attempt-score-wrap { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.attempt-pct-row    { display: flex; align-items: center; gap: 10px; }
-.attempt-pct        { font-size: 17px; font-weight: 700; color: #1a1d2e; }
-.result-chip-sm {
-  font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+.num-label {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.result-chip-sm.pass { background: #dcfce7; color: #16a34a; }
-.result-chip-sm.fail { background: #fef2f2; color: #dc2626; }
+.num-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
 
-.pct-bar-track { height: 6px; background: #f0f1f5; border-radius: 999px; overflow: hidden; }
-.pct-bar-fill  { height: 100%; border-radius: 999px; transition: width 0.4s; }
-.pct-bar-fill.green  { background: #22c55e; }
-.pct-bar-fill.yellow { background: #f59e0b; }
-.pct-bar-fill.red    { background: #ef4444; }
-.attempt-raw { font-size: 12px; color: #9399aa; }
+.attempt-score-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.attempt-pct-row { display: flex; align-items: center; gap: 0.625rem; }
+
+.attempt-pct {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Progress bar */
+.pct-bar-track {
+  height: 6px;
+  background: var(--gray-light);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pct-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.pct-bar-fill.green  { background: var(--forest-green); }
+.pct-bar-fill.yellow { background: var(--primary-yellow); }
+.pct-bar-fill.red    { background: var(--primary-pink); }
+
+.attempt-raw {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
 
 .attempt-meta {
-  display: flex; flex-direction: column; gap: 3px;
-  font-size: 12px; color: #9399aa; flex-shrink: 0; text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  text-align: right;
 }
 
+/* Action buttons */
 .attempt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
 .btn-ghost-sm {
-  background: transparent; color: #555;
-  border: 1.5px solid #e2e5ef; border-radius: 8px;
-  padding: 5px 12px; font-size: 12.5px;
-  font-family: 'Sarabun', sans-serif;
-  cursor: pointer; transition: background 0.15s; white-space: nowrap;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
-.btn-ghost-sm:hover { background: #f7f8fc; }
+.btn-ghost-sm:hover {
+  background: var(--gray-light);
+  border-color: var(--forest-green);
+  color: var(--forest-green);
+}
 
-/* States */
+/* Empty / loading / error states */
 .empty-state {
-  text-align: center; padding: 64px 24px;
-  background: #fff; border-radius: 14px; border: 1.5px dashed #d0d4e5;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--card-border);
 }
-.empty-icon { font-size: 40px; margin-bottom: 14px; }
-.empty-state p { color: #7c82a0; font-size: 15px; }
-.loading-state { text-align: center; padding: 64px; color: #7c82a0; font-size: 14px; }
-.error-banner {
-  background: #fef2f2; border: 1px solid #fca5a5;
-  border-radius: 9px; padding: 12px 16px; font-size: 13.5px; color: #dc2626;
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.875rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.empty-state p { color: var(--text-muted); font-size: 0.9375rem; }
+
+.loading-state {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.84rem;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/*  Responsive  */
 @media (max-width: 600px) {
-  .page      { padding: 20px 16px; }
+  .page { padding: 1.25rem 1rem; }
   .best-card { flex-direction: column; align-items: flex-start; }
   .best-right { align-items: flex-start; }
   .attempt-row { flex-wrap: wrap; }

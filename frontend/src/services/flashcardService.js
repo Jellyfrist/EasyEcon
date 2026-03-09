@@ -23,6 +23,11 @@ const flashcardService = {
         return api.get('/flashcards/sets', { params: { course_id: courseId } })
     },
 
+    // list all active sets for a course (student view: any teacher's sets)
+    browseSets(courseId) {
+        return api.get('/flashcards/browse', { params: { course_id: courseId } })
+    },
+
     // update set title or description
     updateSet(setId, data) {
         return api.patch(`/flashcards/sets/${setId}`, data)

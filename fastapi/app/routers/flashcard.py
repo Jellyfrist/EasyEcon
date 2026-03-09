@@ -436,6 +436,28 @@ async def permanent_delete_card(
 student routes
 '''
 
+@router.get('/browse', response_model=List[FlashcardSetResponse])
+def list_sets_student(
+    course_id: int,
+    db: Session = Depends(get_db),
+    student: User = Depends(require_student),
+):
+    '''student: list all active sets for a course (from any teacher)'''
+    sets = (
+        db.query(FlashcardSet)
+        .filter(
+            FlashcardSet.course_id == course_id,
+            FlashcardSet.is_active == True,
+        )
+        .all()
+    )
+    results = []
+    for fs in sets:
+        r = FlashcardSetResponse.model_validate(fs)
+        r.card_count = len([c for c in fs.cards if c.is_active])
+        results.append(r)
+    return results
+
 @router.get('/sets/{set_id}/study', response_model=FlashcardSetDetail)
 def study_set(
     set_id: int,

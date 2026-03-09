@@ -1,254 +1,301 @@
 <template>
-  <div class="dashboard-page">
-    
-    <header class="top-navbar">
-      <button @click="router.push({ name: 'Courses', params: { courseId: courseId } })" class="back-btn">
+  <div class="ml-root">
+
+    <!-- topbar -->
+    <header class="ml-topbar">
+      <button class="ml-back-btn" @click="router.push({ name: 'Courses', params: { courseId } })">
         <span class="material-symbols-outlined">arrow_back</span>
-        Back To Course Dashboard
+        Back to Course
       </button>
     </header>
 
-    <main class="main-container">
-      
-      <div class="page-header">
-        <div class="title-area">
-          <span class="course-label">Course #{{ courseId }}</span>
-          <h1 class="page-title">Learning Modules</h1>
-          <p class="page-subtitle">เลือกบทเรียนที่ต้องการศึกษาเพื่อเริ่มต้นการเรียนรู้</p>
-        </div>
+    <div class="ml-body">
+
+      <!-- page header -->
+      <div class="ml-page-header">
+        <span class="ml-course-tag">Course #{{ courseId }}</span>
+        <h1 class="ml-page-title">Learning Modules</h1>
+        <p class="ml-page-sub">Select a module to start learning.</p>
       </div>
 
-      <div v-if="loading" class="state-container">
-        <div class="spinner"></div>
-        <p>กำลังโหลดข้อมูลบทเรียน...</p>
+      <!-- loading -->
+      <div v-if="loading" class="ml-state">
+        <div class="ml-spinner"></div>
+        <p>Loading modules...</p>
       </div>
 
-      <div v-else-if="error" class="error-box">
-        <span class="material-symbols-outlined">error</span>
+      <!-- error -->
+      <div v-else-if="error" class="ml-error">
+        <span class="material-symbols-outlined">error_outline</span>
         {{ error }}
       </div>
 
-      <div v-else-if="modules.length === 0" class="empty-state">
-        <div class="empty-icon">📚</div>
-        <p class="empty-title">ไม่พบเนื้อหา</p>
-        <p class="empty-desc">ขณะนี้ยังไม่มีการเพิ่มเนื้อหาบทเรียนในคอร์สนี้<br>โปรดรอคุณครูอัปเดตเนื้อหาในภายหลัง</p>
+      <!-- empty -->
+      <div v-else-if="modules.length === 0" class="ml-empty">
+        <div class="ml-empty-icon">
+          <span class="material-symbols-outlined">menu_book</span>
+        </div>
+        <h3>No content yet</h3>
+        <p>No modules have been added to this course.<br>Check back later when your instructor publishes content.</p>
       </div>
 
-      <div v-else class="modules-list">
-        
-        <div v-for="(mod, index) in modules" :key="mod.id" class="module-card">
-          
-          <div class="module-header" @click="toggleModule(mod)">
-            <div class="module-header-left">
-              <span class="material-symbols-outlined chevron-icon" :class="{ 'rotated': mod.isExpanded }">
-                chevron_right
+      <!-- module grid -->
+      <div v-else class="ml-grid">
+        <div
+          v-for="(mod, index) in modules"
+          :key="mod.id"
+          class="ml-card"
+          @click="goToLesson(mod.id)"
+        >
+          <!-- card accent bar color cycles through palette -->
+          <div class="ml-card-bar" :style="{ background: barColors[index % barColors.length] }"></div>
+
+          <div class="ml-card-body">
+            <div class="ml-card-top">
+              <span class="ml-module-num">Module {{ index + 1 }}</span>
+              <span class="ml-lesson-pill">
+                <span class="material-symbols-outlined">auto_stories</span>
+                {{ mod.learning_pages?.length || 0 }} lessons
               </span>
-              <h2 class="module-title" @click="goToLesson(mod.id)">
-                <span class="module-badge">Module {{ index + 1 }}</span>
-                {{ mod.title }}
-              </h2>
             </div>
-            
-            <div class="module-header-right">
-              <span class="lesson-count-badge">
-                {{ mod.learning_pages?.length || 0 }} Lessons
+
+            <h2 class="ml-card-title">{{ mod.title }}</h2>
+
+            <div class="ml-card-footer">
+              <span class="ml-start-link">
+                Start module
+                <span class="material-symbols-outlined">arrow_forward</span>
               </span>
             </div>
           </div>
-
-          <!-- <div v-show="mod.isExpanded" class="module-content">
-            <div v-if="mod.learning_pages && mod.learning_pages.length > 0" class="lessons-list">
-              
-              <div v-for="(page, pIndex) in mod.learning_pages" :key="page.id" 
-                   class="lesson-item" 
-                   @click="goToLesson(page.id, mod.id)">
-                
-                <div class="lesson-info">
-                  <div class="lesson-number">{{ pIndex + 1 }}</div>
-                  <div class="lesson-details">
-                    <h3 class="lesson-title">{{ page.title || 'Untitled Lesson' }}</h3>
-                    <p class="lesson-subtitle">คลิกเพื่อเริ่มเรียนหัวข้อนี้</p>
-                  </div>
-                </div>
-
-                <div class="lesson-action">
-                   <span class="enter-btn-text">เข้าเรียน</span>
-                   <span class="material-symbols-outlined action-arrow">arrow_forward</span>
-                </div>
-
-              </div>
-
-            </div>
-            
-            <div v-else class="empty-lessons">
-              <span class="material-symbols-outlined">info</span>
-              ยังไม่มีเนื้อหาบทเรียนในโมดูลนี้
-            </div>
-          </div> -->
-
         </div>
-
       </div>
 
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import learningService from '@/services/learningService' 
+import learningService from '@/services/learningService'
 
-const route = useRoute()
-const router = useRouter()
+const route    = useRoute()
+const router   = useRouter()
 const courseId = computed(() => route.params.courseId)
 
 const modules = ref([])
 const loading = ref(false)
-const error = ref(null)
+const error   = ref(null)
+
+// accent bar colors using the brand palette
+const barColors = [
+  '#ed4081',
+  '#0A703C',
+  '#ffc14d',
+  '#ed4081',
+  '#0A703C',
+  '#ffc14d',
+]
 
 const loadModules = async () => {
   loading.value = true
-  error.value = null
+  error.value   = null
   try {
     const res = await learningService.listModules(courseId.value)
-    const fetchedModules = res.data || []
+    const fetched = res.data || []
 
-    for (let mod of fetchedModules) {
+    for (const mod of fetched) {
       try {
-        const pagesRes = await learningService.listPages(mod.id);
-        mod.learning_pages = (pagesRes.data || []).filter(p => p.is_published);
-        
-        mod.isExpanded = false;
-      } catch (err) {
-        console.warn(`ดึงข้อมูลหน้าย่อยของโมดูล ${mod.id} ไม่สำเร็จ`, err);
-        mod.learning_pages = []; 
-        mod.isExpanded = false;
+        const pRes = await learningService.listPages(mod.id)
+        mod.learning_pages = (pRes.data || []).filter(p => p.is_published)
+      } catch {
+        mod.learning_pages = []
       }
+      mod.isExpanded = false
     }
-
-    modules.value = fetchedModules;
-
+    modules.value = fetched
   } catch (err) {
-    console.error("Failed to fetch modules:", err)
-    error.value = "เกิดข้อผิดพลาดในการโหลดข้อมูลบทเรียน"
+    console.error('Failed to fetch modules:', err)
+    error.value = 'Failed to load modules. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  loadModules()
-})
+onMounted(loadModules)
 
-const toggleModule = (mod) => {
-  mod.isExpanded = !mod.isExpanded;
-}
-
-const goToLesson = (moduleId) => {
-  router.push({
-    name: 'LearningDashboard',
-    params: {
-      courseId: courseId.value,
-      moduleId: moduleId
-    }
-  });
+const goToLesson = moduleId => {
+  router.push({ name: 'LearningDashboard', params: { courseId: courseId.value, moduleId } })
 }
 </script>
 
 <style scoped>
-/* ================= Base Styles ================= */
-.dashboard-page {
+/* tokens */
+.ml-root {
+  --pink:         #ed4081;
+  --pink-h:       #d13570;
+  --pink-light:   #ffc7db;
+  --pink-bg:      #fff0f6;
+  --green:        #0A703C;
+  --green-light:  #c7ffc7;
+  --yellow:       #ffc14d;
+  --yellow-light: #fff4c7;
+  --ink:          #1a1a2e;
+  --ink2:         #374151;
+  --muted:        #6b7280;
+  --border:       #e5e7eb;
+  --bg:           #faf9f7;
+  --white:        #ffffff;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
   min-height: 100vh;
-  background-color: #f8fafc;
-  font-family: 'Sarabun', sans-serif;
-  padding-bottom: 5rem;
 }
 
-/* ================= Navbar ================= */
-.top-navbar {
-  background-color: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 1rem 2rem;
+/* topbar */
+.ml-topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 50;
 }
 
-.back-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #64748b; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: color 0.2s; padding: 0; }
-.back-btn:hover { color: #0f172a; }
+.ml-back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  color: var(--muted); padding: 0;
+  transition: color 0.15s;
+}
+.ml-back-btn .material-symbols-outlined { font-size: 18px; }
+.ml-back-btn:hover { color: var(--pink); }
 
-/* ================= Main Content ================= */
-.main-container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+/* body */
+.ml-body { max-width: 1000px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
 
-/* ================= Header Section ================= */
-.page-header { margin-bottom: 2.5rem; }
-.course-label { font-size: 0.85rem; font-weight: 700; color: #e91e63; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; }
-.page-title { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem 0; letter-spacing: -0.5px; }
-.page-subtitle { color: #64748b; margin: 0; font-size: 1rem; }
+/* page header */
+.ml-page-header { margin-bottom: 2rem; }
+.ml-course-tag {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pink); background: var(--pink-bg);
+  padding: 3px 10px; border-radius: 99px;
+  margin-bottom: 0.6rem;
+}
+.ml-page-title {
+  font-size: 1.9rem; font-weight: 800;
+  color: var(--ink); margin: 0 0 0.35rem;
+  letter-spacing: -0.5px;
+}
+.ml-page-sub { font-size: 0.95rem; color: var(--muted); margin: 0; }
 
-/* ================= States ================= */
-.state-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 0; color: #64748b; }
-.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #e91e63; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+/* states */
+.ml-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; padding: 5rem 0; color: var(--muted);
+}
+.ml-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--pink);
+  border-radius: 50%;
+  animation: ml-spin 0.8s linear infinite;
+}
+@keyframes ml-spin { to { transform: rotate(360deg); } }
 
-.empty-state { text-align: center; padding: 5rem 2rem; background-color: white; border-radius: 24px; border: 1px solid #e2e8f0; }
-.empty-icon { font-size: 4rem; margin-bottom: 1.5rem; }
-.empty-title { font-size: 1.75rem; font-weight: 800; color: #e91e63; margin-bottom: 0.5rem; }
-.empty-desc { color: #64748b; line-height: 1.6; }
+.ml-error {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff0f0; color: #c0392b;
+  border: 1px solid #fecaca; border-radius: 12px;
+  padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9rem;
+}
 
-/* ================= Module Cards (Accordion) ================= */
-.modules-list { display: flex; flex-direction: column; gap: 1rem; }
-
-.module-card {
-  background-color: white;
+.ml-empty {
+  text-align: center; padding: 5rem 2rem;
+  background: var(--white); border: 1px solid var(--border);
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  overflow: hidden; 
-  transition: all 0.2s ease;
+}
+.ml-empty-icon {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--pink-bg); color: var(--pink);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+.ml-empty-icon .material-symbols-outlined { font-size: 32px; }
+.ml-empty h3 { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin: 0 0 0.5rem; }
+.ml-empty p  { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0; }
+
+/* grid */
+.ml-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
 }
 
-.module-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
+/* card */
+.ml-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
   cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  display: flex; flex-direction: column;
+}
+.ml-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.09);
+  border-color: #d1d5db;
 }
 
-.module-header:hover { background-color: #f8fafc; }
+.ml-card-bar { height: 5px; flex-shrink: 0; }
 
-.module-header-left { display: flex; align-items: center; gap: 12px; }
+.ml-card-body { padding: 1.4rem 1.5rem 1.25rem; display: flex; flex-direction: column; flex: 1; }
 
-.chevron-icon { color: #94a3b8; font-size: 1.5rem; transition: transform 0.3s ease; }
-.chevron-icon.rotated { transform: rotate(90deg); color: #e91e63; }
-
-.module-title { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 12px; }
-.module-badge { background-color: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; border: 1px solid #e2e8f0; }
-
-.lesson-count-badge { font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 4px 12px; border-radius: 99px; border: 1px solid #e2e8f0; }
-
-.module-content {
-  padding: 0 1.5rem 1.5rem 4rem;
-  border-top: 1px solid #f1f5f9;
-  background-color: #fafbfc;
+.ml-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.85rem;
 }
 
-/* ================= Lessons List ================= */
-.lessons-list { display: flex; flex-direction: column; gap: 8px; padding-top: 1.5rem; border-left: 2px solid #fce7f3; padding-left: 12px; }
+.ml-module-num {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+}
 
-.lesson-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; background-color: white; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s ease; }
-.lesson-item:hover { border-color: #f9a8d4; box-shadow: 0 4px 12px rgba(233, 30, 99, 0.08); transform: translateX(4px); }
+.ml-lesson-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.75rem; font-weight: 600; color: var(--muted);
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 3px 9px; border-radius: 99px;
+}
+.ml-lesson-pill .material-symbols-outlined { font-size: 13px; }
 
-.lesson-info { display: flex; align-items: center; gap: 12px; }
-.lesson-number { width: 32px; height: 32px; background-color: #fce7f3; color: #e91e63; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-.lesson-title { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0; }
-.lesson-subtitle { font-size: 0.8rem; color: #94a3b8; margin: 0; }
+.ml-card-title {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--ink); margin: 0; line-height: 1.45;
+  flex: 1;
+}
 
-.lesson-action { display: flex; align-items: center; gap: 8px; opacity: 0.5; transition: all 0.2s; }
-.lesson-item:hover .lesson-action { opacity: 1; color: #e91e63; }
-.enter-btn-text { font-size: 0.85rem; font-weight: 700; }
-.action-arrow { font-size: 18px; }
+.ml-card-footer { margin-top: 1.25rem; }
 
-.empty-lessons { display: flex; align-items: center; gap: 8px; padding-top: 1.5rem; color: #94a3b8; font-style: italic; }
+.ml-start-link {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.82rem; font-weight: 700;
+  color: var(--pink); transition: gap 0.15s;
+}
+.ml-start-link .material-symbols-outlined { font-size: 16px; }
+.ml-card:hover .ml-start-link { gap: 8px; }
+
+/* responsive */
+@media (max-width: 600px) {
+  .ml-grid { grid-template-columns: 1fr; }
+  .ml-body { padding: 1.5rem 1rem 4rem; }
+  .ml-page-title { font-size: 1.5rem; }
+}
 </style>

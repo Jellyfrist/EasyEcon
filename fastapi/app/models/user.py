@@ -56,7 +56,7 @@ class User(Base):
     # teacher account tracking
     email_sent: Mapped[bool] = mapped_column(Boolean, default = False)
 
-    #vertify mail
+    # vertify mail
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     verification_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
