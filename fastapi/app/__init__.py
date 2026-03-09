@@ -66,6 +66,8 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
             f"{api_prefix}/docs",
             f"{api_prefix}/redoc",
             f"{api_prefix}/openapi.json",
+
+            "/auth/verify-email"
         ]
 
         logger.debug(f"Request method: {request.method}, path: {request.url.path}")

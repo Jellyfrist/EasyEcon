@@ -42,11 +42,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Full Name</label>
-                        <input v-model="invite.full_name" type="text" placeholder="e.g. Jane Doe" :disabled="store.loading" />
+                        <input v-model="invite.full_name" type="text" placeholder="e.g. Natthanicha Rodaree" :disabled="store.loading" />
                     </div>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input v-model="invite.email" type="email" placeholder="e.g. jane.doe@university.edu" :disabled="store.loading" />
+                        <input v-model="invite.email" type="email" placeholder="e.g. natthanicha@university.edu" :disabled="store.loading" />
                     </div>
                 </div>
     

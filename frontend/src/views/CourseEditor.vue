@@ -86,7 +86,7 @@
             </div>
           </div>
 
-          <div class="mini-action-card disabled-card">
+          <div class="mini-action-card" @click="router.push({ name: 'TeacherExamDashboard', params: { courseId: courseId } })">
             <div class="card-left">
               <div class="icon-box bg-blue-50 text-blue-600">
                 <span class="material-symbols-outlined">quiz</span>
@@ -98,7 +98,7 @@
             </div>
             <div class="card-right">
               <span class="badge badge-exam">{{ store.currentCourse?.exam_template_count ?? 0 }}</span>
-              <button class="btn-icon add-btn" disabled>
+              <button class="btn-icon add-btn" @click.stop="router.push({ name: 'ExamEditor', params: { courseId: courseId } })" title="New Set">
                 <span class="material-symbols-outlined">add</span>
               </button>
             </div>

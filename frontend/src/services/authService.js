@@ -150,6 +150,18 @@ export async function register(username, email, password, fullName = null) {
         );
     }
 }
+export async function verifyEmail(token) {
+    try {
+        const response = await axios.post(`${AUTH_URL}/verify-email`, { token });
+        return response.data;
+    } catch (error) {
+        throw new AuthError(
+            error.response?.data?.detail || "Email verification failed",
+            error.response?.status || 500,
+            error.response?.data
+        );
+    }
+}
 
 /**
  * Logout: clears backend cookie + local storage.
@@ -233,6 +245,7 @@ export async function handleSSOCallback() {
 export const authService = {
     login,
     register,
+    verifyEmail,
     logout,
     getProfile,
     refreshUser,

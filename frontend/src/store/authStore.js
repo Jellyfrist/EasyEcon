@@ -14,8 +14,7 @@ import {
 /**
  * Authentication Store
  * Manages global authentication state.
- * 
- * JWT lives in HTTP-only cookie (backend controls it).
+ * * JWT lives in HTTP-only cookie (backend controls it).
  * csrf_token + user profile live in localStorage (we control them).
  */
 export const useAuthStore = defineStore("auth", {
@@ -37,7 +36,6 @@ export const useAuthStore = defineStore("auth", {
         isStudent: (state) => state.user?.role === "student",
 
         // matches backend require_teacher: role "teacher" OR "admin"
-        // isTeacher: (state) => ["teacher", "admin"].includes(state.user?.role),
         isTeacher: (state) => state.user?.role === "teacher",
 
         isAdmin: (state) => state.user?.role === "admin",
@@ -62,10 +60,12 @@ export const useAuthStore = defineStore("auth", {
             } else {
                 this.user = user;
             }
+            
+            // 🚨 แก้ไข Key ให้ตรงกับ authService.js (เปลี่ยนจาก "user" เป็น "user_profile")
             if (this.user) {
-                localStorage.setItem("user", JSON.stringify(this.user));
+                localStorage.setItem("user_profile", JSON.stringify(this.user));
             } else {
-                localStorage.removeItem("user");
+                localStorage.removeItem("user_profile");
             }
         },
 
@@ -95,17 +95,20 @@ export const useAuthStore = defineStore("auth", {
                 if (data && data.user) {
                     this._setUser(data.user);
                 } else {
-                    // 3. 🚨 ถ้าไม่ส่งมา (มีแค่ Token) ให้บังคับดึง Profile ทันที!
-                    // ฟังก์ชัน refreshUser ของใบชาเขียนไว้ดีมากแล้ว เรียกใช้ได้เลยครับ
+                    // 3. ถ้าไม่ส่งมา (มีแค่ Token) ให้บังคับดึง Profile ทันที!
                     await this.refreshUser();
                 }
 
                 // สำคัญมาก: ส่งข้อมูลกลับไปให้ Component คุยต่อ
-                // เราส่ง this.user ไปด้วย เพื่อให้หน้า Login.vue เอาไปเช็ค Role ได้ชัวร์ๆ
                 return { success: true, user: this.user }; 
             } catch (error) {
+                // 🚨 ส่ง message ออกไปตรงๆ ให้ Login.vue ดึงไปใช้แสดง Alert ได้ง่ายๆ
                 this.setError(error.message);
-                return { success: false, error };
+                return { 
+                    success: false, 
+                    error: error, 
+                    message: error.message 
+                };
             } finally {
                 this.isLoading = false;
             }
@@ -126,7 +129,7 @@ export const useAuthStore = defineStore("auth", {
                 return { success: true, data };
             } catch (error) {
                 this.setError(error.message);
-                return { success: false, error };
+                return { success: false, error: error, message: error.message };
             } finally {
                 this.isLoading = false;
             }
@@ -148,7 +151,7 @@ export const useAuthStore = defineStore("auth", {
                 return { success: true, user };
             } catch (error) {
                 this.setError(error.message);
-                return { success: false, error };
+                return { success: false, error: error, message: error.message };
             } finally {
                 this.isLoading = false;
             }
@@ -193,7 +196,6 @@ export const useAuthStore = defineStore("auth", {
                 if (profile) {
                     // merge in case backend returns extra fields
                     this._setUser({ ...this.user, ...profile });
-                    localStorage.setItem("user", JSON.stringify(this.user));
                 }
                 return true;
             } catch (error) {

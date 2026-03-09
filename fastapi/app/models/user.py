@@ -56,6 +56,10 @@ class User(Base):
     # teacher account tracking
     email_sent: Mapped[bool] = mapped_column(Boolean, default = False)
 
+    # vertify mail
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    verification_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     '''
     relationship
     '''
@@ -81,15 +85,10 @@ class User(Base):
     )
 
     progress_records: Mapped[List["PageProgress"]] = relationship(
-        back_populates = "student", # หรือ "student" (ต้องไปเช็คฝั่งนู้นว่าเรียกเราว่าอะไร)
-        # foreign_keys="PageProgress.user_id", # ถ้าตารางลูกมีเชื่อมหลายตัว อาจจะต้องใส่บรรทัดนี้ด้วยครับ
-    )
-
-    progress_records: Mapped[List["PageProgress"]] = relationship(
         back_populates="student",
         foreign_keys="PageProgress.student_id"
     )
-    
+
     # student: flashcard, mini quiz attempts, best mini quiz attempt, exam attempts
     flashcard_progress: Mapped[List["FlashcardProgress"]] = relationship(
         back_populates = "student",

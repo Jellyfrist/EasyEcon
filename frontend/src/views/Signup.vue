@@ -1,5 +1,5 @@
 <template>
-    <div class="page-wrapper">
+    <div class="auth-wrapper">
         <AuthHeroSection />
     
         <div class="form-section">
@@ -73,7 +73,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { authService } from '../services/authService';
+import { authService, AuthError } from '../services/authService';
 import AuthHeroSection from '@/components/AuthHeroSection.vue'
 
 const router = useRouter();
@@ -86,25 +86,25 @@ const isLoading = ref(false);
 const signUp = async () => {
     isLoading.value = true;
     try {
-        const userData = {
-            username: username.value,
-            email: email.value,
-            password: password.value
-        };
-
+        // ส่งเฉพาะข้อมูลที่มีในฟอร์มจริงๆ ไปให้ Service (ไม่ต้องมี full_name)
         await authService.register(
-            userData.username, 
-            userData.email, 
-            userData.password, 
-            userData.full_name
+            username.value, 
+            email.value, 
+            password.value
         );
         
-        alert("Registration successful! Please log in.");
+        // 🚨 อัปเดตให้แจ้งเตือนเรื่องการยืนยันอีเมล
+        alert("🎉 สมัครสมาชิกสำเร็จ! \n\nกรุณาตรวจสอบกล่องจดหมายในอีเมลของคุณ เพื่อคลิกลิงก์ยืนยันบัญชีก่อนเข้าสู่ระบบ");
         router.push('/login');
 
     } catch (error) {
         console.error("Registration failed:", error);
-        const errorMessage = error.response?.data?.detail || "An error occurred during registration";
+        let errorMessage = "An error occurred during registration";
+        
+        if (error instanceof AuthError || error.response) {
+             errorMessage = error.response?.data?.detail || error.message;
+        }
+        
         alert("ERROR: " + errorMessage);
     } finally {
         isLoading.value = false;
@@ -117,14 +117,16 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 <style scoped>
 /* Layout */
-
-.page-wrapper {
+.auth-wrapper {
     display: flex;
     min-height: 100vh;
+    width: 100vw;       /* บังคับกว้าง 100% ของหน้าจอ */
+    margin: 0;
+    padding: 0;
+    background: white;  /* ทับสีครีมของ body */
 }
 
 /* --- Form Section --- */
-
 .form-section {
     flex: 1;
     background: white;

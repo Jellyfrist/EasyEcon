@@ -15,6 +15,9 @@ class TeacherInvite(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
 
+class VerifyEmailRequest(BaseModel):
+    token: str
+
 # user response
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -26,3 +29,4 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     email_sent: bool
+    is_verified: bool

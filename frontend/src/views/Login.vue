@@ -1,5 +1,5 @@
 <template>
-    <div class="page-wrapper">
+    <div class="auth-wrapper">
     
         <AuthHeroSection subtitle="Your Economics Space Awaits" />
     
@@ -120,14 +120,16 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 <style scoped>
 /* Layout */
-
-.page-wrapper {
+.auth-wrapper {
     display: flex;
     min-height: 100vh;
+    width: 100vw;       /* บังคับกว้าง 100% ของหน้าจอ */
+    margin: 0;
+    padding: 0;
+    background: white;  /* ทับสีครีมของ body */
 }
 
 /* --- Form Section --- */
-
 .form-section {
     flex: 1;
     background: white;
