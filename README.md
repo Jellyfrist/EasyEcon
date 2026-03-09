@@ -1,27 +1,40 @@
-# CS212 Web Application Boilerplate
+# EasyEcon
 
-This repository contains the reference implementation for the full-stack web application assignment. It demonstrates the integration of a Vue.js frontend with a FastAPI backend, utilizing Docker for containerization and Vercel for serverless deployment.
+EasyEcon is an e-learning platform built for Modern Application Development (204212). Teachers can create courses, flashcards, and exams. Students can study content, take quizzes, and track their progress.
+
+## Team Members
+
+| Name | Student ID | Role |
+|------|-----------|------|
+| Natthanicha Rodaree | 670510653 | Fullstack |
+| Noorfadilah Prayunto | 670510666 | Frontend and Documentation |
+| Wannee Thanomworrakul | 670510679 | Fullstack |
 
 ## System Architecture
 
 The application is composed of two primary services:
 
-*   **Frontend**: A Single Page Application (SPA) built with Vue 3 and Vite. It serves the user interface and communicates with the backend via RESTful API calls.
-*   **Backend**: A Python-based REST API built with FastAPI. It handles data persistence, business logic, and authentication (JWT + Google OAuth).
+*   **Frontend**: A Single Page Application (SPA) built with Vue 3 and Vite. It serves the user interface and communicates with the backend.
+*   **Backend**: A Python-based built with FastAPI. It handles data persistence, business logic, and authentication (JWT + Google OAuth + GitHub OAuth).
 *   **Database**: PostgreSQL is used for relational data storage. The application is configured to switch between a local Dockerized instance and a remote Supabase instance based on environment configuration.
 
 ## Project Structure
 
 ```
-├── fastapi/          # Backend application source code
-│   ├── app/          # Core application logic (routers, models, schemas)
-│   ├── main.py       # Application entry point
+├── fastapi/               # backend application source code
+│   ├── app/               # core application logic (routers, models, schemas)
+│   ├── main.py            # application entry point
 │   └── requirements.txt
-├── frontend/         # Frontend application source code
-├── docker-compose.yml # Container orchestration configuration
-├── vercel.json       # Deployment configuration for Vercel
-├── run.sh            # Utility script for local environment initialization
-└── .env.example      # Environment variable template
+├── frontend/              # frontend application source code
+│   └── src/
+│       ├── views/         # page components
+│       ├── components/    # shared ui components
+│       ├── services/      # api call functions
+│       └── store/         # pinia stores
+├── docker-compose.yml     # container orchestration configuration
+├── vercel.json            # deployment configuration for Vercel
+├── run.sh                 # utility script for local environment initialization
+└── .env.example           # environment variable template
 ```
 
 ## Local Development Setup
@@ -31,9 +44,13 @@ The project is designed to run in a containerized environment using Docker.
 ### 1. Environment Configuration
 
 Copy the example configuration file and update the values with your credentials.
-
 ```bash
 cp .env.example .env
+```
+
+**If you do NOT have `.env.example`** — then yes, you should list the variables so someone cloning the repo knows what to put in their `.env`.
+
+My suggestion: create a `.env.example` file in your repo with all the keys but empty or placeholder values, then keep the README short. It is cleaner and the standard way most projects do it.
 ```
 
 ### 2. Service Initialization
@@ -45,13 +62,44 @@ Execute the initialization script to start the services. This script automatical
 ```
 
 **Database Modes:**
-*   **Local**: Uses a local PostgreSQL container (Default).
+*   **Local**: Uses a local PostgreSQL container (default).
 *   **Remote**: Set `USE_SUPABASE=true` in `.env` to connect to a managed Supabase instance.
 
 ### 3. Access Points
 
 *   **Frontend**: `http://localhost:8080`
-*   **API Documentation**: `http://localhost:56733/docs` (Direct) or `http://localhost:8080/api/docs` (Proxied)
+*   **API Documentation**: `http://localhost:56733/docs`
+
+### 4. Create the First Admin
+
+After startup, call this endpoint once to seed the admin account using `SEED_ADMIN_*` values from `.env`:
+
+```bash
+curl -X POST http://localhost:56733/admin/seed
+```
+
+### Database Migrations
+
+Migrations run automatically on startup. To run them manually:
+
+```bash
+docker compose exec fastapi python3 -m alembic upgrade head
+```
+
+## API Routes
+
+Base URL: `http://localhost:56733` — Full interactive docs at `/docs`
+
+| Router | Prefix | Roles |
+|--------|--------|-------|
+| Auth | `/auth` | Public |
+| Users | `/users` | Authenticated |
+| Admin | `/admin` | Admin |
+| Courses | `/courses` | Teacher, Student |
+| Learning | `/learning` | Teacher, Student |
+| Flashcards | `/flashcards` | Teacher, Student |
+| Exam | `/exam` | Teacher, Student |
+| Search | `/search` | Teacher, Student |
 
 ## Deployment (Vercel)
 
@@ -72,10 +120,12 @@ The application is configured for deployment on the Vercel platform.
 Verify the following settings in the Vercel Project Dashboard:
 
 *   **Environment Variables**:
-    *   `SUPABASE_DB_URL`: Connection string for the production database.
-    *   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: OAuth credentials.
-    *   `SECRET_KEY` / `JWT_SECRET_KEY`: Cryptographic signing keys.
+    *   `DATABASE_URL`: Connection string for the production database (Supabase).
+    *   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google OAuth credentials.
+    *   `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`: GitHub OAuth credentials.
+    *   `SECRET_KEY`: Cryptographic signing key for JWT.
     *   `APP_ENV`: Set to `production`.
+    *   `USE_SUPABASE`: Set to `true`.
 
 *   **Build Settings**: Default settings are overridden by `vercel.json` and do not require manual configuration.
 
@@ -83,9 +133,13 @@ Verify the following settings in the Vercel Project Dashboard:
 
 Authentication is implemented using JSON Web Tokens (JWT) and OAuth 2.0.
 
+*   **JWT**: Stored as an HTTP-only cookie. A CSRF token is returned in the response body and must be sent as `X-CSRF-Token` on every state-changing request.
 *   **Google OAuth**: Requires valid credentials from the Google Cloud Console.
-    *   **Local Redirect URI**: `http://localhost:56733/google/auth`
-    *   **Production Redirect URI**: `https://<your-project>.vercel.app/api/google/auth`
+    *   **Local Redirect URI**: `http://localhost:56733/auth/google/callback`
+    *   **Production Redirect URI**: `https://<your-project>.vercel.app/api/auth/google/callback`
+*   **GitHub OAuth**: Requires valid credentials from GitHub Developer Settings.
+    *   **Local Redirect URI**: `http://localhost:56733/auth/github/callback`
+    *   **Production Redirect URI**: `https://<your-project>.vercel.app/api/auth/github/callback`
 
 ## Dependency Management
 
