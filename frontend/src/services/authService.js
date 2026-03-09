@@ -1,6 +1,6 @@
 /**
  * Authentication Service
- * 
+ *
  * Cookie strategy (matches backend):
  *   - "jwt" cookie: HTTP-only, set by backend, browser sends automatically
  *   - csrf_token: returned in JSON body on login, stored in localStorage
@@ -9,48 +9,16 @@
  * SSO flow:
  *   - Backend redirects to /login-success?csrf_token=xxx
  *   - LoginSuccess.vue reads csrf_token from URL, stores in localStorage
+ *
+ * NOTE: All axios config (baseURL, withCredentials, interceptors) lives in
+ * api.js. This file just uses that instance — no raw axios here.
  */
 
-import axios from "axios";
+import api from "./api";
 import { jwtDecode } from "jwt-decode";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://easy-econ.vercel.app/api";
-const AUTH_URL = `${BACKEND_URL}/auth`;
-
-// Axios defaults
-
-axios.defaults.withCredentials = true; // send "jwt" cookie automatically
-
-// Axios request interceptor: attach csrf_token header
-
-axios.interceptors.request.use(
-    (config) => {
-        const method = config.method?.toUpperCase();
-        if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-            const csrfToken = localStorage.getItem("csrf_token");
-            if (csrfToken) {
-                config.headers["X-CSRF-Token"] = csrfToken;
-            }
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Axios response interceptor: handle 401
-
-axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            removeToken();
-            if (window.location.pathname !== "/login") {
-                window.location.href = "/login";
-            }
-        }
-        return Promise.reject(error);
-    }
-);
+// All paths are relative to api.js baseURL (e.g. /api)
+const AUTH_URL = `/auth`;
 
 // Custom error class
 
@@ -69,14 +37,13 @@ export class AuthError extends Error {
  * Store csrf_token and user profile after login.
  * JWT cookie is set by the backend — we never touch it here.
  */
-// ใน authService.js
 export function saveToken(csrfToken, userData) {
     if (csrfToken) localStorage.setItem("csrf_token", csrfToken);
-    if (userData) localStorage.setItem("user_profile", JSON.stringify(userData)); // ใช้ user_profile
+    if (userData) localStorage.setItem("user_profile", JSON.stringify(userData));
 }
 
 export function getUser() {
-    const raw = localStorage.getItem("user_profile"); 
+    const raw = localStorage.getItem("user_profile");
     if (!raw) return null;
     try { return JSON.parse(raw); }
     catch { return null; }
@@ -108,12 +75,11 @@ export function removeToken() {
  */
 export async function login(usernameOrEmail, password) {
     try {
-        // OAuth2PasswordRequestForm expects application/x-www-form-urlencoded
         const params = new URLSearchParams();
         params.append("username", usernameOrEmail);
         params.append("password", password);
 
-        const response = await axios.post(`${AUTH_URL}/token`, params, {
+        const response = await api.post(`${AUTH_URL}/token`, params, {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
@@ -135,7 +101,7 @@ export async function login(usernameOrEmail, password) {
  */
 export async function register(username, email, password, fullName = null) {
     try {
-        const response = await axios.post(`${AUTH_URL}/register`, {
+        const response = await api.post(`${AUTH_URL}/register`, {
             username,
             email,
             password,
@@ -150,10 +116,10 @@ export async function register(username, email, password, fullName = null) {
         );
     }
 }
-//verify
+
 export async function verifyEmail(token) {
     try {
-        const response = await axios.post(`${AUTH_URL}/verify-email`, { token });
+        const response = await api.post(`${AUTH_URL}/verify-email`, { token });
         return response.data;
     } catch (error) {
         throw new AuthError(
@@ -169,8 +135,7 @@ export async function verifyEmail(token) {
  */
 export async function logout(redirectToLogin = true) {
     try {
-        // tell backend to clear the JWT cookie
-        await axios.post(`${AUTH_URL}/logout`);
+        await api.post(`${AUTH_URL}/logout`);
     } catch (e) {
         console.warn("Logout API call failed, clearing local state anyway");
     } finally {
@@ -187,7 +152,7 @@ export async function logout(redirectToLogin = true) {
  */
 export async function getProfile() {
     try {
-        const response = await axios.get(`${AUTH_URL}/me`);
+        const response = await api.get(`${AUTH_URL}/me`);
         return response.data;
     } catch (error) {
         console.error("Get profile error:", error);
@@ -202,11 +167,14 @@ export const refreshUser = getProfile;
  * Backend handles OAuth, sets cookie, redirects to /login-success?csrf_token=xxx
  */
 export function loginWithGoogle() {
-    window.location.href = `${AUTH_URL}/login/google`;
+    // Must be a full URL for browser redirect — derive from current origin
+    const base = import.meta.env.VITE_BACKEND_URL || `${window.location.origin}/api`;
+    window.location.href = `${base}/auth/login/google`;
 }
 
 export function loginWithGithub() {
-    window.location.href = `${AUTH_URL}/login/github`;
+    const base = import.meta.env.VITE_BACKEND_URL || `${window.location.origin}/api`;
+    window.location.href = `${base}/auth/login/github`;
 }
 
 export function loginWithSocial(provider) {
@@ -227,10 +195,8 @@ export async function handleSSOCallback() {
         throw new AuthError("Missing csrf_token in SSO callback", 400);
     }
 
-    // Store csrf_token first so interceptor can attach it
     localStorage.setItem("csrf_token", csrfToken);
 
-    // Fetch profile using the JWT cookie the backend already set
     const user = await getProfile();
     if (!user) {
         removeToken();

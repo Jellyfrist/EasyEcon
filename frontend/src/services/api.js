@@ -7,7 +7,9 @@
 
 import axios from 'axios'
 
-const rawUrl = import.meta.env.VITE_BACKEND_URL || 'https://easy-econ.vercel.app/api/auth'
+// Use env var if set, otherwise fall back to a relative path so every
+// deployment (preview or production) calls its OWN backend automatically.
+const rawUrl = import.meta.env.VITE_BACKEND_URL || '/api'
 const baseURL = rawUrl.replace(/\/auth$/, '')
 
 const api = axios.create({
@@ -23,5 +25,20 @@ api.interceptors.request.use((config) => {
     }
     return config
 })
+
+// handle 401 globally
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('csrf_token')
+            localStorage.removeItem('user_profile')
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login'
+            }
+        }
+        return Promise.reject(error)
+    }
+)
 
 export default api
