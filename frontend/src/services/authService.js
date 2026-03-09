@@ -14,7 +14,7 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-const BACKEND_URL = "http://localhost:56733";
+const BACKEND_URL = "https://easy-econ.vercel.app/api";
 const AUTH_URL = `${BACKEND_URL}/auth`;
 
 // Axios defaults

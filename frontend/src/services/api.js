@@ -7,7 +7,7 @@
 
 import axios from 'axios'
 
-const rawUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:56733/auth'
+const rawUrl = import.meta.env.VITE_BACKEND_URL || 'https://easy-econ.vercel.app/api/auth'
 const baseURL = rawUrl.replace(/\/auth$/, '')
 
 const api = axios.create({
