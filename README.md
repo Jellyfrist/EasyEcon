@@ -48,10 +48,9 @@ Copy the example configuration file and update the values with your credentials.
 cp .env.example .env
 ```
 
-**If you do NOT have `.env.example`** — then yes, you should list the variables so someone cloning the repo knows what to put in their `.env`.
+**If you do NOT have `.env.example`** then you should list the variables so someone cloning the repo knows what to put in their `.env`.
 
-My suggestion: create a `.env.example` file in your repo with all the keys but empty or placeholder values, then keep the README short. It is cleaner and the standard way most projects do it.
-```
+Our suggestion: create a `.env.example` file in your repo with all the keys but empty or placeholder values, then keep the README short. It is cleaner and the standard way most projects do it.
 
 ### 2. Service Initialization
 
@@ -76,14 +75,6 @@ After startup, call this endpoint once to seed the admin account using `SEED_ADM
 
 ```bash
 curl -X POST http://localhost:56733/admin/seed
-```
-
-### Database Migrations
-
-Migrations run automatically on startup. To run them manually:
-
-```bash
-docker compose exec fastapi python3 -m alembic upgrade head
 ```
 
 ## API Routes
