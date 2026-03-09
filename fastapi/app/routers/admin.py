@@ -23,8 +23,8 @@ import string
 
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from fastapi import APIRouter, Depends, HTTPException, Query
+import resend
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -38,27 +38,22 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 ALLOWED_ROLES = ("student", "teacher", "admin")
 
 # mail helper
-def _get_mail_client() -> FastMail:
-    '''build fastmail client from settings, raises 500 if not configured'''
-    if not settings.mail_username or not settings.mail_password or not settings.mail_from:
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "mail not configured. "
-                "set MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM in .env"
-            ),
-        )
-    conf = ConnectionConfig(
-        MAIL_USERNAME = settings.mail_username,
-        MAIL_PASSWORD = settings.mail_password,
-        MAIL_FROM = settings.mail_from,
-        MAIL_PORT = settings.mail_port,
-        MAIL_SERVER = settings.mail_server,
-        MAIL_STARTTLS = True,
-        MAIL_SSL_TLS = False,
-        USE_CREDENTIALS = True,
-    )
-    return FastMail(conf)
+def _send_email_resend(to: str, subject: str, body: str):
+    """Send plain-text email via Resend."""
+    import os
+    resend.api_key = os.getenv("RESEND_API_KEY", "")
+    mail_from = os.getenv("MAIL_FROM")
+    if not resend.api_key:
+        raise HTTPException(status_code=500, detail="RESEND_API_KEY not set in environment")
+    try:
+        resend.Emails.send({
+            "from": mail_from,
+            "to": [to],
+            "subject": subject,
+            "text": body,
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 def _generate_username(full_name: str, db: Session) -> str:
     '''
@@ -162,7 +157,6 @@ def deactivate_user(
 @router.post("/teachers/invite", response_model = UserResponse, status_code = 201)
 async def invite_teacher(
     body: TeacherInvite,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ):
@@ -192,21 +186,16 @@ async def invite_teacher(
     db.refresh(teacher)
 
     # send credentials immediately in the background
-    fm = _get_mail_client()
-    message = MessageSchema(
-        subject = "EasyEcon: your teacher account is ready",
-        recipients = [body.email],
-        body=(
-            f"Hello {body.full_name},\n\n"
-            f"Your teacher account on EasyEcon has been created.\n\n"
-            f"Username : {username}\n"
-            f"Password : {password}\n\n"
-            f"Login at: {settings.frontend_login_success_uri.replace('/login-success', '/login')}\n\n"
-            f"Please log in with your username, not this email address."
-        ),
-        subtype="plain",
+    login_url = settings.frontend_login_success_uri.replace("/login-success", "/login")
+    email_body = (
+        f"Hello {body.full_name},\n\n"
+        f"Your teacher account on EasyEcon has been created.\n\n"
+        f"Username : {username}\n"
+        f"Password : {password}\n\n"
+        f"Login at: {login_url}\n\n"
+        f"Please log in with your username, not this email address."
     )
-    background_tasks.add_task(fm.send_message, message)
+    _send_email_resend(body.email, "EasyEcon: your teacher account is ready", email_body)
 
     return teacher
 
@@ -214,7 +203,6 @@ async def invite_teacher(
 @router.post("/teachers/{user_id}/send-credentials", response_model=UserResponse)
 async def send_credentials(
     user_id: int,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ):
@@ -235,20 +223,15 @@ async def send_credentials(
     db.commit()
     db.refresh(user)
 
-    fm = _get_mail_client()
-    message = MessageSchema(
-        subject = "EasyEcon: your login credentials have been reset",
-        recipients = [user.email],
-        body=(
-            f"Hello {user.full_name or user.username},\n\n"
-            f"Your EasyEcon account credentials have been reset.\n\n"
-            f"Username : {user.username}\n"
-            f"Password : {new_password}\n\n"
-            f"Login at: {settings.frontend_login_success_uri.replace('/login-success', '/login')}\n\n"
-            f"Please log in with your username, not this email address."
-        ),
-        subtype="plain",
+    login_url = settings.frontend_login_success_uri.replace("/login-success", "/login")
+    email_body = (
+        f"Hello {user.full_name or user.username},\n\n"
+        f"Your EasyEcon account credentials have been reset.\n\n"
+        f"Username : {user.username}\n"
+        f"Password : {new_password}\n\n"
+        f"Login at: {login_url}\n\n"
+        f"Please log in with your username, not this email address."
     )
-    background_tasks.add_task(fm.send_message, message)
+    _send_email_resend(user.email, "EasyEcon: your login credentials have been reset", email_body)
 
     return user

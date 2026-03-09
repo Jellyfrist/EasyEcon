@@ -33,7 +33,7 @@ import os
 
 from datetime import timedelta
 
-from fastapi import APIRouter, Request, Response, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -49,10 +49,7 @@ from app.models.user import User
 from app.models.social_auth import SocialAuth
 from app.schemas.auth import StudentRegister, UserResponse, VerifyEmailRequest
 
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 
 from app.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -76,62 +73,42 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 def send_verification_email_sync(email_to: str, token: str):
-    # 1. ดึงค่าจาก .env
-    mail_username = os.getenv("MAIL_USERNAME")
-    raw_password = os.getenv("MAIL_PASSWORD")
+    resend.api_key = os.getenv("RESEND_API_KEY")
     mail_from = os.getenv("MAIL_FROM")
-    mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-    mail_port = int(os.getenv("MAIL_PORT", 587))
-    
-    # 🚨 ดึง URL ของหน้าเว็บ Frontend มาจาก .env (ถ้าไม่มีจะตั้งต้นเป็นพอร์ต 8080)
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:8080")
+    frontend_url = os.getenv("FRONTEND_URL")
 
-    if not mail_username or not raw_password:
-        logger.error("❌ [EMAIL ERROR] หาค่า MAIL_USERNAME หรือ MAIL_PASSWORD ใน .env ไม่เจอ!")
+    if not resend.api_key:
+        logger.error("RESEND_API_KEY not set in environment")
         return
 
-    mail_password = raw_password.replace('"', '').replace("'", "").replace(" ", "")
-
-    # 2. สร้างโครงสร้างอีเมล
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "ยินดีต้อนรับสู่ EasyEcon! กรุณายืนยันอีเมลของคุณ"
-    msg["From"] = mail_from
-    msg["To"] = email_to
-
-    # 🚨 ใช้ frontend_url ที่ดึงมาประกอบเป็นลิงก์ เพื่อให้เปิดในพอร์ต 8080 ได้ตรงเป๊ะ!
     verify_url = f"{frontend_url}/verify-email?token={token}"
-    
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <h2 style="color: #111827;">ยินดีต้อนรับสู่ EasyEcon! 🎉</h2>
+        <h2 style="color: #111827;">Welcome to EasyEcon!</h2>
         <p style="color: #4b5563; line-height: 1.6;">
-            ขอบคุณที่สมัครสมาชิกกับ EasyEcon กรุณายืนยันที่อยู่อีเมลของคุณโดยคลิกที่ปุ่มด้านล่างนี้:
+            Thank you for registering with EasyEcon. Please verify your email address by clicking the button below:
         </p>
         <div style="text-align: center; margin: 30px 0;">
             <a href="{verify_url}" style="background-color: #0a703c; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                คลิกเพื่อยืนยันอีเมล
+                Verify Email
             </a>
         </div>
         <p style="color: #9ca3af; font-size: 12px; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-            ลิงก์นี้สามารถใช้งานได้เพียงครั้งเดียว หากมีข้อสงสัยติดต่อแอดมินได้เลยครับ
+            This link can only be used once. If you have any questions, please contact the admin.
         </p>
     </div>
     """
 
-    part = MIMEText(html_content, "html")
-    msg.attach(part)
-
-    # 3. ส่งอีเมลผ่านเซิร์ฟเวอร์ Gmail
     try:
-        with smtplib.SMTP(mail_server, mail_port) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(mail_username, mail_password)
-            server.sendmail(mail_from, email_to, msg.as_string())
-            
-        logger.info(f"✅ [REAL EMAIL] ส่งอีเมลยืนยันสำเร็จไปที่: {email_to}")
+        resend.Emails.send({
+            "from": mail_from,
+            "to": [email_to],
+            "subject": "Welcome to EasyEcon! Please verify your email",
+            "html": html_content,
+        })
+        logger.info(f"[RESEND] Verification email sent to: {email_to}")
     except Exception as e:
-        logger.error(f"❌ [EMAIL ERROR] ส่งอีเมลไม่สำเร็จ: {str(e)}")
+        logger.error(f"[RESEND ERROR] Failed to send email: {str(e)}")
 
 # set jwt
 def _set_jwt_cookie(response: Response, token: str) -> str:
@@ -182,17 +159,11 @@ def _sso_redirect(token: str) -> RedirectResponse:
     )
     return redirect
 
-def send_verification_email(email: str, token: str):
-    # เปลี่ยน URL นี้ให้เป็นโดเมน Frontend ของคุณ
-    verify_url = f"http://localhost:5173/verify-email?token={token}"
-    # พิมพ์ลง Console เพื่อให้คุณก๊อปปี้ลิงก์ไปเทสได้เลย
-    logger.info(f"📧 [MOCK EMAIL] ส่งอีเมลไปที่: {email}")
-    logger.info(f"🔗 [MOCK EMAIL] ลิงก์ยืนยัน: {verify_url}")
 
 # student self registration
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register_student(body: StudentRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def register_student(body: StudentRegister, db: Session = Depends(get_db)):
     '''
     - student register themselves with username, email, and password.
     - role is always set to 'student' -> teachers are created by admins only.
@@ -217,7 +188,7 @@ def register_student(body: StudentRegister, background_tasks: BackgroundTasks, d
     db.commit()
     db.refresh(user)
 
-    background_tasks.add_task(send_verification_email_sync, user.email, token)
+    send_verification_email_sync(user.email, token)
 
     return user
 
@@ -228,14 +199,14 @@ def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="ลิงก์ยืนยันไม่ถูกต้อง หรือหมดอายุแล้ว"
+            detail="Invalid or expired verification link"
         )
     
     user.is_verified = True
     user.verification_token = None
     db.commit()
     
-    return {"message": "ยืนยันอีเมลสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว"}
+    return {"message": "Email verified successfully! You can now log in."}
 
 # login (all roles) -> JWT
 
@@ -276,7 +247,7 @@ def login(
 
     #verify
     if not user.is_verified:
-        raise HTTPException(status_code=403, detail="กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ")
+        raise HTTPException(status_code=403, detail="Please verify your email before logging in")
 
     token = create_access_token(
         data={"sub": str(user.id), "role": user.role},
