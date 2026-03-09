@@ -45,140 +45,82 @@ fastapi_app.logger = logger
 # Remember to add CORSMiddleware LAST so it wraps the custom JWT middleware!
 
 
-# class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: StarletteRequest, call_next):
-#         # Paths that skip JWT/CSRF check entirely
-#         # - GET requests are always allowed (read-only)
-#         # - Auth endpoints (login, register, SSO callbacks) must be excluded
-#         #   so users can reach them before they have a token
-#         excluded_paths = [
-#             "/",
-#             # auth: login & register never have a token yet
-#             "/auth/token",
-#             "/auth/register",
-#             "/auth/login/google",
-#             "/auth/google/callback",
-#             "/auth/login/github",
-#             "/auth/github/callback",
-#             #try idk
-#             f"{api_prefix}/auth/token",
-#             f"{api_prefix}/auth/register",
-#             f"{api_prefix}/auth/login/google",
-#             f"{api_prefix}/auth/google/callback",
-#             f"{api_prefix}/auth/login/github",
-#             f"{api_prefix}/auth/github/callback",
-#             # ... and so on
-#             # legacy paths kept for backward compatibility
-#             "/login",
-#             "/google/auth",
-#             "/logout",
-#             # docs
-#             f"{api_prefix}/docs",
-#             f"{api_prefix}/redoc",
-#             f"{api_prefix}/openapi.json",
-#             # verify
-#             "/auth/verify-email"
-#         ]
-
-#         logger.debug(f"Request method: {request.method}, path: {request.url.path}")
-
-#         # skip middleware for GET/HEAD/OPTIONS or excluded paths
-#         if request.method not in ["POST", "PUT", "DELETE", "PATCH"] \
-#                 or request.url.path in excluded_paths:
-#             logger.debug("Skipping JWT/CSRF validation for this request")
-#             return await call_next(request)
-
-#         token = request.cookies.get("jwt")
-#         logger.debug(f"JWT cookie: {token}")
-#         if not token:
-#             logger.error("Missing JWT cookie in middleware")
-#             raise HTTPException(status_code=401, detail="Missing JWT cookie")
-
-#         try:
-#             payload = jwt.decode(
-#                 token, settings.jwt_secret_key, algorithms=["HS256"])
-#             logger.debug(f"JWT payload: {payload}")
-#         except JWTError as e:
-#             logger.error(f"JWT decoding failed in middleware: {e}")
-#             raise HTTPException(
-#                 status_code=401, detail="Invalid or expired token")
-
-#         client_csrf = request.headers.get("X-CSRF-Token")
-#         server_csrf = payload.get("csrf_token")
-#         logger.debug(f"Client CSRF token: {client_csrf}, Server CSRF token: {server_csrf}")
-        
-#         # Only validate CSRF if both client sent a token AND server has one
-#         # This allows grace period after login before frontend has stored the token
-#         if client_csrf and server_csrf:
-#             if server_csrf != client_csrf:
-#                 logger.error(f"CSRF token mismatch: expected {server_csrf}, got {client_csrf}")
-#                 raise HTTPException(status_code=403, detail="CSRF token mismatch")
-#         elif server_csrf and not client_csrf:
-#             # Server has CSRF token but client didn't send it - warn but don't fail
-#             logger.warning(f"Client missing CSRF token header (path: {request.url.path})")
-#         elif not server_csrf:
-#             # JWT doesn't have CSRF token - this shouldn't happen but allow it
-#             logger.warning(f"JWT missing CSRF claim (path: {request.url.path})")
-
-#         response = await call_next(request)
-#         return response
-
 class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: StarletteRequest, call_next):
-        path = request.url.path
-        method = request.method
-
-        # 1. ALWAYS let OPTIONS through (The CORS preflight fix)
-        if method == "OPTIONS":
-            return await call_next(request)
-
-        # 2. Public suffixes (This makes sure /api/auth/register AND /auth/register both work)
-        public_suffixes = [
+        # Paths that skip JWT/CSRF check entirely
+        # - GET requests are always allowed (read-only)
+        # - Auth endpoints (login, register, SSO callbacks) must be excluded
+        #   so users can reach them before they have a token
+        excluded_paths = [
+            "/",
+            # auth: login & register never have a token yet
             "/auth/token",
             "/auth/register",
             "/auth/login/google",
             "/auth/google/callback",
             "/auth/login/github",
             "/auth/github/callback",
-            "/auth/verify-email",
+            f"{api_prefix}/auth/token",
+            f"{api_prefix}/auth/register",
+            f"{api_prefix}/auth/login/google",
+            f"{api_prefix}/auth/google/callback",
+            f"{api_prefix}/auth/login/github",
+            f"{api_prefix}/auth/github/callback",
+            # ... and so on
+            # legacy paths kept for backward compatibility
             "/login",
+            "/google/auth",
             "/logout",
-            "/docs",
-            "/redoc",
-            "/openapi.json"
+            # docs
+            f"{api_prefix}/docs",
+            f"{api_prefix}/redoc",
+            f"{api_prefix}/openapi.json",
+            # verify
+            "/auth/verify-email"
         ]
 
-        # 3. Skip check if it's GET/HEAD OR if it matches a public suffix
-        is_public = any(path.endswith(s) for s in public_suffixes) or path == "/"
-        is_read_only = method in ["GET", "HEAD"]
+        logger.debug(f"Request method: {request.method}, path: {request.url.path}")
 
-        if is_read_only or is_public:
-            logger.debug(f"Skipping JWT/CSRF validation for: {method} {path}")
+        # skip middleware for GET/HEAD/OPTIONS or excluded paths
+        if request.method not in ["POST", "PUT", "DELETE", "PATCH"] \
+                or request.url.path in excluded_paths:
+            logger.debug("Skipping JWT/CSRF validation for this request")
             return await call_next(request)
 
-        # --- JWT Validation Logic ---
         token = request.cookies.get("jwt")
+        logger.debug(f"JWT cookie: {token}")
         if not token:
-            logger.error(f"Missing JWT cookie for {path}")
-            # Use JSONResponse instead of raising HTTPException 
-            # This is safer inside BaseHTTPMiddleware
-            return JSONResponse(status_code=401, content={"detail": "Missing JWT cookie"})
+            logger.error("Missing JWT cookie in middleware")
+            raise HTTPException(status_code=401, detail="Missing JWT cookie")
 
         try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
+            payload = jwt.decode(
+                token, settings.jwt_secret_key, algorithms=["HS256"])
+            logger.debug(f"JWT payload: {payload}")
         except JWTError as e:
-            logger.error(f"JWT decoding failed: {e}")
-            return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+            logger.error(f"JWT decoding failed in middleware: {e}")
+            raise HTTPException(
+                status_code=401, detail="Invalid or expired token")
 
-        # --- CSRF Validation Logic ---
         client_csrf = request.headers.get("X-CSRF-Token")
         server_csrf = payload.get("csrf_token")
+        logger.debug(f"Client CSRF token: {client_csrf}, Server CSRF token: {server_csrf}")
         
-        if client_csrf and server_csrf and server_csrf != client_csrf:
-            logger.error("CSRF token mismatch")
-            return JSONResponse(status_code=403, content={"detail": "CSRF token mismatch"})
+        # Only validate CSRF if both client sent a token AND server has one
+        # This allows grace period after login before frontend has stored the token
+        if client_csrf and server_csrf:
+            if server_csrf != client_csrf:
+                logger.error(f"CSRF token mismatch: expected {server_csrf}, got {client_csrf}")
+                raise HTTPException(status_code=403, detail="CSRF token mismatch")
+        elif server_csrf and not client_csrf:
+            # Server has CSRF token but client didn't send it - warn but don't fail
+            logger.warning(f"Client missing CSRF token header (path: {request.url.path})")
+        elif not server_csrf:
+            # JWT doesn't have CSRF token - this shouldn't happen but allow it
+            logger.warning(f"JWT missing CSRF claim (path: {request.url.path})")
 
-        return await call_next(request)
+        response = await call_next(request)
+        return response
 
 fastapi_app.add_middleware(JWTAndCSRFMiddleware)
 
