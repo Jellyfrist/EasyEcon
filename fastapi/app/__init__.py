@@ -66,7 +66,7 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
             f"{api_prefix}/docs",
             f"{api_prefix}/redoc",
             f"{api_prefix}/openapi.json",
-            #verify
+            # verify
             "/auth/verify-email"
         ]
 

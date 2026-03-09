@@ -188,6 +188,7 @@ export const useAuthStore = defineStore("auth", {
             try {
                 const profile = await getProfile();
                 if (profile) {
+                    
                     // merge in case backend returns extra fields
                     this._setUser({ ...this.user, ...profile });
                 }

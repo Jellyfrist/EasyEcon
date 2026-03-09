@@ -1,3 +1,4 @@
+<!-- add feat verify -->
 <template>
   <div class="verify-page">
     <div class="card">

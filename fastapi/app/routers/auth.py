@@ -274,7 +274,7 @@ def login(
     if not user.is_active:
         raise HTTPException(status_code = 400, detail = "Inactive account")
 
-    # verify
+    #verify
     if not user.is_verified:
         raise HTTPException(status_code=403, detail="กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ")
 
