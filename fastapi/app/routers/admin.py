@@ -25,7 +25,6 @@ import string
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-import resend
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -39,20 +38,34 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 ALLOWED_ROLES = ("student", "teacher", "admin")
 
 # mail helper
-def _send_email_resend(to: str, subject: str, body: str):
-    """Send plain-text email via Resend."""
+def _send_email_smtp(to: str, subject: str, body: str):
+    """Send plain-text email via Gmail SMTP."""
     import os
-    resend.api_key = os.getenv("RESEND_API_KEY", "")
-    mail_from = os.getenv("MAIL_FROM")
-    if not resend.api_key:
-        raise HTTPException(status_code=500, detail="RESEND_API_KEY not set in environment")
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    mail_username = os.getenv("MAIL_USERNAME", "")
+    mail_password = os.getenv("MAIL_PASSWORD", "")
+    mail_from     = os.getenv("MAIL_FROM", mail_username)
+    mail_server   = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    mail_port     = int(os.getenv("MAIL_PORT", 587))
+
+    if not mail_username or not mail_password:
+        raise HTTPException(status_code=500, detail="MAIL_USERNAME or MAIL_PASSWORD not set")
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = mail_from
+    msg["To"]      = to
+    msg.attach(MIMEText(body, "plain"))
+
     try:
-        resend.Emails.send({
-            "from": mail_from,
-            "to": [to],
-            "subject": subject,
-            "text": body,
-        })
+        with smtplib.SMTP(mail_server, mail_port) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(mail_username, mail_password)
+            server.sendmail(mail_from, to, msg.as_string())
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
@@ -196,7 +209,7 @@ async def invite_teacher(
         f"Login at: {login_url}\n\n"
         f"Please log in with your username, not this email address."
     )
-    _send_email_resend(body.email, "EasyEcon: your teacher account is ready", email_body)
+    _send_email_smtp(body.email, "EasyEcon: your teacher account is ready", email_body)
 
     return teacher
 
@@ -233,7 +246,7 @@ async def send_credentials(
         f"Login at: {login_url}\n\n"
         f"Please log in with your username, not this email address."
     )
-    _send_email_resend(user.email, "EasyEcon: your login credentials have been reset", email_body)
+    _send_email_smtp(user.email, "EasyEcon: your login credentials have been reset", email_body)
 
     return user
 

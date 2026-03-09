@@ -49,7 +49,6 @@ from app.models.user import User
 from app.models.social_auth import SocialAuth
 from app.schemas.auth import StudentRegister, UserResponse, VerifyEmailRequest
 
-import resend
 
 from app.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -73,12 +72,19 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 def send_verification_email_sync(email_to: str, token: str):
-    resend.api_key = os.getenv("RESEND_API_KEY")
-    mail_from = os.getenv("MAIL_FROM")
-    frontend_url = os.getenv("FRONTEND_URL")
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
 
-    if not resend.api_key:
-        logger.error("RESEND_API_KEY not set in environment")
+    mail_username = os.getenv("MAIL_USERNAME", "")
+    mail_password = os.getenv("MAIL_PASSWORD", "")
+    mail_from     = os.getenv("MAIL_FROM", mail_username)
+    mail_server   = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    mail_port     = int(os.getenv("MAIL_PORT", 587))
+    frontend_url  = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    if not mail_username or not mail_password:
+        logger.error("MAIL_USERNAME or MAIL_PASSWORD not set")
         return
 
     verify_url = f"{frontend_url}/verify-email?token={token}"
@@ -99,16 +105,21 @@ def send_verification_email_sync(email_to: str, token: str):
     </div>
     """
 
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Welcome to EasyEcon! Please verify your email"
+    msg["From"]    = mail_from
+    msg["To"]      = email_to
+    msg.attach(MIMEText(html_content, "html"))
+
     try:
-        resend.Emails.send({
-            "from": mail_from,
-            "to": [email_to],
-            "subject": "Welcome to EasyEcon! Please verify your email",
-            "html": html_content,
-        })
-        logger.info(f"[RESEND] Verification email sent to: {email_to}")
+        with smtplib.SMTP(mail_server, mail_port) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(mail_username, mail_password)
+            server.sendmail(mail_from, email_to, msg.as_string())
+        logger.info(f"[SMTP] Verification email sent to: {email_to}")
     except Exception as e:
-        logger.error(f"[RESEND ERROR] Failed to send email: {str(e)}")
+        logger.error(f"[SMTP ERROR] Failed to send email: {str(e)}")
 
 # set jwt
 def _set_jwt_cookie(response: Response, token: str) -> str:
