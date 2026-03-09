@@ -256,8 +256,8 @@ def login(
     if not user.is_active:
         raise HTTPException(status_code = 400, detail = "Inactive account")
 
-    #verify
-    if not user.is_verified:
+    # teachers and admins skip email verification (they are created by admin)
+    if not user.is_verified and user.role not in ("teacher", "admin"):
         raise HTTPException(status_code=403, detail="Please verify your email before logging in")
 
     token = create_access_token(

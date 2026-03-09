@@ -194,6 +194,8 @@ async def invite_teacher(
         full_name = body.full_name,
         role = "teacher",
         email_sent = True,
+        # teachers are created by admin, so no email verification needed
+        is_verified = True,
     )
     db.add(teacher)
     db.commit()
