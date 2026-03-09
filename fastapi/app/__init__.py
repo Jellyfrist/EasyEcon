@@ -76,7 +76,11 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
             f"{api_prefix}/redoc",
             f"{api_prefix}/openapi.json",
             # verify
-            "/auth/verify-email"
+            "/auth/verify-email",
+            f"{api_prefix}/auth/verify-email",
+            # one-time admin seed (no token exists yet)
+            "/admin/seed",
+            f"{api_prefix}/admin/seed",
         ]
 
         logger.debug(f"Request method: {request.method}, path: {request.url.path}")
@@ -141,7 +145,7 @@ fastapi_app.add_middleware(
 # fastapi_app.add_middleware(JWTAndCSRFMiddleware)
 fastapi_app.state.settings = settings
 
-# Auto-detect environment and conditionally create tables
+# auto-detect environment and conditionally create tables
 try:
     if should_auto_create_tables():
         logger.info("Auto-creating database tables (Docker)")
@@ -150,7 +154,41 @@ try:
         logger.info("Skipping table creation (Vercel/Local)")
 except Exception as e:
     logger.error(f"Error during table creation: {e}")
-    # Don't fail the app if table creation fails
+    # don't fail the app if table creation fails
+
+# auto-create admin on startup if no admin exists yet
+try:
+    from app.db import SessionLocal
+    from app.models.user import User
+    from app.security import hash_password
+
+    db = SessionLocal()
+    existing = db.query(User).filter(User.role == "admin").first()
+    if not existing:
+        email    = os.getenv("SEED_ADMIN_EMAIL", "")
+        password = os.getenv("SEED_ADMIN_PASSWORD", "")
+        username = os.getenv("SEED_ADMIN_USERNAME", "")
+        if email and password and username:
+            admin_user = User(
+                username=username,
+                email=email,
+                hashed_password=hash_password(password),
+                full_name="Admin",
+                role="admin",
+                is_active=True,
+                is_verified=True,
+                email_sent=False,
+            )
+            db.add(admin_user)
+            db.commit()
+            logger.info(f"Admin auto-created: {username}")
+        else:
+            logger.warning("SEED_ADMIN_* env vars not set, skipping admin creation")
+    else:
+        logger.info(f"Admin already exists: {existing.username}")
+    db.close()
+except Exception as e:
+    logger.error(f"Error during admin auto-seed: {e}")
 
 # router registration
 fastapi_app.include_router(auth.router,      prefix=api_prefix)
