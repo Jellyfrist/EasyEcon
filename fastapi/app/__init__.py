@@ -34,13 +34,15 @@ fastapi_app = FastAPI(
 )
 fastapi_app.logger = logger
 
-fastapi_app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# fastapi_app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=settings.allowed_origins,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# Remember to add CORSMiddleware LAST so it wraps the custom JWT middleware!
 
 
 class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
@@ -113,8 +115,23 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
 
-
 fastapi_app.add_middleware(JWTAndCSRFMiddleware)
+
+fastapi_app.add_middleware(
+    CORSMiddleware,
+    # 1. This handles your explicit production domains from your .env
+    allow_origins=settings.allowed_origins, 
+    
+    # 2. This safely catches ANY Vercel preview deployment for your specific project
+    allow_origin_regex=r"https://easy-econ-.*-jellyfrists-projects\.vercel\.app", 
+    
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# fastapi_app.add_middleware(JWTAndCSRFMiddleware)
 fastapi_app.state.settings = settings
 
 # Auto-detect environment and conditionally create tables
