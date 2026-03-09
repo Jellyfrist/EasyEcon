@@ -132,22 +132,22 @@
           />
 
           <span class="option-letter">{{ letters[oi] || oi + 1 }}</span>
-          
-          <span>
-            <!-- Editable option string — updates List[str] in place -->
-            <input
-              :value="optText"
-              placeholder="Option text"
-              class="input-field option-input"
-              @input="updateOption(oi, $event.target.value)"
-            />
-            <button
-              v-if="q.options.length > 2"
-              type="button"
-              class="btn-close"
-              @click="removeOption(oi)"
-            >✕</button>
-          </span>
+
+          <input
+            :value="optText"
+            placeholder="Option text"
+            class="input-field option-input"
+            @input="updateOption(oi, $event.target.value)"
+          />
+
+          <button
+            v-if="q.options.length > 2"
+            type="button"
+            class="btn-remove"
+            @click="removeOption(oi)"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
 
           
         </div>
@@ -463,11 +463,11 @@ export default {
           break
         case 'true_false':
           // schema allows options to store ['True','False'] for display
-          this.q.options        = ['True', 'False']
+          this.q.options = ['True', 'False']
           this.q.correct_answer = 'True'
           break
         case 'short_answer':
-          this.q.options        = null   // null per schema comment
+          this.q.options = null   // null per schema comment
           this.q.correct_answer = ''
           break
       }
@@ -477,69 +477,114 @@ export default {
 </script>
 
 <style scoped>
-/* ══ Header ═══════════════════════════════════════════════ */
+/* ══ Question card header ══════════════════════════════════ */
 .qe-header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 0.5rem;
+  padding-bottom: 0.875rem;
+  margin-bottom: 0.875rem;
+  border-bottom: 1.5px solid var(--gray-light);
 }
+
 .type-select {
-  font-size: 12px;
-  padding: 4px 10px;
+  font-size: 0.78rem;
+  padding: 0.3rem 1.8rem 0.3rem 0.7rem;
   height: auto;
-  max-width: 180px;
+  max-width: 170px;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background-color: var(--gray-light);
+  color: var(--text-main);
+  font-family: inherit;
+  font-weight: 600;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
+
+.type-select:focus {
+  outline: none;
+  border-color: var(--primary-pink);
+  background-color: var(--white);
+}
+
 .multi-toggle {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: #6b7280;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
   cursor: pointer;
   user-select: none;
+  font-weight: 500;
 }
 
 /* ══ RTE toolbar ══════════════════════════════════════════ */
 .rte-toolbar {
   display: flex;
   align-items: center;
-  gap: 3px;
-  background: #f8f9fb;
-  border: 1px solid #e2e5ea;
+  gap: 0.2rem;
+  background: var(--gray-light);
+  border: 1.5px solid var(--card-border);
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  padding: 5px 10px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 0.3rem 0.6rem;
   flex-wrap: wrap;
 }
+
 .rte-btn {
   background: none;
   border: 1px solid transparent;
   border-radius: 5px;
-  padding: 3px 8px;
-  font-size: 13px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.82rem;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-main);
+  font-family: inherit;
   line-height: 1.4;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
-.rte-btn:hover { background: #e9ecf0; border-color: #cbd1d9; }
-.img-btn  { cursor: pointer; }
+
+.rte-btn:hover {
+  background: var(--card-border);
+  border-color: var(--card-border);
+}
+
+.img-btn    { cursor: pointer; }
 .hidden-file { display: none; }
-.math-icon { font-family: serif; font-style: italic; font-size: 15px; }
-.rte-divider { width: 1px; height: 20px; background: #d1d5db; margin: 0 4px; }
+.math-icon  { font-family: serif; font-style: italic; font-size: 0.95rem; }
+
+.rte-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--card-border);
+  margin: 0 0.25rem;
+}
 
 .rte-editor {
   min-height: 80px;
-  border-radius: 0 0 8px 8px !important;
+  border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
   outline: none;
   line-height: 1.65;
   white-space: pre-wrap;
+  background: var(--gray-light);
 }
+
+.rte-editor:focus {
+  background: var(--white);
+  border-color: var(--primary-pink) !important;
+  box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
+}
+
 .rte-editor:empty::before {
   content: attr(data-placeholder);
-  color: #9ca3af;
+  color: var(--text-muted);
+  opacity: 0.6;
   pointer-events: none;
 }
 
@@ -548,10 +593,10 @@ export default {
   display: inline-block;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   padding: 1px 6px;
   font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #1d4ed8;
   margin: 0 2px;
   cursor: default;
@@ -559,43 +604,141 @@ export default {
 
 /* Math preview in modal */
 .math-preview {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #f8f9fb;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #374151;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--gray-light);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  color: var(--text-main);
 }
-.math-preview code { font-family: 'Courier New', monospace; color: #1d4ed8; }
 
-/* ══ Options ══════════════════════════════════════════════ */
+.math-preview code {
+  font-family: 'Courier New', monospace;
+  color: #1d4ed8;
+}
+
+/* ══ Options block ════════════════════════════════════════ */
 .options-block-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 0.6rem;
 }
-.btn-sm { font-size: 12px; padding: 4px 12px; }
+
+.options-block-header h4 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+}
 
 /* ══ True / False ═════════════════════════════════════════ */
-.tf-row   { display: flex; gap: 12px; }
+.tf-row { display: flex; gap: 0.75rem; }
+
 .tf-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 600;
-  background: white;
-  font-size: 14px;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  font-family: inherit;
+  font-size: 0.875rem;
+  background: var(--gray-light);
+  color: var(--text-main);
+  transition: all 0.15s ease;
 }
-.tf-option:hover { border-color: #94a3b8; }
+
+.tf-option:hover {
+  border-color: var(--forest-green);
+  background: var(--light-green);
+  color: var(--forest-green);
+}
+
 .tf-option.is-correct {
-  border-color: #22c55e;
-  background: #f0fdf4;
-  color: #15803d;
+  border-color: var(--forest-green);
+  background: var(--light-green);
+  color: var(--forest-green);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   7. Option rows  (Multiple Choice & Short Answer)
+═══════════════════════════════════════════════════════════ */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.35rem;
+  transition: background 0.15s ease;
+}
+
+.option-row:hover                     { background: var(--white); }
+.option-row.is-correct                { background: var(--light-green); }
+.option-row.is-correct .option-letter {
+  background: var(--forest-green);
+  color: var(--white);
+  border-color: var(--forest-green);
+}
+
+.option-radio {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--forest-green);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.option-letter {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: var(--white);
+  border: 1.5px solid var(--card-border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.option-input {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--white);
+  min-width: 0;
+}
+
+.btn-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-remove:hover {
+  background: #fee2e2;
+  color: #ef4444;
 }
 </style>
