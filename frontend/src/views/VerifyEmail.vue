@@ -10,14 +10,14 @@
 
       <div v-else-if="isSuccess" class="state-box success">
         <span class="material-symbols-outlined icon">check_circle</span>
-        <h2>ยืนยันอีเมลสำเร็จ! 🎉</h2>
+        <h2>ยืนยันอีเมลสำเร็จ</h2>
         <p class="text-gray-500">บัญชีของคุณพร้อมใช้งานแล้ว ระบบจะพาคุณไปหน้าเข้าสู่ระบบ...</p>
         <button @click="goToLogin" class="btn-primary mt-4">ไปหน้าเข้าสู่ระบบทันที</button>
       </div>
 
       <div v-else class="state-box error">
         <span class="material-symbols-outlined icon">cancel</span>
-        <h2>ไม่สามารถยืนยันอีเมลได้ ❌</h2>
+        <h2>ไม่สามารถยืนยันอีเมลได้</h2>
         <p class="text-gray-500">{{ errorMessage }}</p>
         <button @click="goToLogin" class="btn-outline mt-4">กลับไปหน้าเข้าสู่ระบบ</button>
       </div>
@@ -29,7 +29,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import authService from '@/services/authService'; // ปรับ path ให้ตรงกับโปรเจกต์คุณ
+import authService from '@/services/authService';
 
 const route = useRoute();
 const router = useRouter();
@@ -39,7 +39,6 @@ const isSuccess = ref(false);
 const errorMessage = ref('ลิงก์ยืนยันไม่ถูกต้อง หรือหมดอายุแล้ว');
 
 onMounted(async () => {
-  // ดึงค่า token จาก URL query (?token=...)
   const token = route.query.token;
 
   if (!token) {
@@ -49,11 +48,9 @@ onMounted(async () => {
   }
 
   try {
-    // ส่งไปเช็คกับ Backend
     await authService.verifyEmail(token);
     isSuccess.value = true;
     
-    // สำเร็จปุ๊บ ให้นับถอยหลัง 3 วินาทีแล้วเด้งไปหน้า Login
     setTimeout(() => {
       goToLogin();
     }, 3000);
@@ -67,7 +64,7 @@ onMounted(async () => {
 });
 
 const goToLogin = () => {
-  router.push('/login'); // ปรับให้ตรงกับ path หน้า login ของคุณ
+  router.push('/login'); 
 };
 </script>
 

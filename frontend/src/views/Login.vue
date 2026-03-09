@@ -90,24 +90,25 @@ const login = async () => {
     try {
         const result = await authStore.login(email.value, password.value);
 
-        // ใช้เช็คว่าเป็นใคร
-        // console.log("👉 ข้อมูลจาก Store:", authStore.user);
-        // console.log("👉 ระบบมองว่าเป็นครูไหม:", authStore.isTeacher);
-        // Redirect based on the role
-        if (result.success) {
-            if (authStore.isAdmin) {
-                router.push('/admin');
-            } else if (authStore.isTeacher) {
-                // router.push('/teacher/dashboard');
-                router.push('/teacher');
-            } else {
-                router.push('/dashboard');
-            }
+        if (!result.success) {
+            const errorMessage = result.error?.response?.data?.detail || result.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+            
+            alert(errorMessage);
+            password.value = '';
+            return; 
         }
+
+        if (authStore.isAdmin) {
+            router.push('/admin');
+        } else if (authStore.isTeacher) {
+            router.push('/teacher');
+        } else {
+            router.push('/dashboard');
+        }
+
     } catch (error) {
-        console.error("Login failed:", error);
-        const errorMessage = error.response?.data?.detail || error.message || "Invalid login credentials";
-        alert("ERROR: " + errorMessage);
+        console.error("Login failed (unexpected):", error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
         password.value = ''; 
     } finally {
         isLoading.value = false;
@@ -123,10 +124,10 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 .auth-wrapper {
     display: flex;
     min-height: 100vh;
-    width: 100vw;       /* บังคับกว้าง 100% ของหน้าจอ */
+    width: 100vw;  
     margin: 0;
     padding: 0;
-    background: white;  /* ทับสีครีมของ body */
+    background: white;
 }
 
 /* --- Form Section --- */

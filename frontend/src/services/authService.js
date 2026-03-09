@@ -150,6 +150,7 @@ export async function register(username, email, password, fullName = null) {
         );
     }
 }
+
 export async function verifyEmail(token) {
     try {
         const response = await axios.post(`${AUTH_URL}/verify-email`, { token });

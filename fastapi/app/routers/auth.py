@@ -132,7 +132,7 @@ def send_verification_email_sync(email_to: str, token: str):
         logger.info(f"✅ [REAL EMAIL] ส่งอีเมลยืนยันสำเร็จไปที่: {email_to}")
     except Exception as e:
         logger.error(f"❌ [EMAIL ERROR] ส่งอีเมลไม่สำเร็จ: {str(e)}")
-               
+
 # set jwt
 def _set_jwt_cookie(response: Response, token: str) -> str:
     '''
@@ -274,6 +274,7 @@ def login(
     if not user.is_active:
         raise HTTPException(status_code = 400, detail = "Inactive account")
 
+    #verify
     if not user.is_verified:
         raise HTTPException(status_code=403, detail="กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ")
 

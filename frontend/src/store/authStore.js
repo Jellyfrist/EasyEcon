@@ -61,7 +61,6 @@ export const useAuthStore = defineStore("auth", {
                 this.user = user;
             }
             
-            // 🚨 แก้ไข Key ให้ตรงกับ authService.js (เปลี่ยนจาก "user" เป็น "user_profile")
             if (this.user) {
                 localStorage.setItem("user_profile", JSON.stringify(this.user));
             } else {
@@ -88,21 +87,16 @@ export const useAuthStore = defineStore("auth", {
             this.clearError();
 
             try {
-                // 1. ยิงล็อกอินเพื่อรับ Token (Cookie)
                 const data = await login(usernameOrEmail, password);
 
-                // 2. เช็คว่า Backend ใจดีส่งข้อมูล user มาพร้อม Token เลยไหม?
                 if (data && data.user) {
                     this._setUser(data.user);
                 } else {
-                    // 3. ถ้าไม่ส่งมา (มีแค่ Token) ให้บังคับดึง Profile ทันที!
                     await this.refreshUser();
                 }
 
-                // สำคัญมาก: ส่งข้อมูลกลับไปให้ Component คุยต่อ
                 return { success: true, user: this.user }; 
             } catch (error) {
-                // 🚨 ส่ง message ออกไปตรงๆ ให้ Login.vue ดึงไปใช้แสดง Alert ได้ง่ายๆ
                 this.setError(error.message);
                 return { 
                     success: false, 

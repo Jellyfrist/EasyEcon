@@ -86,14 +86,12 @@ const isLoading = ref(false);
 const signUp = async () => {
     isLoading.value = true;
     try {
-        // ส่งเฉพาะข้อมูลที่มีในฟอร์มจริงๆ ไปให้ Service (ไม่ต้องมี full_name)
         await authService.register(
             username.value, 
             email.value, 
             password.value
         );
         
-        // 🚨 อัปเดตให้แจ้งเตือนเรื่องการยืนยันอีเมล
         alert("🎉 สมัครสมาชิกสำเร็จ! \n\nกรุณาตรวจสอบกล่องจดหมายในอีเมลของคุณ เพื่อคลิกลิงก์ยืนยันบัญชีก่อนเข้าสู่ระบบ");
         router.push('/login');
 

@@ -29,4 +29,5 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     email_sent: bool
+    
     is_verified: bool
