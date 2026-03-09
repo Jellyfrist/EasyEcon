@@ -60,6 +60,14 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
             "/auth/google/callback",
             "/auth/login/github",
             "/auth/github/callback",
+            #try idk
+            f"{api_prefix}/auth/token",
+            f"{api_prefix}/auth/register",
+            f"{api_prefix}/auth/login/google",
+            f"{api_prefix}/auth/google/callback",
+            f"{api_prefix}/auth/login/github",
+            f"{api_prefix}/auth/github/callback",
+            # ... and so on
             # legacy paths kept for backward compatibility
             "/login",
             "/google/auth",
