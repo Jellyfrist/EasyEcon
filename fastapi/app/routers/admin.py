@@ -7,6 +7,7 @@ routes:
     PATCH  /admin/users/{user_id}/deactivate            deactivate a user account
     POST   /admin/teachers/invite                       create teacher + auto-generate credentials + send email
     POST   /admin/teachers/{user_id}/send-credentials   reset password + resend credentials email
+    POST   /admin/seed                                  create initial admin user
 
 teacher invite flow:
     1. admin fills in full_name + email only
@@ -235,3 +236,39 @@ async def send_credentials(
     _send_email_resend(user.email, "EasyEcon: your login credentials have been reset", email_body)
 
     return user
+
+# one-time admin seeder: call once, then delete this route
+@router.post("/seed", include_in_schema=False)
+def seed_admin(db: Session = Depends(get_db)):
+    import os
+    email    = os.getenv("SEED_ADMIN_EMAIL", "")
+    password = os.getenv("SEED_ADMIN_PASSWORD", "")
+    username = os.getenv("SEED_ADMIN_USERNAME", "")
+
+    if not email or not password or not username:
+        raise HTTPException(status_code=500, detail="SEED_ADMIN_* env vars not set")
+
+    existing = db.query(User).filter(User.role == "admin").first()
+    if existing:
+        return {"message": f"Admin already exists: {existing.username}"}
+
+    email_taken = db.query(User).filter(User.email == email).first()
+    if email_taken:
+        email_taken.role = "admin"
+        email_taken.is_verified = True
+        db.commit()
+        return {"message": f"Promoted {email} to admin"}
+
+    admin = User(
+        username=username,
+        email=email,
+        hashed_password=hash_password(password),
+        full_name="Admin",
+        role="admin",
+        is_active=True,
+        is_verified=True,
+        email_sent=False,
+    )
+    db.add(admin)
+    db.commit()
+    return {"message": f"Admin created: {username}"}
