@@ -1,16 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { authService } from '@/services/authService';
-
+import { authService } from '../services/authService';
 
 const routes = [
 
-  /* =========== Initial page =========== */
+  /* =========== initial page =========== */
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: () => {
+      const user = authService.getUser()
+      if (['teacher', 'admin'].includes(user?.role)) return '/teacher'
+      return '/dashboard'
+    }
   },
 
-  /* =========== Auth =========== */
+  /* =========== auth =========== */
   {
     path: '/login',
     name: 'Login',
@@ -19,7 +22,7 @@ const routes = [
       showNavbar: false,
       showFooter: false,
       guest: true,
-      title: 'Log in - EasyEcon'
+      title: 'Log in'
     }
   },
   {
@@ -30,33 +33,28 @@ const routes = [
       showNavbar: false,
       showFooter: false,
       guest: true,
-      title: 'Sign up - EasyEcon'
+      title: 'Sign up'
     }
   },
   {
     path: '/verify-email',
     name: 'VerifyEmail',
     component: () => import('@/views/VerifyEmail.vue'),
-    meta: { title: 'กำลังยืนยันอีเมล... - EasyEcon' }
+    meta: { title: 'Loading' }
   },
   {
-    // Google/GitHub SSO lands here with ?csrf_token=xxx
-    // LoginSuccess.vue calls authStore.handleSSOCallback() on mount.
     path: '/login-success',
     name: 'LoginSuccess',
     component: () => import('@/views/LoginSuccess.vue'),
     meta: {
       showNavbar: false,
       showFooter: false,
-      guest: true, // Allow unauthenticated access for SSO callback
+      guest: true,
       title: 'Login Successfully'
     }
   },
 
-  /* =========== Dashboard (Initial page for each role) ===========*/
-
-  // Student
-  // main student page: course lists and learning features.
+  /* =========== dashboards =========== */
   {
     path: '/dashboard',
     name: 'Dashboard',
@@ -64,39 +62,35 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      title: 'Elevate Your Economics Grade - EasyEcon'
+      title: 'Dashboard'
     }
   },
-  // Teacher
-  // main teacher page: lists modules, flashcard sets, exam templates.
   {
     path: '/teacher',
     name: 'Teacher',
     component: () => import('@/views/Teacher.vue'),
-    meta: { 
+    meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
+      requiresAuth: true,
       requiresTeacher: true,
-      title: 'Teacher Dashboard - EasyEcon'
+      title: 'Teacher Dashboard'
     }
   },
-  // Admin
   {
     path: '/admin',
     name: 'Admin',
-    component: () => import('@/views/AdminPage.vue'),
+    component: () => import('@/views/Admin.vue'),
     meta: {
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
       requiresAdmin: true,
-      title: 'Admin - EasyEcon'
+      title: 'Admin Page'
     }
   },
 
-  /* ---- Course ---- */
-  // student
+  /* =========== course =========== */
   {
     path: '/courses/:courseId',
     name: 'Courses',
@@ -105,11 +99,9 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Cours - EasyEcon'
+      title: 'Course'
     }
   },
-  
-  // teacher
   {
     path: '/teacher/courses/create',
     name: 'CreateCourses',
@@ -119,7 +111,7 @@ const routes = [
       showFooter: true,
       requiresAuth: true,
       requiresTeacher: true,
-      title: 'Create Course - EasyEcon'
+      title: 'Create Course'
     }
   },
   {
@@ -131,13 +123,13 @@ const routes = [
       showFooter: true,
       requiresAuth: true,
       requiresTeacher: true,
-      title: 'Edit Course - EasyEcon'
+      title: 'Edit Course'
     }
   },
 
-  /* ---- Flashcard ---- */
+  /* =========== flashcard =========== */
 
-  // teacher/admin: manage flashcard sets for a course (edit, delete, create)
+  // teacher: manage sets for a course
   {
     path: '/teacher/flashcards/:courseId',
     name: 'TeacherFlashcardDashboard',
@@ -147,11 +139,11 @@ const routes = [
       showFooter: true,
       requiresAuth: true,
       requiresTeacher: true,
-      title: 'Manage Flashcards - EasyEcon'
+      title: 'Manage Flashcards'
     }
   },
 
-  // student: browse and study flashcard sets for a course
+  // student: browse sets for a course
   {
     path: '/flashcards/:courseId',
     name: 'FlashcardsDashboard',
@@ -159,17 +151,12 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      showDashboardHero: true,
       requiresAuth: true,
-      title: 'Flashcards Dashboard - EasyEcon'
+      title: 'Flashcards'
     }
   },
 
-  // student - flashcard study: study a flashcard set.
-  // courseId kept in the url so the back button can return to the right dashboard.
-  // API: GET  /flashcards/sets/:setId/study
-  //      POST /flashcards/progress              <- called inside this view
-  //      GET  /flashcards/sets/:setId/progress  <- called inside this view
+  // student: study a set
   {
     path: '/flashcards/:courseId/study/:setId',
     name: 'FlashcardStudy',
@@ -178,19 +165,11 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Flashcards - EasyEcon'
+      title: 'Flashcards'
     }
   },
 
-  // teacher - flashcard editor: create or edit a flashcard set and its cards.
-  // courseId is required (no ?) so POST /flashcards/sets always has course_id.
-  // setId is optional: no setId = create mode, with setId = edit mode.
-  // API: POST   /flashcards/sets                <- create mode
-  //      PATCH  /flashcards/sets/:setId         <- edit mode
-  //      POST   /flashcards/sets/:setId/cards
-  //      PATCH  /flashcards/cards/:cardId
-  //      DELETE /flashcards/cards/:cardId
+  // teacher: create or edit a set
   {
     path: '/flashcards/:courseId/edit/:setId?',
     name: 'FlashcardEditor',
@@ -200,123 +179,11 @@ const routes = [
       showFooter: true,
       requiresAuth: true,
       requiresTeacher: true,
-      title: 'Edit Flashcards - EasyEcon'
+      title: 'Edit Flashcards'
     }
   },
 
-  /* ---- Learn ---- */
-
-  // teacher
-  {
-    path: '/teacher/learning/:courseId',
-    name: 'TeacherLearningDashboard',
-    component: () => import('@/views/TeacherLearningDashboard.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Manage Learn - EasyEcon'
-    }
-  },
-  // teacher - flashcard editor: create or edit a flashcard set and its cards.
-  // courseId is required (no ?) so POST /flashcards/sets always has course_id.
-  // setId is optional: no setId = create mode, with setId = edit mode.
-  // API: POST   /flashcards/sets                <- create mode
-  //      PATCH  /flashcards/sets/:setId         <- edit mode
-  //      POST   /flashcards/sets/:setId/cards
-  //      PATCH  /flashcards/cards/:cardId
-  //      DELETE /flashcards/cards/:cardId
-  {
-    path: '/learning/:courseId/:moduleId/edit/:pageId?',
-    name: 'LearningEditor',
-    component: () => import('@/views/LearningEditor.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Edit Learning - EasyEcon'
-    }
-  },
-  {
-    path: '/teacher/modules/:courseId',
-    name: 'LearningModule',
-    component: () => import('@/views/LearningModule.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Learning Module - EasyEcon'
-    }
-  },
-
-  // student: browse and study flashcard sets for a course
-  {
-    path: '/courses/:courseId/modules',
-    name: 'ModulesList',
-    component: () => import('@/views/ModulesList.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      title: 'Course Modules - EasyEcon'
-    }
-  },
-  {
-    path: '/courses/:courseId/studydashboard/:moduleId', 
-    name: 'LearningDashboard',
-    component: () => import('@/views/LearningDashboard.vue'),
-    meta: {
-      requiresAuth: true,
-      title: 'Learning Dashboard - EasyEcon'
-    }
-  },
-  {
-    path: '/courses/:courseId/study/lesson/:moduleId/:pageId',
-    name: 'LearningChapter',
-    component: () => import('@/views/LearningChapter.vue'),
-    meta: {
-      requiresAuth: true,
-      title: 'Learning Chapter - EasyEcon'
-    }
-  },
-  {
-    path: '/student/courses/:courseId/modules/:moduleId/summary',
-    name: 'LearningMiniquizPoint', // คุณสามารถใช้ชื่อเดิม หรือเปลี่ยนเป็น 'ModuleSummary' ก็ได้ครับ
-    component: () => import('@/views/LearningMiniquizPoint.vue'), // ชี้ไปที่ไฟล์หน้าสรุปผลที่คุณสร้างไว้
-    meta: {
-      requiresAuth: true,
-      title: 'Complete Learning - EasyEcon'
-    }
-  },
-  // {
-  //   path: '/courses/:courseId/study',
-  //   component: () => import('@/components/LearningLayout.vue'),
-  //   children: [
-      
-  //     {
-  //       path: 'lesson/:moduleId/:pageId',
-  //       name: 'LearningChapter',
-  //       component: () => import('@/views/LearningChapter.vue'),
-  //       meta: {
-  //         requiresAuth: true,
-  //         title: 'Learning Chapter - EasyEcon'
-  //       }
-  //     },
-  //     {
-  //       path: 'complete/learn/:moduleId/:pageId',
-  //       name: 'LearningMiniquizPoint',
-  //       component: () => import('@/views/LearningMiniquizPoint.vue'),
-  //       meta: {
-  //         requiresAuth: true,
-  //         title: 'Complete Learning - EasyEcon'
-  //       }
-  //     }
-  //   ]
-  // },
-  /* ---- Practice Exam ---- */
+  /* ---- Practice Past Exam ---- */
 
   // student: browse all exam sets for a course. (see all exam session)
   // API: GET /exam/sessions?course_id=
@@ -329,7 +196,7 @@ const routes = [
       showFooter: true,
       showDashboardHero: false,
       requiresAuth: true,
-      title: 'Exam Dashboard - EasyEcon'
+      title: 'Exam Dashboard'
     }
   },
 
@@ -343,7 +210,7 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Exam Sets - EasyEcon'
+      title: 'Exam Sets'
     }
   },
 
@@ -357,7 +224,7 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Take Exam - EasyEcon'
+      title: 'Take Exam'
     }
   },
 
@@ -371,7 +238,7 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Exam Result - EasyEcon'
+      title: 'Exam Result'
     }
   },
 
@@ -385,7 +252,7 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Performance Analysis - EasyEcon'
+      title: 'Performance Analysis'
     }
   },
 
@@ -399,12 +266,12 @@ const routes = [
       showNavbar: true,
       showFooter: true,
       requiresAuth: true,
-      title: 'Exam History - EasyEcon'
+      title: 'Exam History'
     }
   },
 
   /*
-    POST /exam/templates                -> /teacher/exam/new
+    POST /exam/templates                      -> /teacher/exam/new
           PATCH/DELETE /exam/templates/:id    -> /teacher/exam/edit/:templateId
           POST /exam/sessions                 -> /teacher/exam/launch/:templateId
           GET  /exam/sessions/:id/results     -> /teacher/exam/results/:sessionId
@@ -418,9 +285,9 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
-      requiresTeacher: false,
-      title: 'Manage Exam - EasyEcon'
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Manage Exam'
     }
   },
 
@@ -433,9 +300,9 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
-      requiresTeacher: false,
-      title: 'Edit Exam - EasyEcon'
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Edit Exam'
     }
   },
 
@@ -448,9 +315,9 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
-      requiresTeacher: false,
-      title: 'Launch Exam - EasyEcon'
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Launch Exam'
     }
   },
 
@@ -463,13 +330,13 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
-      requiresTeacher: false,
-      title: 'Exam Results - EasyEcon'
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Exam Results'
     }
   },
 
-  /* =========== User Setting =========== */
+  /* =========== settings =========== */
   {
     path: '/settings',
     name: 'Settings',
@@ -477,73 +344,159 @@ const routes = [
     meta: {
       showNavbar: true,
       showFooter: true,
-      requiresAuth: false,
-      title: 'User Settings - EasyEcon'
+      requiresAuth: true,
+      title: 'User Settings'
     }
   },
 
-  /* ============ Error Page =========== */
-  // {
-  //     path: '/:pathMatch(.*)*',
-  //     name: 'NotFound',
-  //     component: () => import('@/views/NotFound.vue')
-  // }
-];
+  /* =========== learning (teacher) =========== */
 
-// register all routes, and reset scroll position to top ( or restore saved position when navigating back/forward)
+  // teacher: overview of all modules + pages for a course
+  {
+    path: '/teacher/learning/:courseId',
+    name: 'TeacherLearningDashboard',
+    component: () => import('@/views/TeacherLearningDashboard.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Learning Lessons'
+    }
+  },
+
+  // teacher: manage module structure (create/delete modules and pages)
+  {
+    path: '/teacher/modules/:courseId',
+    name: 'LearningModule',
+    component: () => import('@/views/LearningModule.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Manage Modules'
+    }
+  },
+
+  // teacher: create or edit a learning page (rich text editor)
+  {
+    path: '/learning/:courseId/:moduleId/edit/:pageId?',
+    name: 'LearningEditor',
+    component: () => import('@/views/LearningEditor.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      requiresTeacher: true,
+      title: 'Lesson Editor'
+    }
+  },
+
+  /* =========== learning (student) =========== */
+
+  // student: list all modules for a course
+  {
+    path: '/courses/:courseId/modules',
+    name: 'ModulesList',
+    component: () => import('@/views/ModulesList.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      title: 'Learning Modules'
+    }
+  },
+
+  // student: module dashboard — lesson list + progress for one module
+  {
+    path: '/courses/:courseId/modules/:moduleId',
+    name: 'LearningDashboard',
+    component: () => import('@/views/LearningDashboard.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      title: 'Module Dashboard'
+    }
+  },
+
+  // student: study a single learning page inside a module
+  {
+    path: '/courses/:courseId/modules/:moduleId/pages/:pageId',
+    name: 'LearningChapter',
+    component: () => import('@/views/LearningChapter.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      title: 'Learning Chapter'
+    }
+  },
+
+  {
+    path: '/student/courses/:courseId/modules/:moduleId',
+    name: 'LearningMiniquizPoint',
+    component: () => import('@/views/LearningMiniquizPoint.vue'),
+    meta: {
+      showNavbar: true,
+      showFooter: true,
+      requiresAuth: true,
+      title: 'Complete Learning - EasyEcon'
+    }
+  }
+]
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    return savedPosition || { top: 0 };
+    return savedPosition || { top: 0 }
   }
-});
-
-// Navigation Guards
+})
 
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth);
-  const requiresTeacher = to.matched.some((r) => r.meta.requiresTeacher);
-  const requiresAdmin = to.matched.some((r) => r.meta.requiresAdmin);
-  const guest = to.matched.some((r) => r.meta.guest);
+  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)
+  const requiresTeacher = to.matched.some((r) => r.meta.requiresTeacher)
+  const requiresAdmin = to.matched.some((r) => r.meta.requiresAdmin)
+  const guest = to.matched.some((r) => r.meta.guest)
 
-  const isAuthenticated = authService.isAuthenticated();
-  const user = authService.getUser();
+  const isAuthenticated = authService.isAuthenticated()
+  const user = authService.getUser()
+  const isTeacher = ['teacher', 'admin'].includes(user?.role)
 
   // update page title
-  if (to.meta.title) {
-    document.title = to.meta.title;
-  }
+  if (to.meta.title) document.title = to.meta.title
 
-  // already logged in -> skip guest pages
+  // already logged in -> skip guest pages, redirect based on role
   if (guest && isAuthenticated) {
-    return next({ name: 'Dashboard' });
+    return next({ name: isTeacher ? 'Teacher' : 'Dashboard' })
   }
 
   // not logged in -> go to login
   if (requiresAuth && !isAuthenticated) {
-    return next({ name: 'Login' });
+    return next({ name: 'Login' })
   }
 
   // admin only
   if (requiresAdmin) {
     if (user?.role !== 'admin') {
-      alert("Insufficient permission: Admin access only");
-      return next({ name: 'Dashboard' });
+      alert('Insufficient permission: Admin access only')
+      return next({ name: isTeacher ? 'Teacher' : 'Dashboard' })
     }
-    return next();
+    return next()
   }
 
   // teacher or admin
   if (requiresTeacher) {
-    if (!user || !['teacher', 'admin'].includes(user.role)) {
-      alert("Access Denied: Teacher account required");
-      return next({ name: 'Dashboard' });
+    if (!isTeacher) {
+      alert('Access Denied: Teacher account required')
+      return next({ name: 'Dashboard' })
     }
-    return next();
+    return next()
   }
 
-  next();
-});
+  next()
+})
 
-export default router;
+export default router

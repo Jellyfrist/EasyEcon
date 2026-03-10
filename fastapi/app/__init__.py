@@ -56,6 +56,8 @@ class JWTAndCSRFMiddleware(BaseHTTPMiddleware):
             # auth: login & register never have a token yet
             "/auth/token",
             "/auth/register",
+            "/auth/verify-email",
+            "/auth/resend-verification",
             "/auth/login/google",
             "/auth/google/callback",
             "/auth/login/github",
