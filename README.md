@@ -15,11 +15,11 @@
 - **Role:** Fullstack  
 
 #### 2. นูรฟาฎีละห์ ประยูรโต
-- **Student ID:** 660510666 
+- **Student ID:** 670510666 
 - **GitHub ID:** [n00raw](https://github.com/n00raw)  
 - **Role:** Frontend 
 
 #### 3. วรรณี ถนอมวรกุล
-- **Student ID:** 660510679
+- **Student ID:** 670510679
 - **GitHub ID:** [cutecupca-ke](https://github.com/cutecupca-ke)  
 - **Role:** Fullstack
