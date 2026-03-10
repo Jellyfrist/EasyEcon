@@ -1,165 +1,149 @@
 <template>
-  <div class="layout-wrapper">
-
-    <!-- sidebar -->
-    <aside class="sidebar">
-
-      <div class="sidebar-nav">
-        <button class="nav-btn" @click="router.push('/dashboard')">
-          <span class="material-symbols-outlined">home</span> Home
-        </button>
-        <button class="nav-btn" @click="router.push(`/courses/${courseId}/modules`)">
-          <span class="material-symbols-outlined">arrow_back</span> Back to Modules
-        </button>
-      </div>
-
-      <div class="sidebar-section-label">
-        Lessons ({{ courseModules.length }})
-      </div>
-
-      <div class="sidebar-modules" v-if="courseModules.length > 0">
-        <div
-          v-for="(mod, index) in courseModules"
-          :key="mod.id"
-          class="sidebar-item"
-          :class="{ active: mod.id == moduleId }"
-          @click="goToModule(mod.id)"
-        >
-          <div class="sidebar-item-text">
-            <span class="sidebar-item-num">
-              <span class="material-symbols-outlined">book</span>
-              <span v-if="mod.id == moduleId" class="in-progress-tag">In Progress</span>
-            </span>
-            <h4 class="sidebar-item-title">{{ mod.title }}</h4>
-          </div>
-          <span class="material-symbols-outlined sidebar-arrow">
-            {{ mod.id == moduleId ? 'play_circle' : 'chevron_right' }}
-          </span>
-        </div>
-      </div>
-
-      <div v-else class="sidebar-loading">Loading...</div>
-
-    </aside>
-
-    <!-- main content -->
-    <main class="main-content">
-
-      <div v-if="isLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading lesson data...</p>
-      </div>
-
-      <div v-else-if="dashboardData" class="dashboard-container">
-
-        <!-- breadcrumb -->
-        <nav class="breadcrumb">
-          <span>Course</span>
-          <span class="material-symbols-outlined bc-arrow">chevron_right</span>
-          <span class="bc-current">Module {{ currentModuleIndex + 1 }}</span>
-        </nav>
-
-        <!-- hero section -->
-        <section class="hero-section">
-          <div class="hero-text">
-            <h1 class="hero-title">
-              {{ dashboardData.module?.title }}
-            </h1>
-            <p class="hero-desc">
-              {{ 'Explore the core concepts of this module and build your understanding step by step.' }}
-            </p>
-          </div>
-
-          <div class="progress-card">
-            <div class="circle-wrap">
-              <svg class="circle-svg" viewBox="0 0 44 44">
-                <circle cx="22" cy="22" r="18" fill="none" stroke="#e8edf3" stroke-width="4"/>
-                <circle
-                  cx="22" cy="22" r="18"
-                  fill="none"
-                  stroke="#ed4081"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                  stroke-dasharray="113"
-                  :stroke-dashoffset="113 - (113 * dashboardData.progress_percent / 100)"
-                  transform="rotate(-90 22 22)"
-                  style="transition: stroke-dashoffset 0.6s ease;"
-                />
-              </svg>
-              <span class="circle-pct">{{ dashboardData.progress_percent }}%</span>
+    <div class="layout-wrapper">
+    
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="nav-links">
+                    <button @click="goBack" class="nav-btn">
+                <div class="back-icon-circle">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                </div>
+                <span class="nav-text">Back to Modules</span>
+              </button>
+                </div>
+    
+                <div class="title-group">
+                    <p class="list-title">LESSONS ({{ courseModules.length }})</p>
+                </div>
             </div>
-            <div class="progress-info">
-              <p class="progress-label">Progress</p>
-              <p class="progress-value">{{ dashboardData.completed_pages }} / {{ dashboardData.total_pages }} topics</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- lesson plan header -->
-        <div class="section-header">
-          <h2 class="section-title">Lesson Plan</h2>
-        </div>
-
-        <!-- lesson list -->
-        <div class="lesson-list">
-          <div
-            v-for="(page, index) in dashboardData.pages"
-            :key="page.id"
-            class="lesson-card"
-            :class="page.status"
-          >
-            <div class="status-icon" :class="page.status">
-              <span class="material-symbols-outlined">
-                {{ page.status === 'completed' ? 'check' : page.status === 'active' ? 'play_arrow' : 'lock' }}
+    
+            <nav class="module-list" v-if="courseModules.length > 0">
+                <div v-for="(mod, index) in courseModules" :key="mod.id" :class="['module-card', { active: activeModuleId === mod.id }]" @click="goToModule(mod.id)">
+                    <div class="module-info">
+                        <div class="module-top-row">
+                            <div class="icon-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                      </svg>
+                            </div>
+    
+                            <span class="module-status" v-if="activeModuleId === mod.id">In Progress</span>
+                        </div>
+                        <p class="module-name">{{ mod.title }}</p>
+                    </div>
+    
+                    <span class="action-icon">
+                  <svg v-if="activeModuleId === mod.id" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                     <circle cx="12" cy="12" r="10"></circle>
+                     <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                  </svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
               </span>
+                </div>
+            </nav>
+            <div v-else class="sidebar-loading">Loading modules...</div>
+        </aside>
+    
+        <main class="main-content">
+    
+            <div v-if="isLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading lesson data...</p>
             </div>
-
-            <div class="lesson-details">
-              <div class="lesson-meta">
-                <span class="lesson-index">{{ currentModuleIndex + 1 }}.{{ index + 1 }}</span>
-                <span class="lesson-type-badge" :class="page.status === 'active' ? 'pink-badge' : 'gray-badge'">
-                  Lesson
-                </span>
-              </div>
-              <h3 class="lesson-title">{{ page.title }}</h3>
-              <p class="lesson-desc">Click to study this topic and complete the lesson.</p>
+    
+            <div v-else-if="dashboardData" class="dashboard-container">
+    
+                <nav class="breadcrumb">
+                    <span class="bc-link" @click="router.push(`/courses/${courseId}/modules`)">Course</span>
+                    <span class="material-symbols-outlined bc-arrow">chevron_right</span>
+                    <span class="bc-current">Module {{ currentModuleIndex + 1 }}</span>
+                </nav>
+    
+                <section class="hero-section">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            {{ dashboardData.module?.title }}
+                        </h1>
+                        <p class="hero-desc">
+                            Explore the core concepts of this module and build your understanding step by step.
+                        </p>
+                    </div>
+    
+                    <div class="progress-card">
+                        <div class="circle-wrap">
+                            <svg class="circle-svg" viewBox="0 0 44 44">
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="#fce4ec" stroke-width="4"/>
+                    <circle
+                      cx="22" cy="22" r="18"
+                      fill="none"
+                      stroke="#df4a7d"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-dasharray="113"
+                      :stroke-dashoffset="113 - (113 * dashboardData.progress_percent / 100)"
+                      transform="rotate(-90 22 22)"
+                      style="transition: stroke-dashoffset 0.6s ease;"
+                    />
+                  </svg>
+                            <span class="circle-pct">{{ dashboardData.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-info">
+                            <p class="progress-label">PROGRESS</p>
+                            <p class="progress-value">{{ dashboardData.completed_pages }} / {{ dashboardData.total_pages }} topics</p>
+                        </div>
+                    </div>
+                </section>
+    
+                <div class="section-header">
+                    <h2 class="section-title">Lesson Plan</h2>
+                </div>
+    
+                <div class="lesson-list">
+                    <div v-for="(page, index) in dashboardData.pages" :key="page.id" class="lesson-card" :class="page.status">
+                        <div class="status-icon" :class="page.status">
+                            <svg v-if="page.status === 'completed'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                     <polyline points="20 6 9 17 4 12"></polyline>
+                   </svg>
+                            <svg v-else-if="page.status === 'active'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                     <polyline points="20 6 9 17 4 12"></polyline>
+                   </svg>
+                            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                   </svg>
+                        </div>
+    
+                        <div class="lesson-details">
+                            <div class="lesson-meta">
+                                <span class="lesson-index">{{ currentModuleIndex + 1 }}.{{ index + 1 }}</span>
+                                <span class="lesson-type-badge">Lesson</span>
+                            </div>
+                            <h3 class="lesson-title">{{ page.title }}</h3>
+                            <p class="lesson-desc">Click to study this topic and complete the lesson.</p>
+                        </div>
+    
+                        <button @click="goToLesson(page.id)" class="lesson-btn" :class="page.status" :disabled="page.status === 'locked'">
+                  {{ page.status === 'completed' ? 'Review Again' : page.status === 'active' ? 'Start Lesson' : 'Locked' }}
+                </button>
+                    </div>
+                </div>
+    
             </div>
-
-            <button
-              @click="goToLesson(page.id)"
-              class="lesson-btn"
-              :class="page.status"
-              :disabled="page.status === 'locked'"
-            >
-              {{ page.status === 'completed' ? 'Review Again' : page.status === 'active' ? 'Start Lesson' : 'Locked' }}
-            </button>
-          </div>
-        </div>
-
-        <!--
-          post test banner
-          <div class="posttest-banner">
-            <div class="banner-text">
-              <h2>Ready for the end-of-module assessment?</h2>
-              <p>Complete all lessons to unlock the Post-test!</p>
-            </div>
-            <button class="banner-btn" disabled>
-              Unlock Assessment
-              <span class="material-symbols-outlined">arrow_forward</span>
-            </button>
-          </div>
-        -->
-
-      </div>
-    </main>
-
-  </div>
+        </main>
+    
+    </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useLearningStore } from '@/store/learningStore'; 
+import { useLearningStore } from '@/store/learningStore';
 
 const route = useRoute();
 const router = useRouter();
@@ -170,554 +154,676 @@ const moduleId = computed(() => route.params.moduleId);
 
 const dashboardData = ref(null);
 const isLoading = ref(true);
-const courseModules = ref([]); 
+const courseModules = ref([]);
 
 const currentModuleIndex = computed(() => {
-  const idx = courseModules.value.findIndex(m => m.id == moduleId.value);
-  return idx >= 0 ? idx : 0;
+    const idx = courseModules.value.findIndex(m => m.id == moduleId.value);
+    return idx >= 0 ? idx : 0;
 });
 
 const loadDashboard = async (mId) => {
-  isLoading.value = true;
-  try {
-    const res = await learningStore.fetchModuleDashboard(mId);
-    if (res && res.chapterInfo) {
-      dashboardData.value = {
-        module: { title: res.chapterInfo.title, description: res.chapterInfo.description },
-        progress_percent: res.chapterInfo.progressPercent,
-        completed_pages: res.chapterInfo.completedCount,
-        total_pages: res.chapterInfo.totalCount,
-        pages: res.lessons 
-      };
+    isLoading.value = true;
+    try {
+        const res = await learningStore.fetchModuleDashboard(mId);
+        if (res && res.chapterInfo) {
+            dashboardData.value = {
+                module: { title: res.chapterInfo.title, description: res.chapterInfo.description },
+                progress_percent: res.chapterInfo.progressPercent,
+                completed_pages: res.chapterInfo.completedCount,
+                total_pages: res.chapterInfo.totalCount,
+                pages: res.lessons
+            };
+        }
+    } catch (error) {
+        console.error("Dashboard Load Error:", error);
+    } finally {
+        isLoading.value = false;
     }
-  } catch (error) {
-    console.error("Dashboard Load Error:", error);
-  } finally {
-    isLoading.value = false;
-  }
 };
 
 const loadSidebar = async () => {
-  await learningStore.fetchModules(courseId.value);
-  courseModules.value = learningStore.modules;
+    await learningStore.fetchModules(courseId.value);
+    courseModules.value = learningStore.modules;
 };
 
+// Map URL moduleId to state activeModuleId for sidebar styling
+const activeModuleId = computed(() => {
+    return Number(moduleId.value);
+});
+
+
 onMounted(async () => {
-  await loadSidebar();
-  if (moduleId.value) {
-    await loadDashboard(moduleId.value);
-  } else if (courseModules.value.length > 0) {
-    router.replace(`/courses/${courseId.value}/modules/${courseModules.value[0].id}`);
-  }
+    await loadSidebar();
+    if (moduleId.value) {
+        await loadDashboard(moduleId.value);
+    } else if (courseModules.value.length > 0) {
+        router.replace(`/courses/${courseId.value}/modules/${courseModules.value[0].id}`);
+    }
 });
 
 watch(moduleId, async (newId) => {
-  if (newId) await loadDashboard(newId);
+    if (newId) await loadDashboard(newId);
 });
 
 const goToModule = (mId) => {
-  if (moduleId.value == mId) return; 
-  router.push(`/courses/${courseId.value}/modules/${mId}`);
+    if (moduleId.value == mId) return;
+    router.push(`/courses/${courseId.value}/modules/${mId}`);
 };
 
 const goToLesson = (pageId) => {
-  if (!pageId) {
-    alert("Page ID not found.");
-    return;
-  }
-  router.push({
-    name: 'LearningChapter',
-    params: {
-      courseId: courseId.value,
-      moduleId: moduleId.value,
-      pageId: pageId
+    if (!pageId) {
+        alert("Page ID not found.");
+        return;
     }
-  });
+    router.push({
+        name: 'LearningChapter',
+        params: {
+            courseId: courseId.value,
+            moduleId: moduleId.value,
+            pageId: pageId
+        }
+    });
+};
+
+const goBack = () => {
+    router.push(`/courses/${courseId.value}/modules`);
 };
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap');
+/* =====================================================
+   Layout Wrapper
+   ===================================================== */
+
 .layout-wrapper {
-  display: flex;
-  min-height: 100vh;
-  background-color: #faf9f7;
-  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    font-family: 'DM Sans', 'Sarabun', sans-serif;
+    padding: 2rem;
+    gap: 2rem;
+    box-sizing: border-box;
 }
 
-.material-symbols-outlined { vertical-align: middle; }
+.material-symbols-outlined {
+    vertical-align: middle;
+}
 
-/* sidebar */
+/* =====================================================
+   Sidebar
+   ===================================================== */
+
 .sidebar {
-  width: 272px;
-  background: white;
-  border-right: 1px solid #e8edf3;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  overflow-y: auto;
+    width: 300px;
+    background-color: #df4a7d;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(223, 74, 125, 0.2);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: calc(100vh - 4rem);
+    position: sticky;
+    top: 2rem;
+    overflow: hidden;
 }
 
-.sidebar-nav {
-  padding: 1.25rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-bottom: 1px solid #f1f5f9;
+.sidebar-header {
+    padding: 2rem 1.5rem 1rem 1.5rem;
+}
+
+/* Navigation Buttons (Back to Modules) */
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
 }
 
 .nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.88rem;
-  color: #64748b;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.18s;
-  text-align: left;
-  font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
 }
 
-.nav-btn:hover {
-  background: #f1f5f9;
-  color: #1a1a1a;
+.back-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
-.sidebar-section-label {
-  padding: 1.25rem 1.25rem 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
+.nav-text {
+    font-weight: 700;
+    font-size: 1rem;
 }
 
-.sidebar-modules {
-  padding: 0.5rem 0.75rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.nav-btn:hover .back-icon-circle {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
-.sidebar-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 10px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.18s;
-  border: 1px solid transparent;
+.nav-btn:hover .nav-text {
+    opacity: 0.8;
 }
 
-.sidebar-item:hover { background: #f8f9fb; }
+/* Section Title */
 
-.sidebar-item.active {
-  background: white;
-  border-color: #ffc7db;
-  box-shadow: 0 2px 8px rgba(237,64,129,0.08);
+.title-group {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 0.5rem;
 }
 
-.sidebar-item-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-right: 8px;
+.list-title {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
-.sidebar-item-num {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Module List */
+
+.module-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 1.25rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.in-progress-tag {
-  background: #fce7ef;
-  color: #ed4081;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 99px;
+.module-list::-webkit-scrollbar {
+    width: 4px;
 }
 
-.sidebar-item-title {
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #334155;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.module-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
 }
 
-.sidebar-item.active .sidebar-item-title { color: #1a1a1a; }
-
-.sidebar-arrow {
-  font-size: 18px;
-  color: #cbd5e1;
-  flex-shrink: 0;
+.module-list::-webkit-scrollbar-track {
+    background-color: transparent;
 }
 
-.sidebar-item.active .sidebar-arrow { color: #ed4081; }
+/* Module Card Styles */
 
-.sidebar-loading {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #94a3b8;
-  font-size: 0.875rem;
-}
-
-/* main */
-.main-content {
-  flex: 1;
-  overflow-y: auto;
-  background: #faf9f7;
-  padding: 3rem 3.5rem;
-}
-
-.dashboard-container {
-  max-width: 860px;
-  margin: 0 auto;
-}
-
-/* breadcrumb */
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-bottom: 1.75rem;
-}
-
-.bc-arrow { font-size: 16px; }
-.bc-current { color: #475569; font-weight: 700; }
-
-/* hero */
-.hero-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2.5rem;
-  margin-bottom: 3rem;
-  background: white;
-  border: 1px solid #e8edf3;
-  border-radius: 20px;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-
-.hero-text { flex: 1; }
-
-.hero-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 0 0 0.75rem;
-  line-height: 1.3;
-  letter-spacing: -0.4px;
-}
-
-.hero-desc {
-  font-size: 1rem;
-  color: #64748b;
-  line-height: 1.7;
-  margin: 0;
-  font-weight: 500;
-}
-
-.progress-card {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  flex-shrink: 0;
-  background: #faf9f7;
-  border: 1px solid #e8edf3;
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  min-width: 190px;
-}
-
-.circle-wrap {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-}
-
-.circle-svg { width: 56px; height: 56px; }
-
-.circle-pct {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #ed4081;
-}
-
-.progress-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 4px;
-}
-
-.progress-value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-/* section */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-}
-
-.section-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-/* lesson list */
-.lesson-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 3rem;
-}
-
-.lesson-card {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  background: white;
-  border: 1.5px solid #e8edf3;
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-}
-
-.lesson-card.active {
-  border-color: #ffc7db;
-  box-shadow: 0 4px 16px rgba(237,64,129,0.10);
-}
-
-.lesson-card.locked {
-  opacity: 0.55;
-  background: #f8f9fb;
-}
-
-.lesson-card:not(.locked):hover {
-  border-color: #ffc7db;
-  box-shadow: 0 4px 12px rgba(237,64,129,0.08);
-}
-
-.status-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.status-icon.completed { background: #c7ffc7; color: #0A703C; }
-.status-icon.active { background: #fce7ef; color: #ed4081; }
-.status-icon.locked { background: #f1f5f9; color: #94a3b8; }
-.status-icon .material-symbols-outlined { font-size: 26px; }
-
-.lesson-details { flex: 1; }
-
-.lesson-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.lesson-index {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #94a3b8;
-}
-
-.lesson-type-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.pink-badge { background: #fce7ef; color: #ed4081; }
-.gray-badge { background: #f1f5f9; color: #64748b; }
-
-.lesson-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 4px;
-}
-
-.lesson-desc {
-  font-size: 0.88rem;
-  color: #94a3b8;
-  margin: 0;
-  font-weight: 500;
-}
-
-.lesson-btn {
-  padding: 10px 22px;
-  border-radius: 99px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all 0.18s;
-  white-space: nowrap;
-  font-family: inherit;
-}
-
-.lesson-btn.completed {
-  background: white;
-  color: #64748b;
-  border-color: #e2e8f0;
-}
-
-.lesson-btn.completed:hover {
-  border-color: #94a3b8;
-  color: #1a1a1a;
-}
-
-.lesson-btn.active {
-  background: #ed4081;
-  color: white;
-  box-shadow: 0 4px 12px rgba(237, 64, 129, 0.22);
-}
-
-.lesson-btn.active:hover {
-  background: #d13570;
-  transform: translateY(-1px);
-}
-
-.lesson-btn.locked {
-  background: transparent;
-  color: #94a3b8;
-  cursor: not-allowed;
-}
-
-/*
-
-  /* post test banner
-  .posttest-banner {
-    background: linear-gradient(135deg, #ed4081 0%, #d13570 100%);
-    border-radius: 20px;
-    padding: 2.5rem;
+.module-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+    cursor: pointer;
+    background-color: transparent;
+    border: 1px solid transparent;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: white;
-    gap: 2rem;
-    box-shadow: 0 8px 24px rgba(237,64,129,0.25);
-  }
+    transition: all 0.2s ease;
+    position: relative;
+}
 
-  .banner-text h2 {
-    font-size: 1.35rem;
-    font-weight: 800;
-    margin: 0 0 0.6rem;
-    line-height: 1.3;
-  }
+.module-card:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(3px);
+}
 
-  .banner-text p {
-    margin: 0;
-    font-size: 0.95rem;
-    opacity: 0.88;
-    font-weight: 500;
-    max-width: 480px;
-    line-height: 1.55;
-  }
+/* Active State */
 
-  .banner-btn {
+.module-card.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.module-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.module-top-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: white;
-    color: #ed4081;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 99px;
+}
+
+.icon-box {
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.active .icon-box {
+    color: #ffffff;
+}
+
+.module-status {
+    font-size: 0.65rem;
     font-weight: 800;
+    color: #df4a7d;
+    background: #ffffff;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.module-name {
     font-size: 0.95rem;
-    cursor: not-allowed;
-    opacity: 0.85;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 700;
+    line-height: 1.4;
+    padding-right: 10px;
+}
+
+.active .module-name {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+/* Action Icon (Right Side) */
+
+.action-icon {
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+}
+
+.active .action-icon {
+    color: #ffffff;
+}
+
+.sidebar-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* =====================================================
+   Main Content Area
+   ===================================================== */
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.dashboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Breadcrumb */
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.bc-link {
+    color: #4b5563;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.bc-link:hover {
+    color: #df4a7d;
+}
+
+.bc-arrow {
+    font-size: 16px;
+}
+
+.bc-current {
+    color: #1f2937;
+    font-weight: 800;
+}
+
+/* =====================================================
+   Hero Section
+   ===================================================== */
+
+.hero-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.hero-text {
+    flex: 1;
+    max-width: 600px;
+}
+
+.hero-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 1rem;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+.hero-desc {
+    font-size: 1rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Progress Card in Hero */
+
+.progress-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
+    background: #faf9f7;
+    border: 1px solid #f3f4f6;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+}
+
+.circle-wrap {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+}
+
+.circle-svg {
+    width: 56px;
+    height: 56px;
+}
+
+.circle-pct {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #df4a7d;
+}
+
+.progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.progress-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #9ca3af;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.progress-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+/* =====================================================
+   Lesson Plan List
+   ===================================================== */
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.lesson-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.lesson-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+/* State Styling for Lesson Cards */
+
+.lesson-card.active {
+    border-color: #fecdd3;
+    box-shadow: 0 4px 20px rgba(223, 74, 125, 0.1);
+}
+
+.lesson-card.locked {
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.lesson-card:not(.locked):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.lesson-card.active:hover {
+    border-color: #df4a7d;
+}
+
+/* Status Icon Circles */
+
+.status-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.status-icon.completed {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.status-icon.active {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.status-icon.locked {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+.lesson-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.lesson-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lesson-index {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #6b7280;
+}
+
+.lesson-type-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.lesson-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.lesson-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Action Buttons */
+
+.lesson-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
     font-family: inherit;
-  }
-*/
+}
+
+.lesson-btn.completed,
+.lesson-btn.active {
+    background: transparent;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
+.lesson-btn.completed:hover,
+.lesson-btn.active:hover {
+    border-color: #9ca3af;
+    color: #374151;
+    background: #f9fafb;
+}
+
+.lesson-btn.locked {
+    background: transparent;
+    color: #d1d5db;
+    border-color: #e5e7eb;
+    cursor: not-allowed;
+}
 
 /* loading */
+
 .loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  gap: 1rem;
-  color: #94a3b8;
-  font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 1rem;
+    color: #6b7280;
+    font-weight: 600;
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #e8edf3;
-  border-top-color: #ed4081;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+    width: 40px;
+    height: 40px;
+    border: 3px solid #fce4ec;
+    border-top-color: #df4a7d;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
 /* responsive */
+
 @media (max-width: 1024px) {
-  .hero-section { flex-direction: column; }
-  .progress-card { width: 100%; }
-  .main-content { padding: 2rem; }
+    .hero-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 768px) {
-  .layout-wrapper { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid #e8edf3; }
-  .main-content { padding: 1.5rem 1rem; }
-  .lesson-card { flex-direction: column; text-align: center; gap: 1rem; }
-  .status-icon { margin: 0 auto; }
-  .lesson-meta { justify-content: center; }
-  .lesson-btn { width: 100%; }
-  .posttest-banner { flex-direction: column; text-align: center; padding: 2rem; }
-  .banner-btn { width: 100%; justify-content: center; }
+    .layout-wrapper {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-radius: 20px;
+    }
+    .lesson-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    .status-icon {
+        margin: 0 auto;
+    }
+    .lesson-meta {
+        justify-content: center;
+    }
+    .lesson-btn {
+        width: 100%;
+    }
 }
 </style>

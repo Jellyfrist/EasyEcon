@@ -22,7 +22,7 @@
     
         <!-- ================ COURSE SECTION ================= -->
         <section class="course-section">
-
+    
             <!-- logged in: grid of course tiles -->
             <div v-if="isAuthenticated" class="course-auth">
                 <!-- loading state -->
@@ -30,21 +30,16 @@
                     <span class="material-symbols-outlined course-empty-icon">hourglass_top</span>
                     <p>Loading your courses...</p>
                 </div>
-
+    
                 <!-- error state -->
                 <div v-else-if="store.error" class="course-empty">
                     <span class="material-symbols-outlined course-empty-icon">error</span>
                     <p>{{ store.error }}</p>
                 </div>
-
+    
                 <!-- has courses: show tiles -->
                 <div v-else-if="myCourses.length > 0" class="course-grid">
-                    <div
-                        v-for="course in myCourses"
-                        :key="course.id"
-                        class="course-tile"
-                        @click="$router.push(`/courses/${course.id}`)"
-                    >
+                    <div v-for="course in myCourses" :key="course.id" class="course-tile" @click="$router.push(`/courses/${course.id}`)">
                         <!-- decorative icon in background -->
                         <span class="material-symbols-outlined tile-bg-icon">school</span>
                         <div class="tile-content">
@@ -54,26 +49,26 @@
                         </div>
                     </div>
                 </div>
-
+    
                 <!-- no courses yet -->
                 <div v-else class="course-empty">
                     <span class="material-symbols-outlined course-empty-icon">inbox</span>
                     <p>No courses yet.</p>
                 </div>
-
+    
             </div>
-
+    
         </section>
     
-            <!-- ================= FEATURE SECTION ================= -->
+        <!-- ================= FEATURE SECTION ================= -->
         <section class="features-wrapper">
-
+    
             <!-- section header -->
             <div class="features-header">
                 <span class="features-eyebrow">What you can do</span>
                 <h4 class="features-title">Everything you need<br>to ace economics</h4>
             </div>
-
+    
             <!-- lock overlay when user is not logged in -->
             <div v-if="!isAuthenticated" class="auth-overlay">
                 <div class="overlay-card">
@@ -86,10 +81,10 @@
                     <router-link to="/signup" class="text-login">Sign Up</router-link>
                 </div>
             </div>
-
+    
             <div :class="{ blurred: !isAuthenticated }">
-
-
+    
+    
                 <!-- row 1: illustration left, text right -->
                 <div class="feature-row">
                     <div class="feature-visual visual-pink">
@@ -109,7 +104,7 @@
                         <p>Test your knowledge with past midterm and final exams to reinforce your learning.</p>
                     </div>
                 </div>
-
+    
                 <!-- row 2: text left, illustration right -->
                 <div class="feature-row reverse">
                     <div class="feature-visual visual-pink">
@@ -121,7 +116,7 @@
                         <p>Structured lessons with real-world examples to deepen your understanding step by step.</p>
                     </div>
                 </div>
-
+    
                 <!-- row 3: illustration left, text right -->
                 <div class="feature-row">
                     <div class="feature-visual visual-pink">
@@ -134,7 +129,7 @@
                         <p>Master key economic concepts quickly with interactive flashcards designed for rapid memory retention.</p>
                     </div>
                 </div>
-
+    
             </div>
         </section>
     </div>
@@ -349,6 +344,7 @@ const handleLogout = () => {
 }
 
 /* ---- Course section ---- */
+
 .course-section {
     width: 100%;
 }
@@ -387,6 +383,7 @@ const handleLogout = () => {
 }
 
 /* logged in: grid of tiles */
+
 .course-auth {
     padding: 48px 80px;
     width: 100%;
@@ -426,6 +423,7 @@ const handleLogout = () => {
 }
 
 /* big icon sitting in the background of the tile */
+
 .tile-bg-icon {
     position: absolute;
     font-size: 100px;
@@ -472,6 +470,7 @@ const handleLogout = () => {
 }
 
 /* empty state */
+
 .course-empty {
     text-align: center;
     color: #6b7280;
@@ -502,6 +501,7 @@ const handleLogout = () => {
 }
 
 /* section header */
+
 .features-header {
     text-align: center;
     margin-bottom: 40px;
@@ -527,6 +527,7 @@ const handleLogout = () => {
 }
 
 /* lock overlay */
+
 .auth-overlay {
     position: absolute;
     inset: 0;
@@ -574,6 +575,7 @@ const handleLogout = () => {
 }
 
 /* reverse: illustration on right */
+
 .feature-row.reverse {
     flex-direction: row-reverse;
 }
@@ -594,6 +596,7 @@ const handleLogout = () => {
 }
 
 /* subtle noise texture overlay */
+
 .feature-visual::after {
     content: '';
     position: absolute;
@@ -603,12 +606,24 @@ const handleLogout = () => {
     border-radius: 28px;
 }
 
-.visual-green  { background: linear-gradient(145deg, #0d6b37, #0a5229); }
-.visual-pink   { background: linear-gradient(145deg, #ff649a, #fc4d8d); }
-.visual-yellow { background: linear-gradient(145deg, #f5ca0b, #efb001); }
-.visual-gray   { background: linear-gradient(145deg, #bec7da, #b2bfd1); }
+.visual-green {
+    background: linear-gradient(145deg, #0d6b37, #0a5229);
+}
+
+.visual-pink {
+    background: linear-gradient(145deg, #ff649a, #fc4d8d);
+}
+
+.visual-yellow {
+    background: linear-gradient(145deg, #f5ca0b, #efb001);
+}
+
+.visual-gray {
+    background: linear-gradient(145deg, #bec7da, #b2bfd1);
+}
 
 /* the white card inside the illustration */
+
 .visual-inner {
     background: rgba(255, 255, 255, 0.97);
     border-radius: 18px;
@@ -620,6 +635,7 @@ const handleLogout = () => {
 }
 
 /* small chip/badge at the top */
+
 .vi-chip {
     display: inline-block;
     font-size: 10px;
@@ -634,6 +650,7 @@ const handleLogout = () => {
 }
 
 /* flashcard styles */
+
 .vi-card-label {
     font-size: 10px;
     font-weight: 700;
@@ -677,6 +694,7 @@ const handleLogout = () => {
 }
 
 /* learning module styles */
+
 .vi-module-title {
     font-size: 17px;
     font-weight: 800;
@@ -748,6 +766,7 @@ const handleLogout = () => {
 }
 
 /* past exam styles */
+
 .vi-question {
     font-size: 15px;
     font-weight: 700;
@@ -798,6 +817,7 @@ const handleLogout = () => {
 }
 
 /* large muted number */
+
 .feat-num {
     display: block;
     font-size: 72px;
@@ -841,6 +861,7 @@ const handleLogout = () => {
 }
 
 /* ready for real image swap-in */
+
 .feature-img {
     width: 100%;
     height: 100%;
@@ -900,67 +921,121 @@ const handleLogout = () => {
 /* ---- Responsive Design ---- */
 
 /* tablet: 768px - 1024px */
+
 @media (max-width: 1024px) {
-
     /* hero */
-    .hero-section h1 { font-size: 72px; }
-    .hero-section h2 { font-size: 20px; }
-    .hero-section p  { font-size: 16px; }
-    .icon-1 { font-size: 80px; }
-    .icon-2 { font-size: 70px; }
-    .icon-3 { font-size: 140px; right: -30px; }
-
+    .hero-section h1 {
+        font-size: 72px;
+    }
+    .hero-section h2 {
+        font-size: 20px;
+    }
+    .hero-section p {
+        font-size: 16px;
+    }
+    .icon-1 {
+        font-size: 80px;
+    }
+    .icon-2 {
+        font-size: 70px;
+    }
+    .icon-3 {
+        font-size: 140px;
+        right: -30px;
+    }
     /* course */
-    .title       { font-size: 28px; }
-    .description { font-size: 16px; }
-    .course-auth { padding: 36px 40px; }
-
+    .title {
+        font-size: 28px;
+    }
+    .description {
+        font-size: 16px;
+    }
+    .course-auth {
+        padding: 36px 40px;
+    }
     /* features */
-    .features-title { font-size: 36px; }
-
+    .features-title {
+        font-size: 36px;
+    }
     .feature-row {
         gap: 40px;
         padding: 36px 48px;
     }
-
     .feature-visual {
         min-height: 280px;
         padding: 28px;
     }
-
-    .feat-num      { font-size: 52px; }
-    .feature-text h3 { font-size: 28px; }
-    .feature-text p  { font-size: 15px; }
+    .feat-num {
+        font-size: 52px;
+    }
+    .feature-text h3 {
+        font-size: 28px;
+    }
+    .feature-text p {
+        font-size: 15px;
+    }
 }
 
 /* mobile: below 768px */
+
 @media (max-width: 768px) {
-
     /* hero */
-    .hero-section { padding: 40px 16px 20px; }
-    .hero-section h1 { font-size: 52px; }
-    .hero-section h2 { font-size: 17px; }
-    .hero-section p  { font-size: 14px; }
-
+    .hero-section {
+        padding: 40px 16px 20px;
+    }
+    .hero-section h1 {
+        font-size: 52px;
+    }
+    .hero-section h2 {
+        font-size: 17px;
+    }
+    .hero-section p {
+        font-size: 14px;
+    }
     /* hide background icons so they don't overlap content */
-    .icon-1, .icon-2, .icon-3 { display: none; }
-
-    .hero-divider { width: 90%; margin: 24px auto; }
-
+    .icon-1,
+    .icon-2,
+    .icon-3 {
+        display: none;
+    }
+    .hero-divider {
+        width: 90%;
+        margin: 24px auto;
+    }
     /* course */
-    .course-guest  { padding: 60px 20px; }
-    .course-guest-box h2 { font-size: 26px; }
-    .course-guest-box p  { font-size: 15px; }
-    .course-auth   { padding: 28px 20px; }
-    .course-grid   { justify-content: center; }
-    .course-tile   { width: 100%; max-width: 400px; }
-    .cta button    { font-size: 16px; padding: 12px 24px; }
-
+    .course-guest {
+        padding: 60px 20px;
+    }
+    .course-guest-box h2 {
+        font-size: 26px;
+    }
+    .course-guest-box p {
+        font-size: 15px;
+    }
+    .course-auth {
+        padding: 28px 20px;
+    }
+    .course-grid {
+        justify-content: center;
+    }
+    .course-tile {
+        width: 100%;
+        max-width: 400px;
+    }
+    .cta button {
+        font-size: 16px;
+        padding: 12px 24px;
+    }
     /* features header */
-    .features-wrapper  { padding: 56px 0 40px; }
-    .features-header   { margin-bottom: 48px; }
-    .features-title    { font-size: 28px; }
-
+    .features-wrapper {
+        padding: 56px 0 40px;
+    }
+    .features-header {
+        margin-bottom: 48px;
+    }
+    .features-title {
+        font-size: 28px;
+    }
     /* rows: stack vertically on mobile */
     .feature-row,
     .feature-row.reverse {
@@ -968,7 +1043,6 @@ const handleLogout = () => {
         gap: 28px;
         padding: 40px 20px;
     }
-
     /* illustration full width */
     .feature-visual {
         width: 100%;
@@ -976,33 +1050,50 @@ const handleLogout = () => {
         min-height: 240px;
         padding: 24px;
     }
-
     /* text full width, centered */
     .feature-text {
         max-width: 100%;
         text-align: center;
     }
-
-    .feat-num        { font-size: 48px; }
-    .feature-text h3 { font-size: 24px; }
-    .feature-text p  { font-size: 15px; }
-
+    .feat-num {
+        font-size: 48px;
+    }
+    .feature-text h3 {
+        font-size: 24px;
+    }
+    .feature-text p {
+        font-size: 15px;
+    }
     /* overlay */
-    .overlay-card    { padding: 28px 24px; }
-    .overlay-card h2 { font-size: 22px; }
+    .overlay-card {
+        padding: 28px 24px;
+    }
+    .overlay-card h2 {
+        font-size: 22px;
+    }
 }
 
 /* small mobile: below 480px */
+
 @media (max-width: 480px) {
-
-    .hero-section h1  { font-size: 40px; }
-    .hero-section h2  { font-size: 15px; }
-    .features-title   { font-size: 24px; }
-
+    .hero-section h1 {
+        font-size: 40px;
+    }
+    .hero-section h2 {
+        font-size: 15px;
+    }
+    .features-title {
+        font-size: 24px;
+    }
     .feature-row,
-    .feature-row.reverse { padding: 32px 16px; }
-
-    .feat-num        { font-size: 40px; }
-    .feature-text h3 { font-size: 22px; }
+    .feature-row.reverse {
+        padding: 32px 16px;
+    }
+    .feat-num {
+        font-size: 40px;
+    }
+    .feature-text h3 {
+        font-size: 22px;
+    }
 }
 </style>

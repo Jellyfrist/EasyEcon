@@ -1,186 +1,158 @@
 <template>
     <div class="cd-root">
     
-        <!-- loading state -->
         <div v-if="store.loading" class="cd-state-box">
             <div class="cd-spinner"></div>
             <p class="cd-state-text">Loading course...</p>
         </div>
     
-        <!-- error state -->
         <div v-else-if="store.error" class="cd-state-box">
             <div class="cd-error-icon">!</div>
             <p class="cd-error-msg">{{ store.error }}</p>
-            <button class="cd-btn-back" @click="router.back()">Go Back</button>
+            <button class="cd-btn-back" @click="goToDashboard">Go Back</button>
         </div>
     
-        <!-- course content -->
         <template v-else-if="store.currentCourse">
-    
-          <!-- hero: full bleed dark banner -->
-          <div class="cd-hero">
-            <div class="cd-hero-glow"></div>
-            <div class="cd-hero-inner">
-              <span class="cd-label">Course</span>
-              <h1 class="cd-title">{{ store.currentCourse.title }}</h1>
-              <p v-if="store.currentCourse.description" class="cd-desc">
-                {{ store.currentCourse.description }}
-              </p>
-            </div>
-          </div>
-    
-          <!-- body content -->
-          <div class="cd-body">
-    
-            <!-- stat strip -->
-            <div class="cd-stats">
-              <div class="cd-stat">
-                <div class="cd-stat-icon s-green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="cd-stat-num">{{ store.currentCourse.module_count ?? 0 }}</div>
-                  <div class="cd-stat-lbl">Modules</div>
-                </div>
-              </div>
-    
-              <div class="cd-stat-sep"></div>
-    
-              <div class="cd-stat">
-                <div class="cd-stat-icon s-pink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="5" width="20" height="14" rx="2"/>
-                    <line x1="2" y1="10" x2="22" y2="10"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="cd-stat-num">{{ store.currentCourse.flashcard_set_count ?? 0 }}</div>
-                  <div class="cd-stat-lbl">Flashcard Sets</div>
-                </div>
-              </div>
-    
-              <div class="cd-stat-sep"></div>
-    
-              <div class="cd-stat">
-                <div class="cd-stat-icon s-amber">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="cd-stat-num">{{ store.currentCourse.exam_template_count ?? 0 }}</div>
-                  <div class="cd-stat-lbl">Exams</div>
-                </div>
-              </div>
-            </div>
-    
-            <!-- section heading -->
-            <div class="cd-section-head">
-              <h2 class="cd-section-title">Study Tools</h2>
-              <p class="cd-section-sub">Choose how you want to study this course</p>
-            </div>
-    
-            <!-- feature banners -->
-            <div class="cd-banners">
-    
-              <!-- modules -->
-              <div class="cd-banner cd-green" @click="router.push({ name: 'ModulesList', params: { courseId: courseId } })">
-                <div class="cd-banner-left">
-                  <div class="cd-b-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                    </svg>
-                  </div>
-                  <div class="cd-b-text">
-                    <span class="cd-b-tag">Step-by-step</span>
-                    <h3 class="cd-b-title">Modules</h3>
-                    <p class="cd-b-desc">Work through ordered lessons with mini quizzes to test your understanding.</p>
-                    <span class="cd-b-badge">{{ store.currentCourse.module_count ?? 0 }} available</span>
-                  </div>
-                </div>
-                <div class="cd-banner-right">
-                  <div class="cd-art cd-art-lines">
-                    <span></span><span></span><span></span>
-                  </div>
-                  <button class="cd-arrow" aria-label="go to modules">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
+      
+            <div class="cd-container">
+              
+              <div class="cd-hero">
+                <div class="cd-hero-top">
+                  
+                  <button class="back-btn" @click="goToDashboard">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 12H5M12 5l-7 7 7 7"/>
                     </svg>
                   </button>
+    
+                  <div class="cd-breadcrumb">
+                    <span class="cd-label clickable" @click="goToDashboard">Home</span>
+                    <span class="separator">›</span>
+                    <span class="cd-label">Course</span>
+                  </div>
+                </div>
+    
+                <div class="cd-hero-inner">
+                  <h1 class="cd-title">{{ store.currentCourse.title }}</h1>
+                  <p v-if="store.currentCourse.description" class="cd-desc">
+                    {{ store.currentCourse.description }}
+                  </p>
                 </div>
               </div>
-    
-              <!-- flashcards -->
-              <div class="cd-banner cd-pink" @click="router.push(`/flashcards/${courseId}`)">
-                <div class="cd-banner-left">
-                  <div class="cd-b-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="2" y="5" width="20" height="14" rx="2"/>
-                      <line x1="2" y1="10" x2="22" y2="10"/>
-                    </svg>
+      
+              <div class="cd-body">
+      
+                <div class="cd-stats">
+                  <div class="cd-stat-card">
+                    <div class="cd-stat-num">{{ store.currentCourse.module_count ?? 0 }}</div>
+                    <div class="cd-stat-lbl">Total Modules</div>
                   </div>
-                  <div class="cd-b-text">
-                    <span class="cd-b-tag">Quick review</span>
-                    <h3 class="cd-b-title">Flashcards</h3>
-                    <p class="cd-b-desc">Master key concepts with flashcard sets made by your teacher for fast revision.</p>
-                    <span class="cd-b-badge">{{ store.currentCourse.flashcard_set_count ?? 0 }} sets</span>
+      
+                  <div class="cd-stat-card">
+                    <div class="cd-stat-num">{{ store.currentCourse.flashcard_set_count ?? 0 }}</div>
+                    <div class="cd-stat-lbl">Flashcard Sets</div>
+                  </div>
+      
+                  <div class="cd-stat-card">
+                    <div class="cd-stat-num">{{ store.currentCourse.exam_template_count ?? 0 }}</div>
+                    <div class="cd-stat-lbl">Total Exams</div>
                   </div>
                 </div>
-                <div class="cd-banner-right">
-                  <div class="cd-art cd-art-cards">
-                    <span></span><span></span><span></span>
+      
+                <div class="cd-section-head">
+                  <h2 class="cd-section-title">Study Tools</h2>
+                </div>
+      
+                <div class="cd-banners">
+      
+                  <div class="cd-banner cd-green" @click="router.push({ name: 'ModulesList', params: { courseId: courseId } })">
+                    <div class="cd-banner-left">
+                      <div class="cd-b-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="9" y1="3" x2="9" y2="21"></line>
+                          <path d="M13 8l2 2 4-4"></path>
+                        </svg>
+                      </div>
+                      <div class="cd-b-text">
+                        <span class="cd-b-tag">LEARN</span>
+                        <h3 class="cd-b-title">Modules</h3>
+                        <p class="cd-b-desc">Work through ordered lessons with mini quizzes to test your understanding. <span class="dot">•</span> {{ store.currentCourse.module_count ?? 0 }} available</p>
+                      </div>
+                    </div>
+                    <div class="cd-banner-right">
+                      <div class="cd-art cd-art-lines">
+                        <span></span><span></span><span></span>
+                      </div>
+                      <button class="cd-arrow" aria-label="go to modules">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <button class="cd-arrow" aria-label="go to flashcards">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </button>
+      
+                  <div class="cd-banner cd-pink" @click="router.push(`/flashcards/${courseId}`)">
+                    <div class="cd-banner-left">
+                      <div class="cd-b-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                          <line x1="2" y1="10" x2="22" y2="10"></line>
+                        </svg>
+                      </div>
+                      <div class="cd-b-text">
+                        <span class="cd-b-tag">REVIEW</span>
+                        <h3 class="cd-b-title">Flashcards</h3>
+                        <p class="cd-b-desc">Master key concepts with flashcard sets made by your teacher for fast revision. <span class="dot">•</span> {{ store.currentCourse.flashcard_set_count ?? 0 }} sets</p>
+                      </div>
+                    </div>
+                    <div class="cd-banner-right">
+                      <div class="cd-art cd-art-cards">
+                        <span></span><span></span><span></span>
+                      </div>
+                      <button class="cd-arrow" aria-label="go to flashcards">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+      
+                  <div class="cd-banner cd-orange" @click="router.push(`/exam/${courseId}`)">
+                    <div class="cd-banner-left">
+                      <div class="cd-b-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                          <polyline points="14 2 14 8 20 8"></polyline>
+                          <line x1="16" y1="13" x2="8" y2="13"></line>
+                          <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                      </div>
+                      <div class="cd-b-text">
+                        <span class="cd-b-tag">PRACTICE TEST</span>
+                        <h3 class="cd-b-title">Exams</h3>
+                        <p class="cd-b-desc">Practice with past midterm and final exam question banks to build confidence. <span class="dot">•</span> {{ store.currentCourse.exam_template_count ?? 0 }} exams</p>
+                      </div>
+                    </div>
+                    <div class="cd-banner-right">
+                      <div class="cd-art cd-art-circles">
+                        <span></span><span></span>
+                        <em>✓</em>
+                      </div>
+                      <button class="cd-arrow" aria-label="go to exams">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+      
                 </div>
               </div>
-    
-              <!-- exams -->
-              <div class="cd-banner cd-amber" @click="router.push(`/exam/${courseId}`)">
-                <div class="cd-banner-left">
-                  <div class="cd-b-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/>
-                      <line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                  </div>
-                  <div class="cd-b-text">
-                    <span class="cd-b-tag">Practice test</span>
-                    <h3 class="cd-b-title">Exams</h3>
-                    <p class="cd-b-desc">Practice with past midterm and final exam question banks to build confidence.</p>
-                    <span class="cd-b-badge">{{ store.currentCourse.exam_template_count ?? 0 }} exams</span>
-                  </div>
-                </div>
-                <div class="cd-banner-right">
-                  <div class="cd-art cd-art-circles">
-                    <span></span><span></span>
-                    <em>✓</em>
-                  </div>
-                  <button class="cd-arrow" aria-label="go to exams">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-    
             </div>
-          </div>
 </template>
   </div>
 </template>
@@ -197,6 +169,10 @@ const store = useCourseStore()
 // get course id from url: /courses/:courseId
 const courseId = computed(() => route.params.courseId)
 
+const goToDashboard = () => {
+    router.push('/dashboard')
+}
+
 // fetch course data when page loads
 onMounted(async () => {
     await store.viewCourse(courseId.value)
@@ -210,21 +186,21 @@ onUnmounted(() => {
 
 <style scoped>
 /* =====================================================
-   cd-root: escape any parent container so hero bleeds
-   edge to edge. uses negative margin + 100vw width.
-   ===================================================== */
+ Root Layout
+ ===================================================== */
 
 .cd-root {
-    position: relative;
-    /* pull left to cancel parent horizontal padding */
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    width: 100vw;
+    width: 100%;
     min-height: 100vh;
-    background: #f5f4f2;
+    background: linear-gradient( 90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
     font-family: 'DM Sans', 'Outfit', 'Segoe UI', sans-serif;
-    overflow-x: hidden;
+    padding: 2rem;
     box-sizing: border-box;
+}
+
+.cd-container {
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
 /* ---- loading / error states ---- */
@@ -236,7 +212,6 @@ onUnmounted(() => {
     justify-content: center;
     min-height: 60vh;
     gap: 1rem;
-    padding: 2rem;
 }
 
 .cd-spinner {
@@ -255,8 +230,8 @@ onUnmounted(() => {
 }
 
 .cd-state-text {
-    color: #999;
-    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .cd-error-icon {
@@ -274,258 +249,209 @@ onUnmounted(() => {
 
 .cd-error-msg {
     color: #ef4444;
-    font-size: 0.9rem;
-    text-align: center;
+    font-weight: 500;
 }
 
 .cd-btn-back {
-    padding: 0.55rem 1.4rem;
-    border-radius: 8px;
+    padding: 0.6rem 1.5rem;
+    border-radius: 10px;
     border: none;
-    background: #e91e63;
+    background: #df4a7d;
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.cd-btn-back:hover {
-    background: #c2185b;
 }
 
 /* =====================================================
-   hero: full bleed, no border, no border-radius
-   ===================================================== */
+ Hero: Pink rounded banner
+ ===================================================== */
 
 .cd-hero {
-    position: relative;
-    width: 100%;
-    background: linear-gradient(135deg, #130610 0%, #3b0d21 55%, #130610 100%);
-    padding: 4.5rem 6vw 4rem;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-.cd-hero-glow {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 55% 90% at 75% 50%, rgba(233, 30, 99, 0.2) 0%, transparent 70%), radial-gradient(ellipse 35% 60% at 15% 30%, rgba(255, 77, 141, 0.1) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.cd-hero-inner {
-    position: relative;
-    max-width: 860px;
-}
-
-.cd-label {
-    display: inline-block;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: #f06292;
-    background: rgba(233, 30, 99, 0.15);
-    border: 1px solid rgba(233, 30, 99, 0.35);
-    border-radius: 4px;
-    padding: 0.22rem 0.7rem;
-    margin-bottom: 1.2rem;
-}
-
-.cd-title {
-    font-size: clamp(1.75rem, 3.5vw, 2.8rem);
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin: 0 0 1rem;
-}
-
-.cd-desc {
-    font-size: 0.975rem;
-    color: rgba(255, 255, 255, 0.55);
-    line-height: 1.75;
-    max-width: 560px;
-    margin: 0;
-}
-
-/* =====================================================
-   body: padded section below hero
-   ===================================================== */
-
-.cd-body {
-    padding: 2.5rem 6vw 5rem;
-    box-sizing: border-box;
-}
-
-/* =====================================================
-   stat strip
-   ===================================================== */
-
-.cd-stats {
-    display: flex;
-    align-items: center;
-    background: #fff;
+    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
     border-radius: 16px;
-    border: 1px solid #ece7e7;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2.75rem;
-    overflow: hidden;
+    padding: 2rem 2.5rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px rgba(223, 74, 125, 0.15);
 }
 
-.cd-stat {
-    flex: 1;
+.cd-hero-top {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.4rem 2rem;
+    margin-bottom: 1.5rem;
 }
 
-.cd-stat-sep {
-    width: 1px;
-    height: 44px;
-    background: #f0eaea;
-    flex-shrink: 0;
-}
-
-.cd-stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
     flex-shrink: 0;
 }
 
-.cd-stat-icon svg {
-    width: 20px;
-    height: 20px;
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
-.s-green {
-    background: #e8f5e9;
-    color: #2e7d32;
+.cd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.9;
 }
 
-.s-pink {
-    background: #fce4ec;
-    color: #c2185b;
+.cd-label.clickable {
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
 
-.s-amber {
-    background: #fff8e1;
-    color: #f57f17;
+.cd-label.clickable:hover {
+    opacity: 0.7;
+    text-decoration: underline;
 }
 
-.cd-stat-num {
-    font-size: 1.65rem;
+.separator {
+    font-size: 1.2rem;
+}
+
+.cd-title {
+    font-size: 2.2rem;
     font-weight: 800;
-    color: #130610;
-    line-height: 1;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.01em;
 }
 
-.cd-stat-lbl {
-    font-size: 0.78rem;
-    color: #aaa;
-    font-weight: 500;
-    margin-top: 0.2rem;
+.cd-desc {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 600px;
+    line-height: 1.6;
 }
 
 /* =====================================================
-   section heading
-   ===================================================== */
+ Stats: Separate white cards
+ ===================================================== */
+
+.cd-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+}
+
+.cd-stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cd-stat-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.cd-stat-lbl {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* =====================================================
+ Section Heading
+ ===================================================== */
 
 .cd-section-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 1.1rem;
-    flex-wrap: wrap;
-    gap: 0.25rem;
+    margin-bottom: 1.25rem;
 }
 
 .cd-section-title {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #130610;
-    margin: 0;
-}
-
-.cd-section-sub {
-    font-size: 0.82rem;
-    color: #bbb;
+    color: #1f2937;
     margin: 0;
 }
 
 /* =====================================================
-   feature banners
-   ===================================================== */
+ Feature Banners
+ ===================================================== */
 
 .cd-banners {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 1rem;
 }
 
 .cd-banner {
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-radius: 20px;
-    padding: 1.75rem 2rem;
     cursor: pointer;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-    overflow: hidden;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
-    min-height: 130px;
-    width: 100%;
-    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .cd-banner:hover {
     transform: translateY(-3px);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .cd-banner:hover .cd-arrow {
+    background: rgba(255, 255, 255, 0.3);
     transform: translateX(5px);
-    background: rgba(255, 255, 255, 0.35);
 }
 
-/* banner color themes */
-
 .cd-green {
-    background: linear-gradient(125deg, #0d5c2e 0%, #1a8c47 60%, #22a855 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #357a44 0%, #4db15f 100%);
 }
 
 .cd-pink {
-    background: linear-gradient(125deg, #ad1457 0%, #e91e63 55%, #f48fb1 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #b42158 0%, #df4c82 100%);
 }
 
-.cd-amber {
-    background: linear-gradient(125deg, #b45309 0%, #d97706 55%, #fbbf24 100%);
-    color: #fff;
+.cd-orange {
+    background: linear-gradient(135deg, #c97924 0%, #eeb141 100%);
 }
 
-/* left content */
+/* Left Content */
 
 .cd-banner-left {
     display: flex;
-    align-items: flex-start;
-    gap: 1.2rem;
+    align-items: center;
+    gap: 1.5rem;
     flex: 1;
-    min-width: 0;
+    z-index: 2;
 }
 
 .cd-b-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 13px;
-    background: rgba(255, 255, 255, 0.2);
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -533,74 +459,85 @@ onUnmounted(() => {
 }
 
 .cd-b-icon svg {
-    width: 22px;
-    height: 22px;
-    stroke: #fff;
+    width: 26px;
+    height: 26px;
+    color: #ffffff;
 }
 
 .cd-b-text {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    min-width: 0;
 }
 
 .cd-b-tag {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 2.5px;
     text-transform: uppercase;
-    opacity: 0.65;
+    letter-spacing: 1px;
+    opacity: 0.85;
 }
 
 .cd-b-title {
-    font-size: 1.45rem;
+    font-size: 1.5rem;
     font-weight: 800;
     margin: 0;
     letter-spacing: -0.01em;
 }
 
 .cd-b-desc {
-    font-size: 0.86rem;
-    opacity: 0.78;
-    line-height: 1.6;
-    margin: 0.1rem 0 0;
-    max-width: 440px;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 400;
+    opacity: 0.95;
 }
 
-.cd-b-badge {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.18rem 0.55rem;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.22);
-    letter-spacing: 0.5px;
-    margin-top: 0.3rem;
-    width: fit-content;
+.cd-b-desc .dot {
+    margin: 0 0.4rem;
+    opacity: 0.5;
 }
 
-/* right content */
+/* Right Content */
 
 .cd-banner-right {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    flex-shrink: 0;
+    gap: 1.5rem;
     margin-left: 1rem;
+    z-index: 2;
 }
 
-/* decorative art */
+.cd-arrow {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.cd-arrow svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* =====================================================
+ Decorative Art 
+ ===================================================== */
 
 .cd-art {
     position: relative;
     width: 90px;
     height: 72px;
-    opacity: 0.3;
+    opacity: 0.25;
     flex-shrink: 0;
 }
-
-/* lines: modules */
 
 .cd-art-lines span {
     display: block;
@@ -625,8 +562,6 @@ onUnmounted(() => {
     top: 44px;
     width: 50%;
 }
-
-/* stacked cards: flashcards */
 
 .cd-art-cards span {
     display: block;
@@ -654,8 +589,6 @@ onUnmounted(() => {
     left: 0;
     transform: rotate(4deg);
 }
-
-/* circles: exams */
 
 .cd-art-circles span {
     display: block;
@@ -689,103 +622,44 @@ onUnmounted(() => {
     left: 25px;
 }
 
-/* arrow button */
-
-.cd-arrow {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease;
-    flex-shrink: 0;
-}
-
-.cd-arrow svg {
-    width: 17px;
-    height: 17px;
-    stroke: #fff;
-}
-
 /* =====================================================
-   responsive breakpoints
-   ===================================================== */
+ Responsive
+ ===================================================== */
 
-/* tablet */
-
-@media (max-width: 900px) {
-    .cd-hero {
-        padding: 3.5rem 5vw 3rem;
-    }
-    .cd-body {
-        padding: 2rem 5vw 4rem;
-    }
-    .cd-stat {
-        padding: 1.2rem 1.5rem;
+@media (max-width: 860px) {
+    .cd-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
     .cd-b-desc {
         max-width: 280px;
     }
 }
 
-/* large mobile */
-
 @media (max-width: 640px) {
+    .cd-root {
+        padding: 1rem;
+    }
     .cd-hero {
-        padding: 2.5rem 1.25rem 2.5rem;
+        padding: 1.5rem;
     }
-    .cd-body {
-        padding: 1.5rem 1.25rem 3rem;
-    }
-    /* stats go vertical */
-    .cd-stats {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .cd-stat {
-        padding: 1rem 1.25rem;
-    }
-    .cd-stat-sep {
-        width: auto;
-        height: 1px;
-        margin: 0 1.25rem;
-    }
-    /* simpler banners */
     .cd-banner {
         padding: 1.25rem;
-        min-height: auto;
     }
-    .cd-art {
-        display: none;
+    .cd-banner-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .cd-b-icon {
+        width: 48px;
+        height: 48px;
     }
     .cd-b-desc {
         display: none;
     }
-    .cd-b-title {
-        font-size: 1.2rem;
-    }
-    .cd-section-head {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-/* small mobile */
-
-@media (max-width: 400px) {
-    .cd-title {
-        font-size: 1.5rem;
-    }
-    .cd-b-title {
-        font-size: 1.1rem;
-    }
-    .cd-banner-right {
-        gap: 0.5rem;
-        margin-left: 0.5rem;
+    .cd-art {
+        display: none;
     }
 }
 </style>

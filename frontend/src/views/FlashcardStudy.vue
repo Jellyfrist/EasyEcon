@@ -1,210 +1,201 @@
 <template>
     <div class="study-page">
     
-        <!-- loading -->
         <div v-if="store.loading" class="state-box">
             <div class="spinner"></div>
-            <p>Loading flashcards...</p>
+            <p class="state-text">Loading flashcards...</p>
         </div>
     
-        <!-- error -->
         <div v-else-if="store.error" class="state-box state-error">
-            <span class="material-symbols-outlined">error</span>
-            <p>{{ store.error }}</p>
+            <span class="material-symbols-outlined error-icon">error</span>
+            <p class="state-text">{{ store.error }}</p>
         </div>
     
         <template v-else-if="store.currentSet">
-        
-              <!-- topbar -->
-              <div class="study-topbar">
-                <div class="topbar-left">
-                  <router-link :to="backLink" class="back-btn">
-                    <span class="material-symbols-outlined">arrow_back</span>
-                  </router-link>
-                  <div class="set-info">
-                    <span class="set-label">Flashcards</span>
-                    <span class="set-divider">›</span>
-                    <span class="set-name">{{ store.currentSet.title }}</span>
-                  </div>
-                </div>
-                <div class="topbar-center">
-                  <span class="card-counter">{{ currentIndex + 1 }} / {{ cards.length }}</span>
-                  <span class="card-title-sm">{{ store.currentSet.title }}</span>
-                </div>
-                <div class="topbar-right"></div>
-              </div>
-        
-              <!-- empty -->
-              <div v-if="cards.length === 0" class="state-box">
-                <span class="material-symbols-outlined">layers_clear</span>
-                <p>This set has no cards yet.</p>
-              </div>
-        
-              <!-- done screen -->
-              <div v-else-if="isDone" class="done-screen">
-                <div class="done-icon">🎉</div>
-                <h2>You finished this set!</h2>
-                <h4>
-                  You marked <strong>{{ knownCount }}</strong> card(s) as known
-                  and <strong>{{ learningCount }}</strong> as still learning.
-                </h4>
-                <div class="done-actions">
-                  <button class="btn-outline-light" @click="restart">
-                    <span class="material-symbols-outlined">replay</span>
-                    Study again
-                  </button>
-                  <router-link :to="backLink" class="btn btn-primary">Back to sets</router-link>
-                </div>
-              </div>
-        
-              <!-- main area -->
-              <div v-else class="main-area">
-        
-                <!-- progress row -->
-                <div class="progress-row">
-                  <div class="prog-chip prog-learning">
-                    <span class="prog-count">{{ learningCount }}</span>
-                    <span class="prog-label">Still learning</span>
-                  </div>
-                  <div class="prog-bar-track">
-                    <div class="prog-bar-fill prog-bar-learning" :style="{ width: learningPercent + '%' }"></div>
-                    <div class="prog-bar-fill prog-bar-known" :style="{ width: knownPercent + '%', left: learningPercent + '%' }"></div>
-                  </div>
-                  <div class="prog-chip prog-known">
-                    <span class="prog-label">Know</span>
-                    <span class="prog-count">{{ knownCount }}</span>
-                  </div>
-                </div>
-        
-                <!-- flashcard: full width -->
-                <div
-                  class="flashcard-wrap"
-                  :class="{ 'is-flipped': isFlipped }"
-                  @click="flipCard"
-                  role="button"
-                  aria-label="flip card"
-                >
-                  <div class="flashcard-inner">
-        
-                    <!-- front: term -->
-                    <div class="flashcard-face flashcard-front">
-                      <div v-if="currentCard.image_url" class="card-img-wrap">
-                        <img :src="currentCard.image_url" class="card-img" alt="card image" />
-                      </div>
-                      <p class="card-word">{{ currentCard.term }}</p>
-                      <!-- shortcut bar inside card -->
-                      <div class="card-shortcut-bar" @click.stop>
-                        <span class="material-symbols-outlined shortcut-icon">keyboard</span>
-                        <span class="shortcut-label">Shortcut</span>
-                        <span class="shortcut-text">Press <kbd>Space</kbd> or click on the card to flip</span>
-                      </div>
+          
+                <div class="study-topbar">
+                  <div class="topbar-left" >
+                    <button class="back-btn" @click="goToDashboard">
+                      <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div class="set-info">
+                      <span class="set-label">FLASHCARDS</span>
+                      <span class="material-symbols-outlined set-divider">chevron_right</span>
+                      <span class="set-name">{{ store.currentSet.title }}</span>
                     </div>
-        
-                    <!-- back: definition -->
-                    <div class="flashcard-face flashcard-back">
-                      <div v-if="currentCard.image_url" class="card-img-wrap">
-                        <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                  </div>
+                  <div class="topbar-center">
+                    <span class="card-counter">{{ currentIndex + 1 }} / {{ cards.length }}</span>
+                    <span class="card-title-sm">{{ store.currentSet.title }}</span>
+                  </div>
+                  <div class="topbar-right"></div>
+                </div>
+          
+                <div v-if="cards.length === 0" class="state-box">
+                  <span class="material-symbols-outlined empty-icon">layers_clear</span>
+                  <h2 class="state-title">No cards found</h2>
+                  <p class="state-text">This set has no cards yet.</p>
+                </div>
+          
+                <div v-else-if="isDone" class="done-screen-wrapper">
+                  <div class="result-card">
+                      <div class="icon-confetti">🎉</div>
+                      <h1 class="result-title">You finished this set!</h1>
+                      <p class="result-desc">
+                          You marked <strong class="text-green">{{ knownCount }}</strong> card(s) as known
+                          and <strong class="text-pink">{{ learningCount }}</strong> as still learning.
+                      </p>
+                      
+                      <div class="action-buttons">
+                          <button class="btn-primary" @click="restart">
+                              <span class="material-symbols-outlined mr-1">replay</span>
+                              Study Again
+                          </button>
+                          <button class="btn-outline" @click="goToDashboard">
+                              Back to Flashcard Sets
+                          </button>
                       </div>
-                      <p class="card-word">{{ currentCard.definition }}</p>
-                      <!-- shortcut bar inside card back -->
-                      <div class="card-shortcut-bar" @click.stop>
-                        <span class="material-symbols-outlined shortcut-icon">keyboard</span>
-                        <span class="shortcut-label">Shortcut</span>
-                        <span class="shortcut-text">Press <kbd>←</kbd> Don't Know · <kbd>→</kbd> Know</span>
-                      </div>
-                    </div>
-        
                   </div>
                 </div>
-        
-                <!-- hint row: below card, right-aligned -->
-                <div class="hint-row">
-                  <transition name="hint-slide">
-                    <div v-if="showHint && currentCard.hint" class="hint-box">
-                      <span class="material-symbols-outlined">lightbulb</span>
-                      {{ currentCard.hint }}
+          
+                <div v-else class="main-area">
+          
+                  <div class="progress-row">
+                    <div class="prog-chip prog-learning">
+                      <span class="prog-count">{{ learningCount }}</span>
+                      <span class="prog-label">Still learning</span>
                     </div>
-                  </transition>
-                  <button
-                    v-if="currentCard.hint"
-                    class="hint-btn"
-                    :class="{ 'hint-btn-active': showHint }"
-                    @click="showHint = !showHint"
+                    <div class="prog-bar-track">
+                      <div class="prog-bar-fill prog-bar-learning" :style="{ width: learningPercent + '%' }"></div>
+                      <div class="prog-bar-fill prog-bar-known" :style="{ width: knownPercent + '%', left: learningPercent + '%' }"></div>
+                    </div>
+                    <div class="prog-chip prog-known">
+                      <span class="prog-label">Know</span>
+                      <span class="prog-count">{{ knownCount }}</span>
+                    </div>
+                  </div>
+          
+                  <div
+                    class="flashcard-wrap"
+                    :class="{ 'is-flipped': isFlipped }"
+                    @click="flipCard"
+                    role="button"
+                    aria-label="flip card"
                   >
-                    <span class="material-symbols-outlined">lightbulb</span>
-                    {{ showHint ? 'Hide Hint' : 'Show Hint' }}
-                  </button>
-                </div>
-        
-                <!-- bottom controls -->
-                <div class="bottom-controls">
-                  <!-- track progress toggle -->
-                  <div class="track-toggle">
-                    <span class="track-label">Track progress</span>
+                    <div class="flashcard-inner">
+          
+                      <div class="flashcard-face flashcard-front">
+                        <div v-if="currentCard.image_url" class="card-img-wrap">
+                          <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                        </div>
+                        <p class="card-word">{{ currentCard.term }}</p>
+                        
+                        <div v-if="currentCard.hint && !showHint" class="hint-indicator">
+                          <span class="material-symbols-outlined">lightbulb</span> Click "Show Hint" below if stuck
+                        </div>
+    
+                        <div class="card-shortcut-bar" @click.stop>
+                          <span class="material-symbols-outlined shortcut-icon">keyboard</span>
+                          <span class="shortcut-text">Press <kbd>Space</kbd> or click to flip</span>
+                        </div>
+                      </div>
+          
+                      <div class="flashcard-face flashcard-back">
+                        <div v-if="currentCard.image_url" class="card-img-wrap">
+                          <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                        </div>
+                        <p class="card-word back-text">{{ currentCard.definition }}</p>
+                        <div class="card-shortcut-bar" @click.stop>
+                          <span class="material-symbols-outlined shortcut-icon">keyboard</span>
+                          <span class="shortcut-text">Press <kbd>←</kbd> Don't Know · <kbd>→</kbd> Know</span>
+                        </div>
+                      </div>
+          
+                    </div>
+                  </div>
+          
+                  <div class="hint-row">
+                    <transition name="hint-slide">
+                      <div v-if="showHint && currentCard.hint" class="hint-box">
+                        <span class="material-symbols-outlined">lightbulb</span>
+                        {{ currentCard.hint }}
+                      </div>
+                    </transition>
                     <button
-                      class="toggle-btn"
-                      :class="{ 'toggle-on': trackProgress }"
-                      @click="trackProgress = !trackProgress"
+                      v-if="currentCard.hint"
+                      class="hint-btn"
+                      :class="{ 'hint-btn-active': showHint }"
+                      @click="showHint = !showHint"
                     >
-                      <span class="toggle-thumb"></span>
+                      <span class="material-symbols-outlined">lightbulb</span>
+                      {{ showHint ? 'Hide Hint' : 'Show Hint' }}
                     </button>
                   </div>
-        
-                  <!-- Don't Know / Know buttons -->
-                  <div class="mark-btns">
-                    <button
-                      class="mark-btn mark-learning"
-                      :class="{ active: currentCard.status === 'learning' }"
-                      :disabled="!isFlipped"
-                      @click.stop="mark('learning')"
-                    >
-                      <span class="material-symbols-outlined">close</span>
-                      Don't Know
-                    </button>
-                    <button
-                      class="mark-btn mark-known"
-                      :class="{ active: currentCard.status === 'known' }"
-                      :disabled="!isFlipped"
-                      @click.stop="mark('known')"
-                    >
-                      <span class="material-symbols-outlined">check</span>
-                      Know
-                    </button>
+          
+                  <div class="bottom-controls">
+                    <div class="track-toggle">
+                      <span class="track-label">Track progress</span>
+                      <button
+                        class="toggle-btn"
+                        :class="{ 'toggle-on': trackProgress }"
+                        @click="trackProgress = !trackProgress"
+                      >
+                        <span class="toggle-thumb"></span>
+                      </button>
+                    </div>
+          
+                    <div class="mark-btns">
+                      <button
+                        class="mark-btn mark-learning"
+                        :class="{ active: currentCard.status === 'learning' }"
+                        :disabled="!isFlipped"
+                        @click.stop="mark('learning')"
+                      >
+                        <span class="material-symbols-outlined">close</span>
+                        Don't Know
+                      </button>
+                      <button
+                        class="mark-btn mark-known"
+                        :class="{ active: currentCard.status === 'known' }"
+                        :disabled="!isFlipped"
+                        @click.stop="mark('known')"
+                      >
+                        <span class="material-symbols-outlined">check</span>
+                        Know
+                      </button>
+                    </div>
+          
+                    <div class="right-controls">
+                      <button class="icon-btn" @click="restart" title="Restart">
+                        <span class="material-symbols-outlined">replay</span>
+                      </button>
+                      <button class="icon-btn" @click="shuffle" title="Shuffle">
+                        <span class="material-symbols-outlined">shuffle</span>
+                      </button>
+                    </div>
                   </div>
-        
-                  <!-- restart + shuffle -->
-                  <div class="right-controls">
-                    <button class="icon-btn" @click="restart" title="restart">
-                      <span class="material-symbols-outlined">replay</span>
+          
+                  <div class="nav-row">
+                    <button class="nav-btn" :disabled="currentIndex === 0" @click="prev">
+                      <span class="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <button class="icon-btn" @click="shuffle" title="shuffle">
-                      <span class="material-symbols-outlined">shuffle</span>
+                    <div class="dot-row">
+                      <span
+                        v-for="(card, idx) in cards"
+                        :key="card.id"
+                        class="dot"
+                        :class="{
+                          'dot-active': idx === currentIndex,
+                          'dot-known': card.status === 'known',
+                          'dot-learning': card.status === 'learning',
+                        }"
+                      ></span>
+                    </div>
+                    <button class="nav-btn" @click="next">
+                      <span class="material-symbols-outlined">chevron_right</span>
                     </button>
                   </div>
                 </div>
-        
-                <!-- prev / next arrows -->
-                <div class="nav-row">
-                  <button class="nav-btn" :disabled="currentIndex === 0" @click="prev">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                  </button>
-                  <div class="dot-row">
-                    <span
-                      v-for="(card, idx) in cards"
-                      :key="card.id"
-                      class="dot"
-                      :class="{
-                        'dot-active': idx === currentIndex,
-                        'dot-known': card.status === 'known',
-                        'dot-learning': card.status === 'learning',
-                      }"
-                    ></span>
-                  </div>
-                  <button class="nav-btn" :disabled="currentIndex === cards.length - 1" @click="next">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                  </button>
-                </div>
-              </div>
 </template>
 
   </div>
@@ -212,21 +203,24 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useFlashcardStore } from '../store/flashcardStore'
 import { authService } from '../services/authService'
 
 const route = useRoute()
+const router = useRouter();
 const store = useFlashcardStore()
 
 const setId = computed(() => route.params.setId)
+const courseId = computed(() => route.params.courseId)
 
 const backLink = computed(() => {
     const role = authService.getUser() ?.role
+    const cId = route.params.courseId
     if (role === 'teacher' || role === 'admin') {
-        return { name: 'TeacherFlashcardDashboard', params: { courseId: route.params.courseId } }
+        return `/teacher/courses/${cId}/flashcards`
     }
-    return { name: 'FlashcardsDashboard', params: { courseId: route.params.courseId } }
+    return `/student/courses/${cId}/flashcards`
 })
 
 const cards = computed(() => store.currentSet ?.cards ?? [])
@@ -240,6 +234,7 @@ const currentCard = computed(() => cards.value[currentIndex.value] ?? {})
 
 watch(currentIndex, () => {
     showHint.value = false
+    isFlipped.value = false
 })
 
 const knownCount = computed(() => cards.value.filter(c => c.status === 'known').length)
@@ -250,7 +245,6 @@ const learningPercent = computed(() => Math.round((learningCount.value / (cards.
 function flipCard() { isFlipped.value = !isFlipped.value }
 
 function next() {
-    isFlipped.value = false
     if (currentIndex.value < cards.value.length - 1) {
         currentIndex.value++
     } else {
@@ -259,20 +253,21 @@ function next() {
 }
 
 function prev() {
-    isFlipped.value = false
     if (currentIndex.value > 0) currentIndex.value--
+}
+
+function goToDashboard() {
+    router.push(`/flashcards/${courseId.value}`);
 }
 
 async function mark(status) {
     if (trackProgress.value) {
-        // save to api and update local status
+
         await store.markCard(currentCard.value.id, status)
         const card = cards.value[currentIndex.value]
         if (card) card.status = status
     }
-    // flip back then advance
     isFlipped.value = false
-    setTimeout(() => next(), 600)
 }
 
 function restart() {
@@ -310,22 +305,33 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap');
+/* =============================
+ Base Layout
+ =============================== */
+
 .study-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f0ede8;
+    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    font-family: 'DM Sans', 'Sarabun', sans-serif;
 }
 
-/* topbar */
+.material-symbols-outlined {
+    vertical-align: middle;
+}
+
+/* ===============================
+ Topbar
+ ================================= */
 
 .study-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 2.5rem;
-    background: radial-gradient(ellipse at 70% 50%, #7b1035 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, #4a0a1e 0%, transparent 55%), #2d0514;
-    border-bottom: none;
+    padding: 1.5rem 2.5rem;
+    background: transparent;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -334,7 +340,7 @@ onUnmounted(() => {
 .topbar-left {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
     flex: 1;
 }
 
@@ -342,43 +348,51 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #fce4ec;
+    color: #df4a7d;
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(223, 74, 125, 0.1);
 }
 
 .back-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    transform: translateX(-2px);
+    background: #df4a7d;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(223, 74, 125, 0.2);
 }
 
 .set-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .set-label {
-    font-size: 0.92rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    color: #f472b6;
+    color: #df4a7d;
+    letter-spacing: 0.05em;
+    background: #ffffff;
+    padding: 4px 12px;
+    border-radius: 99px;
 }
 
 .set-divider {
-    color: rgba(255, 255, 255, 0.3);
+    color: #9ca3af;
+    font-size: 20px;
 }
 
 .set-name {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
-    max-width: 200px;
+    font-size: 1rem;
+    color: #111827;
+    font-weight: 800;
+    max-width: 250px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -389,25 +403,28 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
 }
 
 .card-counter {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #111827;
 }
 
 .card-title-sm {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 600;
 }
 
 .topbar-right {
     flex: 1;
 }
 
-/* states */
+/* =====================================================
+ States (Loading / Error / Empty)
+ ===================================================== */
 
 .state-box {
     flex: 1;
@@ -417,26 +434,41 @@ onUnmounted(() => {
     justify-content: center;
     gap: 1rem;
     padding: 4rem 2rem;
-    color: var(--text-muted);
     text-align: center;
 }
 
-.state-box .material-symbols-outlined {
-    font-size: 48px;
-    opacity: 0.35;
+.empty-icon {
+    font-size: 4rem;
+    color: #9ca3af;
+    margin-bottom: 1rem;
 }
 
-.state-error {
-    color: #f87171;
+.error-icon {
+    font-size: 4rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.state-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.state-text {
+    font-size: 1.1rem;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--card-border);
-    border-top-color: var(--primary-pink);
+    width: 44px;
+    height: 44px;
+    border: 4px solid #fce4ec;
+    border-top-color: #df4a7d;
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -445,65 +477,70 @@ onUnmounted(() => {
     }
 }
 
-/* main area */
+/* ===============================
+ Main Area
+ ================================= */
 
 .main-area {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 1.5rem 2.5rem 2rem;
-    gap: 1rem;
-    max-width: 1100px;
+    padding: 1rem 2.5rem 3rem;
+    gap: 1.5rem;
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
 }
 
-/* progress row */
+/* ===============================
+ Progress Row
+ ================================= */
 
 .progress-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .prog-chip {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 800;
     white-space: nowrap;
 }
 
 .prog-chip.prog-learning {
-    color: var(--primary-hover);
+    color: #df4a7d;
 }
 
 .prog-chip.prog-known {
-    color: var(--forest-green);
+    color: #10b981;
 }
 
 .prog-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 2px solid currentColor;
-    font-size: 0.82rem;
-    font-weight: 800;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+    font-weight: 900;
 }
 
 .prog-bar-track {
     flex: 1;
-    height: 8px;
-    background: #e5e0d8;
+    height: 10px;
+    background: #ffffff;
     border-radius: 99px;
     position: relative;
     overflow: hidden;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .prog-bar-fill {
@@ -515,29 +552,25 @@ onUnmounted(() => {
 }
 
 .prog-bar-learning {
-    background: linear-gradient(90deg, var(--primary-hover), var(--primary-pink));
+    background: linear-gradient(90deg, #ffc7db, #df4a7d);
     left: 0;
 }
 
 .prog-bar-known {
-    background: linear-gradient(90deg, var(--forest-green), var(--accent-green));
+    background: linear-gradient(90deg, #10b981, #34d399);
 }
 
-/* flashcard */
+/* =================================
+ Flashcard
+ =================================== */
 
 .flashcard-wrap {
     width: 100%;
-    height: 420px;
-    perspective: 1400px;
+    height: 480px;
+    perspective: 1500px;
     cursor: pointer;
     position: relative;
-    border-radius: 20px;
-    filter: drop-shadow(0 16px 40px rgba(46, 56, 86, 0.13));
-    transition: filter 0.3s;
-}
-
-.flashcard-wrap:hover {
-    filter: drop-shadow(0 20px 48px rgba(46, 56, 86, 0.18));
+    border-radius: 32px;
 }
 
 .flashcard-inner {
@@ -545,11 +578,16 @@ onUnmounted(() => {
     height: 100%;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 20px;
+    border-radius: 32px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
 }
 
 .flashcard-wrap.is-flipped .flashcard-inner {
     transform: rotateY(180deg);
+}
+
+.flashcard-wrap:hover .flashcard-inner {
+    box-shadow: 0 20px 50px rgba(223, 74, 125, 0.15);
 }
 
 .flashcard-face {
@@ -560,224 +598,216 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2.5rem 3rem 4.5rem;
-    gap: 1.25rem;
-    border-radius: 20px;
-    overflow: hidden;
-}
-
-.flashcard-front {
-    background: var(--white);
-    border: 1.5px solid rgba(237, 64, 130, 0.1);
+    padding: 3rem;
+    gap: 1.5rem;
+    border-radius: 32px;
+    background: #ffffff;
+    border: 1.5px solid #ffffff;
 }
 
 .flashcard-back {
-    background: linear-gradient(145deg, #fbfbfb, #ffffff);
-    border: 1.5px solid rgba(237, 64, 130, 0.1);
+    background: #faf9f7;
     transform: rotateY(180deg);
 }
 
 .card-img-wrap {
     width: 100%;
-    max-height: 160px;
+    max-height: 180px;
     display: flex;
     justify-content: center;
 }
 
 .card-img {
-    max-height: 160px;
+    max-height: 180px;
     max-width: 100%;
     object-fit: contain;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .card-word {
-    font-size: 1.85rem;
+    font-size: 2.8rem;
     font-weight: 800;
-    color: var(--text-main);
+    color: #111827;
     text-align: center;
-    line-height: 1.35;
+    line-height: 1.3;
     letter-spacing: -0.02em;
+    margin: 0;
 }
 
-/* shortcut bar: inside card at bottom */
+.back-text {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.hint-indicator {
+    font-size: 0.9rem;
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    background: #fef3c7;
+    padding: 6px 16px;
+    border-radius: 99px;
+    margin-top: 1rem;
+}
+
+/* Shortcut bar */
 
 .card-shortcut-bar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(165, 180, 252, 0.15);
-    border-top: 1px solid rgba(165, 180, 252, 0.2);
-    padding: 0.7rem 1.5rem;
+    background: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+    padding: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #6b7280;
     cursor: default;
-    border-radius: 0 0 20px 20px;
+    border-radius: 0 0 32px 32px;
+    font-weight: 600;
 }
 
 .shortcut-icon {
-    font-size: 20px;
-    color: var(--primary-pink);
-    opacity: 0.8;
-}
-
-.shortcut-label {
-    font-weight: 700;
-    color: var(--text-main);
+    font-size: 18px;
+    color: #df4a7d;
 }
 
 kbd {
     display: inline-block;
-    padding: 2px 8px;
-    border: 1px solid var(--card-border);
+    padding: 3px 8px;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     font-family: inherit;
-    background: var(--white);
-    color: var(--text-main);
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    color: #111827;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* hint row */
+/* ===========================
+ Hint Row
+ ============================= */
 
 .hint-row {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.5rem;
+    gap: 0.8rem;
+    min-height: 40px;
 }
 
 .hint-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 16px;
+    padding: 8px 20px;
     border-radius: 99px;
-    border: 1.5px solid #fbbf24;
-    background: rgba(255, 251, 235, 0.8);
+    border: 1.5px solid #fcd34d;
+    background: #ffffff;
     color: #d97706;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 800;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(251, 191, 36, 0.15);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.1);
 }
 
-.hint-btn:hover {
-    background: #fef3c7;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.25);
-}
-
+.hint-btn:hover,
 .hint-btn-active {
     background: #fef3c7;
-}
-
-.hint-btn .material-symbols-outlined {
-    font-size: 16px;
+    box-shadow: 0 6px 15px rgba(245, 158, 11, 0.2);
 }
 
 .hint-box {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0.8rem 1.25rem;
-    background: linear-gradient(135deg, rgba(255, 251, 235, 0.9), rgba(254, 243, 199, 0.9));
-    border: 1.5px solid #fde68a;
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    font-weight: 500;
+    gap: 12px;
+    padding: 1rem 1.5rem;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
     color: #92400e;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.12);
 }
 
 .hint-box .material-symbols-outlined {
-    font-size: 18px;
     color: #f59e0b;
-    flex-shrink: 0;
+    font-size: 24px;
 }
 
-.hint-slide-enter-active {
-    transition: opacity 0.25s, transform 0.25s;
-}
-
-.hint-slide-leave-active {
-    transition: opacity 0.15s;
-}
-
-.hint-slide-enter-from {
-    opacity: 0;
-    transform: translateY(6px);
-}
-
-.hint-slide-leave-to {
-    opacity: 0;
-}
-
-/* bottom controls */
+/* ================================
+ Bottom Controls
+ ==================================*/
 
 .bottom-controls {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-top: 1rem;
 }
 
 .track-toggle {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 10px;
     flex: 1;
 }
 
 .track-label {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    font-weight: 600;
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 700;
 }
 
 .toggle-btn {
-    width: 46px;
-    height: 26px;
+    width: 50px;
+    height: 28px;
     border-radius: 99px;
-    background: #d1d5db;
+    background: #e5e7eb;
     border: none;
     cursor: pointer;
     position: relative;
-    transition: background 0.25s;
+    transition: background 0.3s;
     padding: 0;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-btn.toggle-on {
-    background: var(--primary-pink);
+    background: #df4a7d;
 }
 
 .toggle-thumb {
     position: absolute;
-    top: 3px;
-    left: 3px;
+    top: 4px;
+    left: 4px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
     background: white;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-btn.toggle-on .toggle-thumb {
-    transform: translateX(20px);
+    transform: translateX(22px);
 }
+
+/* Mark Buttons */
 
 .mark-btns {
     display: flex;
-    gap: 1.25rem;
+    gap: 1.5rem;
     flex: 1;
     justify-content: center;
 }
@@ -786,87 +816,57 @@ kbd {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0.75rem 1.5rem;
+    padding: 1rem 2rem;
     border-radius: 99px;
-    border: none;
+    border: 2px solid transparent;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
-    font-size: 0.95rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .mark-btn:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
 }
 
 .mark-btn:active:not(:disabled) {
     transform: scale(0.97);
 }
 
-.mark-btn .material-symbols-outlined {
-    font-size: 20px;
-}
-
 .mark-btn:disabled {
-    opacity: 0.3;
+    opacity: 0.4;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 .mark-learning {
-    background: linear-gradient(135deg, #ffe3f8, #ffacf0);
-    color: var(--primary-hover);
+    background: #ffffff;
+    color: #df4a7d;
+    border-color: #fce4ec;
 }
 
-.mark-learning:hover:not(:disabled),
-.mark-learning.active {
-    background: linear-gradient(135deg, #ffc7f5, #ffb3e4);
+.mark-learning:hover:not(:disabled) {
+    background: #fff0f5;
+    border-color: #df4a7d;
+    box-shadow: 0 8px 20px rgba(223, 74, 125, 0.2);
 }
 
 .mark-known {
-    background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
-    color: var(--forest-green);
+    background: #ffffff;
+    color: #10b981;
+    border-color: #dcfce7;
 }
 
-.mark-known:hover:not(:disabled),
-.mark-known.active {
-    background: linear-gradient(135deg, #6ee7b7, #34d399);
-}
-
-.next-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0.75rem 2rem;
-    border-radius: 99px;
-    background: var(--primary-pink);
-    border: none;
-    color: white;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s;
-    box-shadow: 0 4px 14px rgba(237, 64, 130, 0.35);
-    animation: pop 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.next-btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(237, 64, 130, 0.45);
-}
-
-.next-btn .material-symbols-outlined {
-    font-size: 20px;
+.mark-known:hover:not(:disabled) {
+    background: #f0fdf4;
+    border-color: #10b981;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
 }
 
 .right-controls {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.8rem;
     flex: 1;
     justify-content: flex-end;
 }
@@ -875,195 +875,242 @@ kbd {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
+    background: #ffffff;
+    border: none;
+    color: #6b7280;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: inherit;
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .icon-btn:hover {
-    background: var(--white);
-    color: var(--text-main);
-    transform: scale(1.05);
-    box-shadow: var(--shadow-md);
+    background: #df4a7d;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(223, 74, 125, 0.2);
 }
 
-.icon-btn .material-symbols-outlined {
-    font-size: 20px;
-}
-
-/* nav row */
+/* ==================================
+ Navigation Row
+ ==================================== */
 
 .nav-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
     justify-content: space-between;
+    margin-top: 1rem;
 }
 
 .nav-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid var(--card-border);
-    color: var(--text-main);
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: none;
+    color: #111827;
     cursor: pointer;
     transition: all 0.2s;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .nav-btn:hover:not(:disabled) {
-    background: var(--white);
-    box-shadow: var(--shadow-md);
+    background: #f9fafb;
+    transform: scale(1.05);
 }
 
 .nav-btn:disabled {
-    opacity: 0.3;
+    opacity: 0.4;
     cursor: not-allowed;
-}
-
-.nav-btn .material-symbols-outlined {
-    font-size: 26px;
 }
 
 .dot-row {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
     justify-content: center;
     flex: 1;
 }
 
 .dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid var(--card-border);
-    transition: background 0.2s, transform 0.2s;
+    background: #e5e7eb;
+    transition: all 0.3s;
 }
 
 .dot-active {
-    background: var(--gray);
-    border-color: var(--primary-pink);
+    background: #6b7280;
     transform: scale(1.4);
 }
 
 .dot-known {
-    background: var(--forest-green);
-    border-color: var(--forest-green);
+    background: #10b981;
 }
 
 .dot-learning {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
+    background: #df4a7d;
 }
 
-/* done screen */
+/* ================================
+ Done Screen 
+ ================================== */
 
-.done-screen {
+.done-screen-wrapper {
     flex: 1;
-    text-align: center;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.25rem;
-    padding: 3rem 1rem;
-    color: var(--text-main);
+    padding: 2rem;
 }
 
-.done-icon {
-    font-size: 4rem;
-    line-height: 1;
-    animation: pop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+.result-card {
+    background: #ffffff;
+    padding: 4rem 3rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    border: 1px solid #ffffff;
+    animation: slideUp 0.4s ease-out;
 }
 
-@keyframes pop {
+@keyframes slideUp {
     from {
-        transform: scale(0.5);
         opacity: 0;
+        transform: translateY(20px);
     }
     to {
-        transform: scale(1);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
-.done-screen h2 {
-    font-size: 1.8rem;
-    font-weight: 800;
+.icon-confetti {
+    font-size: 4.5rem;
+    margin-bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    background: #fce4ec;
+    border-radius: 50%;
+    animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-title {
+    color: #111827;
+    margin-bottom: 1rem;
+    font-size: 2.2rem;
+    font-weight: 900;
     letter-spacing: -0.02em;
 }
 
-.done-screen p {
-    color: var(--text-muted);
-    max-width: 380px;
+.result-desc {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+    line-height: 1.6;
 }
 
-.done-actions {
+.text-green {
+    color: #10b981;
+    font-weight: 800;
+}
+
+.text-pink {
+    color: #df4a7d;
+    font-weight: 800;
+}
+
+.action-buttons {
     display: flex;
+    flex-direction: column;
     gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 0.5rem;
+    width: 100%;
 }
 
-.btn-outline-light {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
-    border: 2px solid var(--card-border);
-    background: var(--white);
-    color: var(--text-main);
-    font-weight: 700;
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 99px;
+    font-size: 1.1rem;
+    font-weight: 800;
     cursor: pointer;
-    font-family: inherit;
-    font-size: 0.95rem;
-    text-decoration: none;
-    box-shadow: var(--shadow-sm);
     transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(223, 74, 125, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-outline-light:hover {
-    background: var(--gray-light);
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(223, 74, 125, 0.35);
 }
 
-@media (max-width: 600px) {
+.btn-outline {
+    width: 100%;
+    background: white;
+    color: #6b7280;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 99px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
     .study-topbar {
-        padding: 0.75rem 1rem;
-    }
-    .main-area {
-        padding: 1.25rem 1rem 1.5rem;
-        gap: 0.75rem;
-    }
-    .flashcard-wrap {
-        height: 300px;
-    }
-    .card-word {
-        font-size: 1.35rem;
+        padding: 1rem;
     }
     .topbar-left .set-name {
         display: none;
     }
+    .main-area {
+        padding: 1rem;
+    }
+    .flashcard-wrap {
+        height: 380px;
+    }
+    .card-word {
+        font-size: 1.8rem;
+    }
+    .back-text {
+        font-size: 1.4rem;
+    }
+    .bottom-controls {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
     .mark-btn {
-        width: 52px;
-        height: 52px;
+        padding: 0.8rem 1.5rem;
+        font-size: 0.95rem;
     }
 }
 </style>

@@ -1,129 +1,145 @@
 <template>
-    <div class="module-manager-page">
+    <div class="cd-root">
     
-        <header class="top-navbar">
-            <button @click="router.push(`/teacher/learning/${courseId}`)" class="back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-                Back To Learning Overview
-            </button>
-        </header>
-        <main class="main-container">
-            <div class="page-header">
-                <h1 class="page-title">Manage Course Structure (Modules)</h1>
-                <p class="page-subtitle">Create main modules and manage lesson content for your course.</p>
-            </div>
+        <main class="cd-container">
     
-            <div class="create-card">
-                <div class="card-header">
-                    <span class="material-symbols-outlined icon-rose">add_box</span>
-                    <h2>1. Create a New Module</h2>
-                </div>
-                <p class="card-desc">Create a module folder first to organise your lesson content inside.</p>
-    
-                <div class="create-form">
-                    <input v-model="newModuleTitle" type="text" placeholder="Module name, e.g. Chapter 1: Introduction to Economics" class="input-module" @keyup.enter="createModule">
-                    <button @click="createModule" :disabled="isCreating" class="btn-create">
-                <span v-if="!isCreating" class="material-symbols-outlined">add_circle</span>
-                <span v-else class="material-symbols-outlined spin">autorenew</span>
-                Create Module
-              </button>
-                </div>
-            </div>
-    
-            <div class="list-card">
-                <div class="card-header">
-                    <span class="material-symbols-outlined icon-emerald">view_list</span>
-                    <h2>2. Select a Module to Manage Content</h2>
-                </div>
-                <p class="card-desc">Click a module to write content (Sections) or delete items inside it.</p>
-    
-                <div v-if="isLoading" class="state-box">
-                    <div class="spinner"></div>
-                    <p>Loading modules...</p>
-                </div>
-    
-                <div v-else-if="modules.length === 0" class="empty-box">
-                    <span class="material-symbols-outlined empty-icon">folder_off</span>
-                    <h3>No modules in this course yet.</h3>
-                    <p>Please create a module using the form above.</p>
-                </div>
-    
-                <div v-else class="module-list">
-                    <div v-for="(mod, index) in modules" :key="mod.id" class="module-card">
-    
-                        <div class="module-item">
-                            <div class="module-info">
-                                <div class="module-number">{{ index + 1 }}</div>
-                                <div class="module-text">
-                                    <h3 class="module-name">{{ mod.title }}</h3>
-                                    <div class="status-group">
-                                        <span v-if="mod.learning_pages && mod.learning_pages.length > 0" class="badge badge-success">
-                          <span class="material-symbols-outlined icon-micro">check_circle</span> Has content
-                                        </span>
-                                        <span v-else class="badge badge-warning">
-                          <span class="material-symbols-outlined icon-micro">edit_document</span> No content yet
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            <div class="module-actions">
-    
-                                <button @click="toggleModuleLessons(mod)" class="btn-action" :class="mod.isExpanded ? 'btn-edit' : 'btn-add'">
-                      <span class="material-symbols-outlined icon-small">
-                        {{ mod.isExpanded ? 'expand_less' : 'list' }}
-                      </span>
-                      {{ mod.isExpanded ? 'Hide Lessons' : 'Manage Lessons' }}
-                    </button>
-    
-                                <button v-if="mod.learning_pages && mod.learning_pages.length > 0" @click="deleteContent(mod)" class="btn-icon btn-clear" title="Delete content only (module name stays)">
-                      <span class="material-symbols-outlined">layers_clear</span>
-                    </button>
-    
-                                <button @click="deleteModule(mod.id)" class="btn-icon btn-delete" title="Delete this module">
-                      <span class="material-symbols-outlined">delete</span>
-                    </button>
-    
-                            </div>
-                        </div>
-    
-                        <div v-show="mod.isExpanded" class="lesson-dropdown">
-    
-                            <div class="add-lesson-bar">
-                                <button @click="createNewLesson(mod.id)" class="btn-add-lesson">
-                      <span class="material-symbols-outlined icon-small">add</span> New Lesson
-                    </button>
-                            </div>
-    
-                            <div v-if="mod.learning_pages && mod.learning_pages.length > 0" class="lesson-items-container">
-                                <div v-for="(page, pIndex) in mod.learning_pages" :key="page.id" class="lesson-sub-item">
-    
-                                    <div class="lesson-sub-info">
-                                        <div class="lesson-sub-number">{{ pIndex + 1 }}</div>
-                                        <div>
-                                            <h4 class="lesson-sub-title">{{ page.title || 'Untitled Lesson' }}</h4>
-                                            <span class="badge" :class="page.is_published ? 'badge-success' : 'badge-warning'" style="font-size: 0.65rem;">
-                            {{ page.is_published ? 'Published' : 'Draft' }}
-                          </span>
-                                        </div>
-                                    </div>
-    
-                                    <button @click="editLesson(page.id, mod.id)" class="btn-edit-lesson">
-                        <span class="material-symbols-outlined icon-small">edit</span> Edit
-                      </button>
-                                </div>
-                            </div>
-    
-                            <div v-else class="empty-lessons-msg">
-                                <span class="material-symbols-outlined">info</span> No lessons added yet.
-                            </div>
-                        </div>
-    
+            <div class="cd-hero">
+                <div class="cd-hero-top">
+                    <button @click="router.push(`/teacher/learning/${courseId}`)" class="back-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 12H5M12 5l-7 7 7 7"/>
+                    </svg>
+                  </button>
+                    <div class="cd-breadcrumb">
+                        <span class="cd-label clickable" @click="router.push(`/teacher/learning/${courseId}`)">Learning Overview</span>
+                        <span class="separator">›</span>
+                        <span class="cd-label">Manage Modules</span>
                     </div>
                 </div>
     
+                <div class="cd-hero-inner">
+                    <h1 class="cd-title">Manage Course Structure</h1>
+                    <p class="cd-desc">Create main modules and manage lesson content for your course.</p>
+                </div>
             </div>
     
+            <div class="cd-body">
+    
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="icon-box icon-rose">
+                            <span class="material-symbols-outlined">add_box</span>
+                        </div>
+                        <div class="header-text">
+                            <h2>1. Create a New Module</h2>
+                            <p class="card-desc">Create a module folder first to organise your lesson content inside.</p>
+                        </div>
+                    </div>
+    
+                    <div class="create-form">
+                        <input v-model="newModuleTitle" type="text" placeholder="Module name, e.g. Chapter 1: Introduction to Economics" class="input-module" @keyup.enter="createModule">
+                        <button @click="createModule" :disabled="isCreating" class="btn-create">
+                              <span v-if="!isCreating" class="material-symbols-outlined">add_circle</span>
+                              <span v-else class="material-symbols-outlined spin">autorenew</span>
+                              Create Module
+                          </button>
+                    </div>
+                </div>
+    
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="icon-box icon-emerald">
+                            <span class="material-symbols-outlined">view_list</span>
+                        </div>
+                        <div class="header-text">
+                            <h2>2. Select a Module to Manage Content</h2>
+                            <p class="card-desc">Click a module to write content (Sections) or delete items inside it.</p>
+                        </div>
+                    </div>
+    
+                    <div v-if="isLoading" class="state-box">
+                        <div class="cd-spinner"></div>
+                        <p>Loading modules...</p>
+                    </div>
+    
+                    <div v-else-if="modules.length === 0" class="empty-box">
+                        <div class="empty-icon-wrapper">
+                            <span class="material-symbols-outlined empty-icon">folder_off</span>
+                        </div>
+                        <h3>No modules in this course yet.</h3>
+                        <p>Please create a module using the form above.</p>
+                    </div>
+    
+                    <div v-else class="module-list">
+                        <div v-for="(mod, index) in modules" :key="mod.id" class="module-card" :class="{'is-expanded': mod.isExpanded}">
+    
+                            <div class="module-item">
+                                <div class="module-info">
+                                    <div class="module-number">{{ index + 1 }}</div>
+                                    <div class="module-text">
+                                        <h3 class="module-name">{{ mod.title }}</h3>
+                                        <div class="status-group">
+                                            <span v-if="mod.learning_pages && mod.learning_pages.length > 0" class="badge badge-success">
+                                                  <span class="material-symbols-outlined icon-micro">check_circle</span> Has content
+                                            </span>
+                                            <span v-else class="badge badge-warning">
+                                                  <span class="material-symbols-outlined icon-micro">edit_document</span> No content yet
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                <div class="module-actions">
+                                    <button @click="toggleModuleLessons(mod)" class="btn-action" :class="mod.isExpanded ? 'btn-edit' : 'btn-add'">
+                                          <span class="material-symbols-outlined icon-small">
+                                              {{ mod.isExpanded ? 'expand_less' : 'list' }}
+                                          </span>
+                                          {{ mod.isExpanded ? 'Hide Lessons' : 'Manage Lessons' }}
+                                      </button>
+    
+                                    <button v-if="mod.learning_pages && mod.learning_pages.length > 0" @click="deleteContent(mod)" class="btn-icon btn-clear" title="Delete content only (module name stays)">
+                                          <span class="material-symbols-outlined">layers_clear</span>
+                                      </button>
+    
+                                    <button @click="deleteModule(mod.id)" class="btn-icon btn-delete" title="Delete this module">
+                                          <span class="material-symbols-outlined">delete</span>
+                                      </button>
+                                </div>
+                            </div>
+    
+                            <div v-show="mod.isExpanded" class="lesson-dropdown">
+                                <div class="add-lesson-bar">
+                                    <button @click="createNewLesson(mod.id)" class="btn-add-lesson">
+                                          <span class="material-symbols-outlined icon-small">add</span> New Lesson
+                                      </button>
+                                </div>
+    
+                                <div v-if="mod.learning_pages && mod.learning_pages.length > 0" class="lesson-items-container">
+                                    <div v-for="(page, pIndex) in mod.learning_pages" :key="page.id" class="lesson-sub-item">
+                                        <div class="lesson-sub-info">
+                                            <div class="lesson-sub-number">{{ pIndex + 1 }}</div>
+                                            <div>
+                                                <h4 class="lesson-sub-title">{{ page.title || 'Untitled Lesson' }}</h4>
+                                                <span class="badge" :class="page.is_published ? 'badge-success' : 'badge-warning'" style="font-size: 0.65rem;">
+                                                      {{ page.is_published ? 'Published' : 'Draft' }}
+                                                  </span>
+                                            </div>
+                                        </div>
+                                        <button @click="editLesson(page.id, mod.id)" class="btn-edit-lesson">
+                                              <span class="material-symbols-outlined icon-small">edit</span> Edit
+                                          </button>
+                                    </div>
+                                </div>
+    
+                                <div v-else class="empty-lessons-msg">
+                                    <span class="material-symbols-outlined">info</span> No lessons added yet.
+                                </div>
+                            </div>
+    
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </template>
@@ -241,115 +257,153 @@ const deleteContent = async (mod) => {
 <style scoped>
 /* ================= Base Styles ================= */
 
-.module-manager-page {
+.cd-root {
+    width: 100%;
     min-height: 100vh;
-    background-color: #f8fafc;
-    font-family: 'Sarabun', 'Inter', sans-serif;
-    padding-bottom: 5rem;
+    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    font-family: 'DM Sans', 'Sarabun', 'Inter', sans-serif;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.cd-container {
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
 .material-symbols-outlined {
     vertical-align: middle;
 }
 
-/* ================= Navbar ================= */
+/* ================= Hero Banner ================= */
 
-.top-navbar {
-    background-color: white;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 1rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+.cd-hero {
+    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px rgba(223, 74, 125, 0.15);
+}
+
+.cd-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #fff;
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-weight: 700;
-    font-size: 0.95rem;
+    justify-content: center;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .back-btn:hover {
-    color: #0f172a;
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
-/* ================= Main Content ================= */
-
-.main-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem;
+.cd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.9;
 }
 
-.page-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+.cd-label.clickable {
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
 
-.page-title {
+.cd-label.clickable:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+}
+
+.separator {
+    font-size: 1.2rem;
+}
+
+.cd-title {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #0f172a;
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.5px;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.01em;
 }
 
-.page-subtitle {
-    color: #64748b;
+.cd-desc {
+    font-size: 0.95rem;
+    opacity: 0.9;
     margin: 0;
-    font-size: 1rem;
-    font-weight: 500;
+    max-width: 600px;
+    line-height: 1.6;
 }
 
 /* ================= Cards ================= */
 
-.create-card,
-.list-card {
+.action-card {
     background-color: white;
-    border-radius: 24px;
+    border-radius: 20px;
     padding: 2rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-    margin-bottom: 2rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1.5rem;
 }
 
 .card-header {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 0.5rem;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.card-header h2 {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .icon-rose {
-    color: #f43f5e;
-    font-size: 1.8rem;
+    background: #ffe4e6;
+    color: #e11d48;
 }
 
 .icon-emerald {
-    color: #10b981;
-    font-size: 1.8rem;
+    background: #d1fae5;
+    color: #059669;
+}
+
+.icon-box .material-symbols-outlined {
+    font-size: 24px;
+}
+
+.header-text h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 0.3rem 0;
 }
 
 .card-desc {
     color: #64748b;
     font-size: 0.95rem;
-    margin: 0 0 1.5rem 0;
+    margin: 0;
 }
 
 /* ================= Create Form ================= */
@@ -357,46 +411,49 @@ const deleteContent = async (mod) => {
 .create-form {
     display: flex;
     gap: 1rem;
+    margin-left: 4rem;
+    /* Indent to align with text */
 }
 
 .input-module {
     flex: 1;
     padding: 1rem 1.25rem;
-    border-radius: 16px;
+    border-radius: 12px;
     border: 2px solid #e2e8f0;
     font-size: 1rem;
     color: #334155;
     background-color: #f8fafc;
     outline: none;
     transition: all 0.2s;
+    font-family: inherit;
 }
 
 .input-module:focus {
     background-color: white;
-    border-color: #f43f5e;
-    box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.1);
+    border-color: #df4a7d;
+    box-shadow: 0 0 0 4px rgba(223, 74, 125, 0.1);
 }
 
 .btn-create {
     display: flex;
     align-items: center;
     gap: 8px;
-    background-color: #f43f5e;
+    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
     color: white;
     border: none;
     padding: 0 2rem;
-    border-radius: 16px;
+    border-radius: 12px;
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+    box-shadow: 0 4px 12px rgba(223, 74, 125, 0.2);
     transition: all 0.2s;
     white-space: nowrap;
 }
 
 .btn-create:hover:not(:disabled) {
-    background-color: #e11d48;
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(223, 74, 125, 0.3);
 }
 
 .btn-create:disabled {
@@ -419,38 +476,50 @@ const deleteContent = async (mod) => {
     font-weight: 600;
 }
 
-.spinner {
+.cd-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f1f5f9;
-    border-top-color: #f43f5e;
+    border: 4px solid #fce4ec;
+    border-top-color: #df4a7d;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: cd-spin 0.8s linear infinite;
     margin-bottom: 1rem;
 }
 
-@keyframes spin {
-    100% {
+@keyframes cd-spin {
+    to {
         transform: rotate(360deg);
     }
 }
 
 .empty-box {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 3rem 2rem;
     background-color: #f8fafc;
-    border-radius: 20px;
+    border-radius: 16px;
     border: 2px dashed #cbd5e1;
+    margin-left: 4rem;
+}
+
+.empty-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .empty-icon {
-    font-size: 4rem;
-    color: #cbd5e1;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: #94a3b8;
 }
 
 .empty-box h3 {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #475569;
     margin: 0 0 0.5rem 0;
@@ -467,7 +536,8 @@ const deleteContent = async (mod) => {
 .module-list {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    margin-left: 4rem;
     animation: slideUp 0.4s ease-out;
 }
 
@@ -492,14 +562,19 @@ const deleteContent = async (mod) => {
 
 .module-card:hover {
     border-color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.module-card.is-expanded {
+    border-color: #df4a7d;
+    box-shadow: 0 4px 20px rgba(223, 74, 125, 0.08);
 }
 
 .module-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
 }
 
 .module-info {
@@ -509,15 +584,15 @@ const deleteContent = async (mod) => {
 }
 
 .module-number {
-    width: 48px;
-    height: 48px;
-    background-color: #f1f5f9;
-    color: #64748b;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    background-color: #fce4ec;
+    color: #c83264;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 800;
 }
 
@@ -525,7 +600,7 @@ const deleteContent = async (mod) => {
     font-size: 1.15rem;
     font-weight: 800;
     color: #1e293b;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.4rem 0;
 }
 
 .status-group {
@@ -538,7 +613,7 @@ const deleteContent = async (mod) => {
     align-items: center;
     gap: 4px;
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 700;
 }
@@ -570,8 +645,8 @@ const deleteContent = async (mod) => {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 20px;
-    border-radius: 12px;
+    padding: 8px 16px;
+    border-radius: 10px;
     font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
@@ -600,12 +675,12 @@ const deleteContent = async (mod) => {
 }
 
 .btn-icon {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 10px;
     background-color: white;
     border: 1px solid #e2e8f0;
     cursor: pointer;
@@ -624,6 +699,8 @@ const deleteContent = async (mod) => {
     border-color: #fecaca;
     color: #ef4444;
 }
+
+/* ================= Lesson Dropdown ================= */
 
 .lesson-dropdown {
     background-color: #f8fafc;
@@ -651,11 +728,11 @@ const deleteContent = async (mod) => {
     display: flex;
     align-items: center;
     gap: 6px;
-    background-color: #fff1f2;
+    background-color: #ffe4e6;
     color: #e11d48;
-    border: 1px solid #ffe4e6;
+    border: 1px solid #fecdd3;
     padding: 8px 16px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
@@ -681,7 +758,7 @@ const deleteContent = async (mod) => {
     padding: 12px 16px;
     background-color: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     transition: all 0.2s;
 }
 
@@ -752,7 +829,27 @@ const deleteContent = async (mod) => {
 
 /* ================= Responsive ================= */
 
-@media (max-width: 768px) {
+@media (max-width: 860px) {
+    .create-form,
+    .module-list,
+    .empty-box {
+        margin-left: 0;
+        margin-top: 1rem;
+    }
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .cd-root {
+        padding: 1rem;
+    }
+    .cd-hero {
+        padding: 1.5rem;
+    }
     .create-form {
         flex-direction: column;
     }
