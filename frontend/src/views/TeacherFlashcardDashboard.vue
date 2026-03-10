@@ -63,7 +63,7 @@
                 <!-- colored top stripe -->
                 <div class="tfd-card-stripe" :style="{ background: stripeColors[index % stripeColors.length] }"></div>
     
-                <div class="tfd-card-body">
+                <div class="tfd-card-body" @click="goToStudy(set.id)" style="cursor:pointer">
                     <div class="tfd-card-top">
                         <span class="tfd-count-pill">{{ set.card_count ?? 0 }} cards</span>
                     </div>
@@ -72,13 +72,13 @@
                     <p class="tfd-set-desc">{{ set.description || 'No description provided.' }}</p>
     
                     <div class="tfd-card-actions">
-                        <button class="tfd-btn tfd-btn-edit" @click="goToEditor(set.id)">
+                        <button class="tfd-btn tfd-btn-edit" @click.stop="goToEditor(set.id)">
                                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                                     <path d="M9.5 1.5L11.5 3.5L4.5 10.5H2.5V8.5L9.5 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
                                 </svg>
                                 Edit
                             </button>
-                        <button class="tfd-btn tfd-btn-delete" @click="confirmDelete(set)">
+                        <button class="tfd-btn tfd-btn-delete" @click.stop="confirmDelete(set)">
                                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                                     <path d="M2 3.5H11M4.5 3.5V2.5C4.5 2 4.9 1.5 5.5 1.5H7.5C8.1 1.5 8.5 2 8.5 2.5V3.5M5.5 6V9.5M7.5 6V9.5M3 3.5L3.5 11C3.5 11.3 3.8 11.5 4 11.5H9C9.3 11.5 9.5 11.3 9.5 11L10 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -135,6 +135,13 @@ const stripeColors = [
 function goToEditor(setId) {
     router.push({
         name: 'FlashcardEditor',
+        params: { courseId: courseId.value, setId }
+    })
+}
+
+function goToStudy(setId) {
+    router.push({
+        name: 'FlashcardStudy',
         params: { courseId: courseId.value, setId }
     })
 }
