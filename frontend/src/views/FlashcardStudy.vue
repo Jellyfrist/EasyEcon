@@ -12,190 +12,190 @@
         </div>
     
         <template v-else-if="store.currentSet">
-          
-                <div class="study-topbar">
-                  <div class="topbar-left" >
-                    <button class="back-btn" @click="goToDashboard">
-                      <span class="material-symbols-outlined">arrow_back</span>
-                    </button>
-                    <div class="set-info">
-                      <span class="set-label">FLASHCARDS</span>
-                      <span class="material-symbols-outlined set-divider">chevron_right</span>
-                      <span class="set-name">{{ store.currentSet.title }}</span>
+              
+                    <div class="study-topbar">
+                      <div class="topbar-left" >
+                        <button class="back-btn" @click="goToDashboard">
+                          <span class="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <div class="set-info">
+                          <span class="set-label">FLASHCARDS</span>
+                          <span class="material-symbols-outlined set-divider">chevron_right</span>
+                          <span class="set-name">{{ store.currentSet.title }}</span>
+                        </div>
+                      </div>
+                      <div class="topbar-center">
+                        <span class="card-counter">{{ currentIndex + 1 }} / {{ cards.length }}</span>
+                        <span class="card-title-sm">{{ store.currentSet.title }}</span>
+                      </div>
+                      <div class="topbar-right"></div>
                     </div>
-                  </div>
-                  <div class="topbar-center">
-                    <span class="card-counter">{{ currentIndex + 1 }} / {{ cards.length }}</span>
-                    <span class="card-title-sm">{{ store.currentSet.title }}</span>
-                  </div>
-                  <div class="topbar-right"></div>
-                </div>
-          
-                <div v-if="cards.length === 0" class="state-box">
-                  <span class="material-symbols-outlined empty-icon">layers_clear</span>
-                  <h2 class="state-title">No cards found</h2>
-                  <p class="state-text">This set has no cards yet.</p>
-                </div>
-          
-                <div v-else-if="isDone" class="done-screen-wrapper">
-                  <div class="result-card">
-                      <div class="icon-confetti">🎉</div>
-                      <h1 class="result-title">You finished this set!</h1>
-                      <p class="result-desc">
-                          You marked <strong class="text-green">{{ knownCount }}</strong> card(s) as known
-                          and <strong class="text-pink">{{ learningCount }}</strong> as still learning.
-                      </p>
-                      
-                      <div class="action-buttons">
-                          <button class="btn-primary" @click="restart">
-                              <span class="material-symbols-outlined mr-1">replay</span>
-                              Study Again
+              
+                    <div v-if="cards.length === 0" class="state-box">
+                      <span class="material-symbols-outlined empty-icon">layers_clear</span>
+                      <h2 class="state-title">No cards found</h2>
+                      <p class="state-text">This set has no cards yet.</p>
+                    </div>
+              
+                    <div v-else-if="isDone" class="done-screen-wrapper">
+                      <div class="result-card">
+                          <div class="icon-confetti">🎉</div>
+                          <h1 class="result-title">You finished this set!</h1>
+                          <p class="result-desc">
+                              You marked <strong class="text-green">{{ knownCount }}</strong> card(s) as known
+                              and <strong class="text-pink">{{ learningCount }}</strong> as still learning.
+                          </p>
+                          
+                          <div class="action-buttons">
+                              <button class="btn-primary" @click="restart">
+                                  <span class="material-symbols-outlined mr-1">replay</span>
+                                  Study Again
+                              </button>
+                              <button class="btn-outline" @click="goToDashboard">
+                                  Back to Flashcard Sets
+                              </button>
+                          </div>
+                      </div>
+                    </div>
+              
+                    <div v-else class="main-area">
+              
+                      <div class="progress-row">
+                        <div class="prog-chip prog-learning">
+                          <span class="prog-count">{{ learningCount }}</span>
+                          <span class="prog-label">Still learning</span>
+                        </div>
+                        <div class="prog-bar-track">
+                          <div class="prog-bar-fill prog-bar-learning" :style="{ width: learningPercent + '%' }"></div>
+                          <div class="prog-bar-fill prog-bar-known" :style="{ width: knownPercent + '%', left: learningPercent + '%' }"></div>
+                        </div>
+                        <div class="prog-chip prog-known">
+                          <span class="prog-label">Know</span>
+                          <span class="prog-count">{{ knownCount }}</span>
+                        </div>
+                      </div>
+              
+                      <div
+                        class="flashcard-wrap"
+                        :class="{ 'is-flipped': isFlipped }"
+                        @click="flipCard"
+                        role="button"
+                        aria-label="flip card"
+                      >
+                        <div class="flashcard-inner">
+              
+                          <div class="flashcard-face flashcard-front">
+                            <div v-if="currentCard.image_url" class="card-img-wrap">
+                              <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                            </div>
+                            <p class="card-word">{{ currentCard.term }}</p>
+                            
+                            <div v-if="currentCard.hint && !showHint" class="hint-indicator">
+                              <span class="material-symbols-outlined">lightbulb</span> Click "Show Hint" below if stuck
+                            </div>
+        
+                            <div class="card-shortcut-bar" @click.stop>
+                              <span class="material-symbols-outlined shortcut-icon">keyboard</span>
+                              <span class="shortcut-text">Press <kbd>Space</kbd> or click to flip</span>
+                            </div>
+                          </div>
+              
+                          <div class="flashcard-face flashcard-back">
+                            <div v-if="currentCard.image_url" class="card-img-wrap">
+                              <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                            </div>
+                            <p class="card-word back-text">{{ currentCard.definition }}</p>
+                            <div class="card-shortcut-bar" @click.stop>
+                              <span class="material-symbols-outlined shortcut-icon">keyboard</span>
+                              <span class="shortcut-text">Press <kbd>←</kbd> Don't Know · <kbd>→</kbd> Know</span>
+                            </div>
+                          </div>
+              
+                        </div>
+                      </div>
+              
+                      <div class="hint-row">
+                        <transition name="hint-slide">
+                          <div v-if="showHint && currentCard.hint" class="hint-box">
+                            <span class="material-symbols-outlined">lightbulb</span>
+                            {{ currentCard.hint }}
+                          </div>
+                        </transition>
+                        <button
+                          v-if="currentCard.hint"
+                          class="hint-btn"
+                          :class="{ 'hint-btn-active': showHint }"
+                          @click="showHint = !showHint"
+                        >
+                          <span class="material-symbols-outlined">lightbulb</span>
+                          {{ showHint ? 'Hide Hint' : 'Show Hint' }}
+                        </button>
+                      </div>
+              
+                      <div class="bottom-controls">
+                        <div class="track-toggle">
+                          <span class="track-label">Track progress</span>
+                          <button
+                            class="toggle-btn"
+                            :class="{ 'toggle-on': trackProgress }"
+                            @click="trackProgress = !trackProgress"
+                          >
+                            <span class="toggle-thumb"></span>
                           </button>
-                          <button class="btn-outline" @click="goToDashboard">
-                              Back to Flashcard Sets
+                        </div>
+              
+                        <div class="mark-btns">
+                          <button
+                            class="mark-btn mark-learning"
+                            :class="{ active: currentCard.status === 'learning' }"
+                            :disabled="!isFlipped"
+                            @click.stop="mark('learning')"
+                          >
+                            <span class="material-symbols-outlined">close</span>
+                            Don't Know
                           </button>
-                      </div>
-                  </div>
-                </div>
-          
-                <div v-else class="main-area">
-          
-                  <div class="progress-row">
-                    <div class="prog-chip prog-learning">
-                      <span class="prog-count">{{ learningCount }}</span>
-                      <span class="prog-label">Still learning</span>
-                    </div>
-                    <div class="prog-bar-track">
-                      <div class="prog-bar-fill prog-bar-learning" :style="{ width: learningPercent + '%' }"></div>
-                      <div class="prog-bar-fill prog-bar-known" :style="{ width: knownPercent + '%', left: learningPercent + '%' }"></div>
-                    </div>
-                    <div class="prog-chip prog-known">
-                      <span class="prog-label">Know</span>
-                      <span class="prog-count">{{ knownCount }}</span>
-                    </div>
-                  </div>
-          
-                  <div
-                    class="flashcard-wrap"
-                    :class="{ 'is-flipped': isFlipped }"
-                    @click="flipCard"
-                    role="button"
-                    aria-label="flip card"
-                  >
-                    <div class="flashcard-inner">
-          
-                      <div class="flashcard-face flashcard-front">
-                        <div v-if="currentCard.image_url" class="card-img-wrap">
-                          <img :src="currentCard.image_url" class="card-img" alt="card image" />
+                          <button
+                            class="mark-btn mark-known"
+                            :class="{ active: currentCard.status === 'known' }"
+                            :disabled="!isFlipped"
+                            @click.stop="mark('known')"
+                          >
+                            <span class="material-symbols-outlined">check</span>
+                            Know
+                          </button>
                         </div>
-                        <p class="card-word">{{ currentCard.term }}</p>
-                        
-                        <div v-if="currentCard.hint && !showHint" class="hint-indicator">
-                          <span class="material-symbols-outlined">lightbulb</span> Click "Show Hint" below if stuck
-                        </div>
-    
-                        <div class="card-shortcut-bar" @click.stop>
-                          <span class="material-symbols-outlined shortcut-icon">keyboard</span>
-                          <span class="shortcut-text">Press <kbd>Space</kbd> or click to flip</span>
+              
+                        <div class="right-controls">
+                          <button class="icon-btn" @click="restart" title="Restart">
+                            <span class="material-symbols-outlined">replay</span>
+                          </button>
+                          <button class="icon-btn" @click="shuffle" title="Shuffle">
+                            <span class="material-symbols-outlined">shuffle</span>
+                          </button>
                         </div>
                       </div>
-          
-                      <div class="flashcard-face flashcard-back">
-                        <div v-if="currentCard.image_url" class="card-img-wrap">
-                          <img :src="currentCard.image_url" class="card-img" alt="card image" />
+              
+                      <div class="nav-row">
+                        <button class="nav-btn" :disabled="currentIndex === 0" @click="prev">
+                          <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <div class="dot-row">
+                          <span
+                            v-for="(card, idx) in cards"
+                            :key="card.id"
+                            class="dot"
+                            :class="{
+                              'dot-active': idx === currentIndex,
+                              'dot-known': card.status === 'known',
+                              'dot-learning': card.status === 'learning',
+                            }"
+                          ></span>
                         </div>
-                        <p class="card-word back-text">{{ currentCard.definition }}</p>
-                        <div class="card-shortcut-bar" @click.stop>
-                          <span class="material-symbols-outlined shortcut-icon">keyboard</span>
-                          <span class="shortcut-text">Press <kbd>←</kbd> Don't Know · <kbd>→</kbd> Know</span>
-                        </div>
+                        <button class="nav-btn" @click="next">
+                          <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
                       </div>
-          
                     </div>
-                  </div>
-          
-                  <div class="hint-row">
-                    <transition name="hint-slide">
-                      <div v-if="showHint && currentCard.hint" class="hint-box">
-                        <span class="material-symbols-outlined">lightbulb</span>
-                        {{ currentCard.hint }}
-                      </div>
-                    </transition>
-                    <button
-                      v-if="currentCard.hint"
-                      class="hint-btn"
-                      :class="{ 'hint-btn-active': showHint }"
-                      @click="showHint = !showHint"
-                    >
-                      <span class="material-symbols-outlined">lightbulb</span>
-                      {{ showHint ? 'Hide Hint' : 'Show Hint' }}
-                    </button>
-                  </div>
-          
-                  <div class="bottom-controls">
-                    <div class="track-toggle">
-                      <span class="track-label">Track progress</span>
-                      <button
-                        class="toggle-btn"
-                        :class="{ 'toggle-on': trackProgress }"
-                        @click="trackProgress = !trackProgress"
-                      >
-                        <span class="toggle-thumb"></span>
-                      </button>
-                    </div>
-          
-                    <div class="mark-btns">
-                      <button
-                        class="mark-btn mark-learning"
-                        :class="{ active: currentCard.status === 'learning' }"
-                        :disabled="!isFlipped"
-                        @click.stop="mark('learning')"
-                      >
-                        <span class="material-symbols-outlined">close</span>
-                        Don't Know
-                      </button>
-                      <button
-                        class="mark-btn mark-known"
-                        :class="{ active: currentCard.status === 'known' }"
-                        :disabled="!isFlipped"
-                        @click.stop="mark('known')"
-                      >
-                        <span class="material-symbols-outlined">check</span>
-                        Know
-                      </button>
-                    </div>
-          
-                    <div class="right-controls">
-                      <button class="icon-btn" @click="restart" title="Restart">
-                        <span class="material-symbols-outlined">replay</span>
-                      </button>
-                      <button class="icon-btn" @click="shuffle" title="Shuffle">
-                        <span class="material-symbols-outlined">shuffle</span>
-                      </button>
-                    </div>
-                  </div>
-          
-                  <div class="nav-row">
-                    <button class="nav-btn" :disabled="currentIndex === 0" @click="prev">
-                      <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <div class="dot-row">
-                      <span
-                        v-for="(card, idx) in cards"
-                        :key="card.id"
-                        class="dot"
-                        :class="{
-                          'dot-active': idx === currentIndex,
-                          'dot-known': card.status === 'known',
-                          'dot-learning': card.status === 'learning',
-                        }"
-                      ></span>
-                    </div>
-                    <button class="nav-btn" @click="next">
-                      <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                  </div>
-                </div>
 </template>
 
   </div>
@@ -262,12 +262,21 @@ function goToDashboard() {
 
 async function mark(status) {
     if (trackProgress.value) {
-
         await store.markCard(currentCard.value.id, status)
         const card = cards.value[currentIndex.value]
         if (card) card.status = status
     }
     isFlipped.value = false
+    showHint.value = false
+
+    // auto-advance to next card after short delay
+    setTimeout(() => {
+        if (currentIndex.value < cards.value.length - 1) {
+            currentIndex.value++
+        } else {
+            isDone.value = true
+        }
+    }, 400)
 }
 
 function restart() {
