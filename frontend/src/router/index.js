@@ -40,7 +40,7 @@ const routes = [
     path: '/verify-email',
     name: 'VerifyEmail',
     component: () => import('@/views/VerifyEmail.vue'),
-    meta: { title: 'Loading' }
+    meta: { title: 'Verify Email' }
   },
   {
     path: '/login-success',
