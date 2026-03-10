@@ -14,8 +14,8 @@
                 <div v-if="store.successMessage" class="alert alert--success">
                     <span class="material-symbols-outlined">check_circle</span> {{ store.successMessage }}
                     <button class="alert-close" @click="store.clearMessages">
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
                 </div>
             </transition>
     
@@ -24,8 +24,8 @@
                 <div v-if="store.error" class="alert alert--error">
                     <span class="material-symbols-outlined">error</span> {{ store.error }}
                     <button class="alert-close" @click="store.clearMessages">
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
                 </div>
             </transition>
     
@@ -35,25 +35,25 @@
                     <span class="material-symbols-outlined section-icon">person_add</span>
                     <div>
                         <h2>Invite Teacher</h2>
-                        <p>Enter full name and email — username and password are auto-generated and sent by email.</p>
+                        <p>Enter full name and email, username and password are auto-generated and sent by email.</p>
                     </div>
                 </div>
     
                 <div class="form-row">
                     <div class="form-group">
                         <label>Full Name</label>
-                        <input v-model="invite.full_name" type="text" placeholder="e.g. Natthanicha Rodaree" :disabled="store.loading" />
+                        <input v-model="invite.full_name" type="text" placeholder="e.g. John Doe" :disabled="store.loading" />
                     </div>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input v-model="invite.email" type="email" placeholder="e.g. natthanicha@university.edu" :disabled="store.loading" />
+                        <input v-model="invite.email" type="email" placeholder="e.g. john.doe@university.edu" :disabled="store.loading" />
                     </div>
                 </div>
     
                 <button class="btn-action" :disabled="store.loading || !invite.full_name || !invite.email" @click="handleInvite">
-                        <span class="material-symbols-outlined">send</span>
-                        {{ store.loading ? 'Sending…' : 'Send Invite' }}
-                    </button>
+                            <span class="material-symbols-outlined">send</span>
+                            {{ store.loading ? 'Sending…' : 'Send Invite' }}
+                        </button>
             </div>
     
             <!-- users section -->
@@ -100,36 +100,36 @@
     
                         <!-- role badge -->
                         <span class="role-badge" :class="`role-badge--${user.role}`">
-                                {{ user.role }}
-                            </span>
+                                    {{ user.role }}
+                                </span>
     
                         <!-- email sent indicator for teachers -->
                         <span v-if="user.role === 'teacher'" class="email-status" :class="user.email_sent ? 'email-status--sent' : 'email-status--pending'">
-                                <span class="material-symbols-outlined" style="font-size: 14px">
-                                    {{ user.email_sent ? 'mark_email_read' : 'schedule_send' }}
-                                </span> {{ user.email_sent ? 'Sent' : 'Pending' }}
+                                    <span class="material-symbols-outlined" style="font-size: 14px">
+                                        {{ user.email_sent ? 'mark_email_read' : 'schedule_send' }}
+                                    </span> {{ user.email_sent ? 'Sent' : 'Pending' }}
                         </span>
     
                         <!-- active user actions -->
                         <div v-if="user.is_active" class="user-actions">
                             <button v-if="user.role === 'teacher'" class="btn-ghost" :disabled="store.loading" @click="handleResend(user)">
-                                    Resend Email
-                                </button>
+                                        Resend Email
+                                    </button>
     
                             <select class="role-select" :value="user.role" :disabled="store.loading" @change="handleRoleChange(user, $event.target.value)">
-                                    <option value="student">student</option>
-                                    <option value="teacher">teacher</option>
-                                    <option value="admin">admin</option>
-                                </select>
+                                        <option value="student">student</option>
+                                        <option value="teacher">teacher</option>
+                                        <option value="admin">admin</option>
+                                    </select>
     
                             <button class="btn-danger" :disabled="store.loading" @click="confirmDeactivate(user)">
-                                    <span class="material-symbols-outlined">block</span>
-                                    Deactivate
-                                </button>
+                                        <span class="material-symbols-outlined">block</span>
+                                        Deactivate
+                                    </button>
                         </div>
     
                         <span v-else class="inactive-label">
-                                <span class="material-symbols-outlined" style="font-size: 15px">block</span> Inactive
+                                    <span class="material-symbols-outlined" style="font-size: 15px">block</span> Inactive
                         </span>
                     </li>
                 </ul>
@@ -599,7 +599,7 @@ input:disabled {
 
 .user-avatar[data-role="admin"] {
     background: #e7faff;
-    color:  #00145d;
+    color: #00145d;
 }
 
 .user-identity {
