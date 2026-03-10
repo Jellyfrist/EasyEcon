@@ -207,37 +207,7 @@ export async function handleSSOCallback() {
     return user;
 }
 
-/**
- * Confirm email address using the token from the verification link.
- */
-export async function verifyEmail(token) {
-    try {
-        const response = await axios.get(`${AUTH_URL}/verify-email`, { params: { token } });
-        return response.data;
-    } catch (error) {
-        throw new AuthError(
-            error.response?.data?.detail || "Verification failed",
-            error.response?.status || 500,
-            error.response?.data
-        );
-    }
-}
 
-/**
- * Resend the verification email for an unverified account.
- */
-export async function resendVerification(email) {
-    try {
-        const response = await axios.post(`${AUTH_URL}/resend-verification`, { email });
-        return response.data;
-    } catch (error) {
-        throw new AuthError(
-            error.response?.data?.detail || "Could not resend verification email",
-            error.response?.status || 500,
-            error.response?.data
-        );
-    }
-}
 
 // Unified export
 
@@ -256,8 +226,6 @@ export const authService = {
     isAuthenticated,
     saveToken,
     removeToken,
-    verifyEmail,
-    resendVerification,
 };
 
 export default authService;
