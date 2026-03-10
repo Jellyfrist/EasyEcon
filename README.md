@@ -48,10 +48,6 @@ Copy the example configuration file and update the values with your credentials.
 cp .env.example .env
 ```
 
-**If you do NOT have `.env.example`** then you should list the variables so someone cloning the repo knows what to put in their `.env`.
-
-Our suggestion: create a `.env.example` file in your repo with all the keys but empty or placeholder values, then keep the README short. It is cleaner and the standard way most projects do it.
-
 ### 2. Service Initialization
 
 Execute the initialization script to start the services. This script automatically detects the database configuration.
