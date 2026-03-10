@@ -254,6 +254,7 @@ def open_session_for_student(
         instructions = session.instructions,
         time_limit_minutes = session.time_limit_minutes,
         questions = safe_questions,
+        course_id = session.template.course_id if session.template else None,  # เพิ่มบรรทัดนี้
     )
 
 # submit answers -> graded immediately

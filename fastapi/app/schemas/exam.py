@@ -156,6 +156,7 @@ class ExamSessionStudentResponse(BaseModel):
     instructions: Optional[str]
     time_limit_minutes: Optional[int]
     questions: List[Dict[str, Any]]   # correct_answer stripped by router
+    course_id: Optional[int] = None
 
 '''
 Exam Attempt
