@@ -172,8 +172,8 @@ function formatTime(dt) {
 /* ── Page ── */
 .page {
   min-height: 100vh;
-  padding: 2rem;
-  max-width: 680px;
+  padding: 2rem 2.5rem;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

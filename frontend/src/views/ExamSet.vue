@@ -7,7 +7,7 @@
 
       <div class="header">
         <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
+          <button class="back-btn" @click="goToDashboard">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           </button>
           <div class="header-text">
@@ -117,22 +117,10 @@ onMounted(() => {
     loadSession()
 })
 
-
 // --- Computed ---
-
 const totalPoints = computed(() =>
   session.value?.questions?.reduce((s, q) => s + (q.points ?? 1), 0) ?? 0
 )
-
-// const questionTypeSummary = computed(() => {
-//   if (!session.value?.questions?.length) return '—'
-//   const counts = {}
-//   for (const q of session.value.questions) {
-//     const label = questionTypeLabel(q.type)
-//     counts[label] = (counts[label] ?? 0) + 1
-//   }
-//   return Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(', ')
-// })
 
 const questionTypeSummary = computed(() => {
   if (!session.value?.questions?.length) return []
@@ -155,10 +143,32 @@ function questionTypeLabel(type) {
   return TYPE_LABELS[type] ?? type
 }
 
-// --- Navigate ---
 function startExam() {
-  router.push({ name: 'TakeExam', params: { sessionId } })
+  router.push({ 
+    name: 'TakeExam', 
+    params: { sessionId: sessionId } 
+  })
 }
+
+function goToDashboard() {
+  let courseId = route.query.courseId || localStorage.getItem('currentCourseId');
+  
+  if (!courseId && session.value) {
+    courseId = session.value.course_id || session.value.courseId || session.value.course?.id;
+  }
+  console.log("Course ID:", courseId);
+
+  if (courseId && courseId !== 'undefined' && courseId !== 'null') {
+    router.push({ 
+      name: 'ExamDashboard', 
+      params: { courseId: courseId } 
+    });
+  } else {
+    console.warn("not found courseId");
+    router.push('/student/courses'); 
+  }
+}
+
 </script>
 
 <style scoped>
@@ -166,7 +176,7 @@ function startExam() {
 .page {
   min-height: 100vh;
   padding: 2rem;
-  max-width: 760px;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -179,7 +189,7 @@ function startExam() {
   align-items: center;
   background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.75rem;
+  padding: 2rem 2.5rem;
   box-shadow: 0 8px 24px rgba(237, 64, 129, 0.28);
   position: relative;
   overflow: hidden;

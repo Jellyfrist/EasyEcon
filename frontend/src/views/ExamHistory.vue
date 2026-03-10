@@ -7,7 +7,7 @@
 
       <div class="header">
         <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
+          <button class="back-btn" @click="goBackToAnalysis">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           </button>
           <div class="header-text">
@@ -162,6 +162,16 @@ function viewResult(attempt) {
 }
 function viewAnalysis(attempt) {
   router.push({ name: 'ExamAnalysis', params: { attemptId: attempt.id } })
+}
+function goBackToAnalysis() {
+  if (best.value) {
+    router.push({ 
+      name: 'ExamAnalysis', 
+      params: { attemptId: best.value.id } 
+    });
+  } else {
+    router.back();
+  }
 }
 </script>
 
