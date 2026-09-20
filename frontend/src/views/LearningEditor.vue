@@ -230,7 +230,8 @@
                   v-model="q.explanation"
                   rows="2"
                   class="le-q-explanation"
-                  placeholder="Explanation shown after student answers (optional)…"
+                  :class="{ 'le-q-explanation-invalid': !(q.explanation || '').trim() }"
+                  placeholder="Required — explain why the correct answer is correct…"
                 ></textarea>
               </div>
             </div>
@@ -460,6 +461,19 @@ const saveLesson = async () => {
     }))
 
     if (quiz.value.isEnabled && quiz.value.questions.length > 0) {
+      // every quiz question needs the teacher's own explanation (enforced by
+      // the backend too, this just fails earlier with the question numbers)
+      const missing = quiz.value.questions
+        .map((q, i) => ((q.explanation || '').trim() ? null : i + 1))
+        .filter(n => n !== null)
+
+      if (missing.length) {
+        alert(
+          `Write an explanation for quiz question ${missing.join(', ')} before saving.`
+        )
+        return          // isSaving is cleared in the finally block
+      }
+
       contentBlocks.push({
         id: `quiz_${Date.now()}`,
         type: 'mini_quiz',
@@ -472,7 +486,7 @@ const saveLesson = async () => {
             options: q.options,
             correct_answer: q.options[q.correct_answer_index] || q.options[0],
             correct_index: q.correct_answer_index,
-            explanation: q.explanation
+            explanation: (q.explanation || '').trim()
           }))
         }
       })
@@ -907,6 +921,8 @@ onMounted(() => {
 .le-q-text:focus, .le-q-explanation:focus { border-color: var(--pink); }
 .le-q-explanation { background: #f0fdf4; border-color: #bbf7d0; font-size: 0.83rem; color: #065f46; }
 .le-q-explanation::placeholder { color: #86efac; }
+.le-q-explanation-invalid { background: #fff7f7; border-color: #fca5a5; color: #b91c1c; }
+.le-q-explanation-invalid::placeholder { color: #fca5a5; }
 
 .le-options { display: flex; flex-direction: column; gap: 6px; }
 

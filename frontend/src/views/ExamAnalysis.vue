@@ -69,61 +69,73 @@
             </div>
           </div>
     
-          <div v-if="groupedWeakness && groupedWeakness.length" class="card">
+          <div v-if="wrongTopics.length" class="card">
             <h2 class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
               Questions to Review
             </h2>
-    
+
             <div class="weakness-groups">
-              <div v-for="group in groupedWeakness" :key="group.topic" class="weakness-group">
+              <div v-for="topic in wrongTopics" :key="topic.topic_tag" class="weakness-group">
                 <div class="group-header">
-                  <span class="group-topic">{{ group.topic }}</span>
-                  <span class="group-count">{{ group.items.length }} question{{ group.items.length > 1 ? 's' : '' }}</span>
+                  <span class="group-topic">{{ topic.topic_tag }}</span>
+                  <span class="group-count">
+                    {{ topic.wrong_count }} of {{ topic.total_questions }} wrong
+                  </span>
                 </div>
-    
+
                 <div class="weakness-items">
-                  <div v-for="(w, i) in group.items" :key="i" class="weakness-item">
+                  <div v-for="q in topic.questions" :key="q.question_id" class="weakness-item">
                     <div class="weakness-item-top">
-                      <span :class="['q-type-badge', w.type ?? 'multiple_choice']">
-                        {{ typeLabel(w.type) }}
+                      <span :class="['q-type-badge', q.type ?? 'multiple_choice']">
+                        {{ typeLabel(q.type) }}
                       </span>
-                      <p class="weakness-q-text">{{ w.question_text || 'No question text available.' }}</p>
+                      <p class="weakness-q-text">{{ q.text || 'No question text available.' }}</p>
                     </div>
-    
-                    <div v-if="w.correct_answer" class="answer-row">
+
+                    <div class="answer-row">
+                      <span class="answer-label">Your Answer:</span>
+                      <span class="answer-val your">
+                        {{ q.answered ? formatAnswer(q.your_answer) : 'Left blank' }}
+                      </span>
+                    </div>
+
+                    <div v-if="q.correct_answer != null" class="answer-row">
                       <span class="answer-label">Correct Answer:</span>
-                      <span class="answer-val">{{ w.correct_answer }}</span>
+                      <span class="answer-val">{{ formatAnswer(q.correct_answer) }}</span>
                     </div>
-    
-                    <div v-if="w.explanation" class="explanation-box">
+
+                    <!-- teacher-written explanation, only sent when the exam reveals answers -->
+                    <div v-if="q.explanation" class="explanation-box">
                       <span class="explanation-label">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                       Explanation
                     </span>
-                      <p class="explanation-text">{{ w.explanation }}</p>
+                      <p class="explanation-text">{{ q.explanation }}</p>
                     </div>
-    
-                    <div v-if="w.linked_learning_page_id" class="action-row">
-                      <router-link
-                        :to="`/learn/${w.linked_learning_page_id}`"
-                        class="review-link"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        Review Lesson 
-                        <span v-if="w.page_number" class="page-ref-text">
-                          (page {{ w.page_number }})
-                        </span>
-                      </router-link>
-                    </div>
-    
+                    <p v-else-if="!answersRevealed" class="explanation-hidden">
+                      The teacher has not released answers and explanations for this exam.
+                    </p>
                   </div>
                 </div>
+
+                <div v-if="topic.lessons?.length" class="action-row">
+                  <router-link
+                    v-for="lesson in topic.lessons"
+                    :key="lesson.page_id"
+                    :to="lesson.study_url"
+                    class="review-link"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Review Lesson: {{ lesson.title }}
+                  </router-link>
+                </div>
+                <p v-else class="no-lesson">No lesson is linked to this topic yet.</p>
               </div>
             </div>
           </div>
-    
-          <div v-else-if="!attempt.weakness_report?.length" class="perfect-card">
+
+          <div v-else class="perfect-card">
             <div class="perfect-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
             </div>
@@ -159,6 +171,7 @@ const sessionId = computed(() => {
 })
 // --- State ---
 const attempt = ref(null)
+const wrongTopics = ref([])   // GET /exam/attempts/:id/wrong-topics
 const isLoading = ref(false)
 const error = ref(null)
 
@@ -177,7 +190,22 @@ async function loadAttempt() {
     }
 }
 
-onMounted(() => { loadAttempt() })
+// wrong questions grouped by topic, each with the teacher's explanation and
+// the lessons covering it. a failure here only hides the review card.
+async function loadWrongTopics() {
+    try {
+        const res = await examService.getWrongTopics(attemptId)
+        wrongTopics.value = res.data ?? res ?? []
+    } catch (err) {
+        console.warn('Failed to load wrong topics', err)
+        wrongTopics.value = []
+    }
+}
+
+onMounted(() => {
+    loadAttempt()
+    loadWrongTopics()
+})
 
 // --- Computed ---
 const topicEntries = computed(() => {
@@ -185,17 +213,11 @@ const topicEntries = computed(() => {
     return Object.entries(attempt.value.topic_stats)
 })
 
-// Group weakness_report by topic
-const groupedWeakness = computed(() => {
-    if (!attempt.value || !attempt.value.weakness_report || !attempt.value.weakness_report.length) return []
-    const map = {}
-    for (const w of attempt.value.weakness_report) {
-        const topic = w.topic ?? w.topic_tag ?? 'Unknown'
-        if (!map[topic]) map[topic] = []
-        map[topic].push(w)
-    }
-    return Object.entries(map).map(([topic, items]) => ({ topic, items }))
-})
+// the backend only sends correct answers and explanations when the exam
+// template has show_correct_after; if none came back, say so once.
+const answersRevealed = computed(() =>
+    wrongTopics.value.some(t => (t.questions || []).some(q => q.explanation))
+)
 
 // --- Helpers ---
 function topicPct(stat) {
@@ -211,6 +233,13 @@ const TYPE_LABELS = {
 }
 
 function typeLabel(type) { return TYPE_LABELS[type] ?? 'Q' }
+
+// multi-select answers arrive as arrays
+function formatAnswer(value) {
+    if (Array.isArray(value)) return value.join(', ')
+    if (value === null || value === undefined || value === '') return '—'
+    return String(value)
+}
 
 function goExamSet() {
     if (sessionId.value) {
@@ -636,6 +665,24 @@ function goExamHistory() {
 .action-row {
     padding-top: 0.75rem;
     border-top: 1px dashed var(--card-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.answer-val.your { color: #b91c1c; }
+
+.explanation-hidden {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.no-lesson {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.5rem;
 }
 
 .review-link {

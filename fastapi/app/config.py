@@ -95,6 +95,10 @@ class Settings(BaseSettings):
     
     frontend_login_success_uri: str = "http://localhost:8080/login-success"  # Default
 
+    # origin of the Vue app (env: FRONTEND_URL), used to build redirect links
+    # back into the UI, e.g. /exam/attempts/{id}/topics/{tag}/go -> a lesson
+    frontend_url: str = "http://localhost:8080"
+
     @validator("allowed_origins", pre=True, always=True)
     def assemble_allowed_origins(cls, v):
         logging.info(f"Raw value for allowed_origins: {v!r}")

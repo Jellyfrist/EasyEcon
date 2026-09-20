@@ -31,7 +31,19 @@ export const useExamStore = defineStore('exam', () => {
     const error = ref(null)
 
     function _setError(err) {
-        error.value = err?.response?.data?.detail || err.message || 'something went wrong'
+        const detail = err?.response?.data?.detail
+
+        // FastAPI validation errors (422) arrive as a list of objects — flatten
+        // them to readable lines instead of rendering "[object Object]"
+        if (Array.isArray(detail)) {
+            error.value = detail
+                .map(d => (d?.msg || '').replace(/^Value error,\s*/, ''))
+                .filter(Boolean)
+                .join(' ') || 'Invalid data'
+            return
+        }
+
+        error.value = detail || err.message || 'something went wrong'
     }
 
     /**

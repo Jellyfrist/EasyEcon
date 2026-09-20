@@ -73,23 +73,38 @@
         </div>
       </div>
 
-      <div v-if="attempt.weakness_report?.length" class="card">
+      <div v-if="wrongTopics.length" class="card">
         <h2 class="card-title">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
           Areas to Improve
         </h2>
         <div class="weakness-list">
-          <div v-for="(w, i) in attempt.weakness_report" :key="i" class="weakness-item">
-            <span class="weakness-topic">{{ w.topic ?? w.topic_tag ?? 'Unknown topic' }}</span>
-            <p v-if="w.question_text" class="weakness-q">{{ w.question_text }}</p>
-            <router-link
-              v-if="w.linked_learning_page_id"
-              :to="`/learn/${w.linked_learning_page_id}`"
-              class="review-link"
-            >
-              Review lesson
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </router-link>
+          <div
+            v-for="t in wrongTopics"
+            :key="t.topic_tag"
+            :class="['weakness-item', t.is_weak ? 'weak' : 'minor']"
+          >
+            <div class="weakness-head">
+              <span class="weakness-topic">{{ t.topic_tag }}</span>
+              <span class="weakness-count">
+                {{ t.wrong_count }}/{{ t.total_questions }} wrong · {{ Number(t.score_pct || 0).toFixed(0) }}%
+              </span>
+            </div>
+
+            <p v-if="t.message" class="weakness-q">{{ t.message }}</p>
+
+            <div v-if="t.lessons?.length" class="lesson-links">
+              <router-link
+                v-for="lesson in t.lessons"
+                :key="lesson.page_id"
+                :to="lesson.study_url"
+                class="review-link"
+              >
+                Review: {{ lesson.title }}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </router-link>
+            </div>
+            <p v-else class="no-lesson">No lesson is linked to this topic yet.</p>
           </div>
         </div>
       </div>
@@ -121,9 +136,10 @@ const router = useRouter()
 const attemptId = route.params.attemptId
 
 // --- State ---
-const attempt   = ref(null)   
-const isLoading = ref(false)
-const error     = ref(null)
+const attempt     = ref(null)
+const wrongTopics = ref([])   // GET /exam/attempts/:id/wrong-topics
+const isLoading   = ref(false)
+const error       = ref(null)
 
 // --- Load ---
 async function loadAttempt() {
@@ -140,7 +156,22 @@ async function loadAttempt() {
   }
 }
 
-onMounted(() => {  loadAttempt() })
+// wrong topics + the lessons covering them. a failure here must not hide the
+// score, so it only warns and leaves the "Areas to Improve" card out.
+async function loadWrongTopics() {
+  try {
+    const res = await examService.getWrongTopics(attemptId)
+    wrongTopics.value = res.data ?? res ?? []
+  } catch (err) {
+    console.warn('Failed to load wrong topics', err)
+    wrongTopics.value = []
+  }
+}
+
+onMounted(() => {
+  loadAttempt()
+  loadWrongTopics()
+})
 
 // --- Circle progress ---
 const circumference = 2 * Math.PI * 52  // r=52
@@ -449,12 +480,48 @@ function formatTime(dt) {
   gap: 0.3125rem;
 }
 
+/* topics above the 60% threshold: wrong, but not flagged as weak */
+.weakness-item.minor {
+  background: var(--gray-light, #f8fafc);
+  border-color: var(--card-border);
+}
+
+.weakness-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .weakness-topic {
   font-size: 0.7rem;
   font-weight: 700;
   color: #c2410c;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.weakness-item.minor .weakness-topic { color: var(--text-muted); }
+
+.weakness-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.lesson-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+}
+
+.no-lesson {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .weakness-q {
@@ -464,6 +531,9 @@ function formatTime(dt) {
 }
 
 .review-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--primary-pink);

@@ -29,7 +29,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # content block
 class ContentBlock(BaseModel):
@@ -51,6 +51,30 @@ class ContentBlock(BaseModel):
     id: str
     type: str
     data: Dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def mini_quiz_questions_need_explanation(self) -> "ContentBlock":
+        '''
+        mini quiz questions carry a teacher-written explanation, same rule as
+        exam questions: blank or whitespace-only is rejected, naming the
+        question. other block types are untouched.
+        '''
+        if self.type != "mini_quiz":
+            return self
+
+        questions = (self.data or {}).get("questions") or []
+        for index, question in enumerate(questions, start=1):
+            if not isinstance(question, dict):
+                continue
+            explanation = (question.get("explanation") or "").strip()
+            if not explanation:
+                label = question.get("id") or f"#{index}"
+                raise ValueError(
+                    f"Mini quiz question '{label}': an explanation is required. "
+                    "Write your own explanation of the correct answer."
+                )
+            question["explanation"] = explanation
+        return self
 
 '''
 module

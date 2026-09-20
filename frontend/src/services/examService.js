@@ -68,6 +68,7 @@ const examService = {
         - POST   /exam/attempts                             submit exam answers (graded immediately)
         - GET    /exam/attempts/{attempt_id}                get a specific attempt result
         - GET    /exam/sessions/{session_id}/my-attempts    list all of student's attempts for a session
+        - GET    /exam/attempts/{attempt_id}/wrong-topics   wrong topics + lessons to review
     */
 
     // list open exam sessions for a course
@@ -94,6 +95,16 @@ const examService = {
     // list all of student's attempts for a session
     getMyAttempts(sessionId) {
         return api.get(`/exam/sessions/${sessionId}/my-attempts`)
+    },
+
+    // topics the student answered wrong + the lessons that cover them
+    // each row: { topic_tag, wrong_count, total_questions, score_pct, is_weak,
+    //             message, question_ids, lessons: [{ page_id, title, study_url, ... }],
+    //             redirect_url }
+    getWrongTopics(attemptId, { weakOnly = false } = {}) {
+        return api.get(`/exam/attempts/${attemptId}/wrong-topics`, {
+            params: weakOnly ? { weak_only: true } : {},
+        })
     },
 }
 

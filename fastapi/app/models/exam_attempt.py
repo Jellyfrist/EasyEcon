@@ -120,6 +120,24 @@ class ExamAttempt(Base):
     )
 
     # grading logic
+    @staticmethod
+    def is_answer_correct(student_answer, correct_answer) -> bool:
+        '''
+        case/whitespace-insensitive comparison used by grading and by
+        wrong_questions(). a list correct_answer is a multi-select: order
+        does not matter, the set of choices must match exactly.
+        '''
+        if student_answer is None:
+            return False
+        if isinstance(correct_answer, list):
+            if not isinstance(student_answer, list):
+                return False
+            return (
+                sorted(str(a).strip().lower() for a in student_answer)
+                == sorted(str(a).strip().lower() for a in correct_answer)
+            )
+        return str(student_answer).strip().lower() == str(correct_answer).strip().lower()
+
     def grade(self, passing_score_pct: int = 60) -> None:
         '''
         auto-grade this attempt against the session's question_snapshot.
@@ -153,15 +171,7 @@ class ExamAttempt(Base):
             if student_ans is None:
                 continue
 
-            if isinstance(correct, list):
-                is_correct = (
-                    sorted(str(a).strip().lower() for a in student_ans)
-                    == sorted(str(a).strip().lower() for a in correct)
-                )
-            else:
-                is_correct = str(student_ans).strip().lower() == str(correct).strip().lower()
-
-            if is_correct:
+            if self.is_answer_correct(student_ans, correct):
                 raw_score += points
                 topic_buckets[tag]["correct"] += 1
 
@@ -226,6 +236,59 @@ class ExamAttempt(Base):
         for attempt in attempts:
             below = sum(1 for s in scores if s < attempt.score_pct)
             attempt.percentile = round(below / n * 100, 2)
+
+    def wrong_questions(self, include_answers: bool = False) -> List[dict]:
+        '''
+        the questions this student got wrong (or left blank), in snapshot order.
+
+        [
+          {
+            "question_id": "q3",
+            "type": "multiple_choice",
+            "text": "What shifts the demand curve?",
+            "topic_tag": "demand",
+            "linked_learning_page_id": 42,   # may be None
+            "points": 1,
+            "answered": false,               # false = left blank
+            "your_answer": "B",              # what the student submitted
+            # only when include_answers is True:
+            "correct_answer": "A",
+            "explanation": "Income changes shift the whole curve ...",
+          },
+          ...
+        ]
+
+        include_answers reveals the correct answer and the teacher's
+        explanation. callers pass the template's `show_correct_after` flag —
+        a session that hides answers (e.g. retakes are still open) keeps them
+        out of the payload.
+        '''
+        questions: list = self.session.question_snapshot or []
+        answers = self.answers or {}
+
+        wrong: List[dict] = []
+        for q in questions:
+            qid = q.get("id")
+            student_ans = answers.get(qid)
+            if self.is_answer_correct(student_ans, q.get("correct_answer")):
+                continue
+
+            entry = {
+                "question_id": qid,
+                "type": q.get("type"),
+                "text": q.get("text"),
+                "topic_tag": q.get("topic_tag") or "untagged",
+                "linked_learning_page_id": q.get("linked_learning_page_id"),
+                "points": q.get("points", 1),
+                "answered": student_ans is not None,
+                "your_answer": student_ans,
+            }
+            if include_answers:
+                entry["correct_answer"] = q.get("correct_answer")
+                entry["explanation"] = q.get("explanation")
+
+            wrong.append(entry)
+        return wrong
 
     # ------------------------------------------------------------------
     # percentile analytics (read-only)

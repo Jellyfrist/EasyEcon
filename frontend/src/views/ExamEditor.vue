@@ -444,7 +444,7 @@ function buildPayload() {
       text: q.text,
       options: q.options ?? null,
       correct_answer: q.correct_answer,
-      explanation: q.explanation || null,
+      explanation: (q.explanation || '').trim(),
       points: q.points,
       topic_tag: q.topic_tag || null,
       order_index: i,
@@ -464,12 +464,30 @@ function buildPayload() {
   }
 }
 
+/**
+ * Questions missing a teacher-written explanation, as 1-based positions.
+ * The backend rejects these too — this just catches them before the request.
+**/
+function questionsMissingExplanation() {
+  return localQuestions.value
+    .map((q, i) => ((q.explanation || '').trim() ? null : i + 1))
+    .filter(n => n !== null)
+}
+
 async function save() {
 
   isSaving.value = true
   error.value = null
 
   try {
+
+    const missing = questionsMissingExplanation()
+    if (missing.length) {
+      throw new Error(
+        `Write an explanation for question ${missing.join(', ')} before saving. ` +
+        'Every question needs your own explanation of the correct answer.'
+      )
+    }
 
     const payload = buildPayload()
 

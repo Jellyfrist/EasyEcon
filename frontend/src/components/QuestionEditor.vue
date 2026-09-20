@@ -221,18 +221,22 @@
       </div>
     </template>
 
-    <!-- Explanation -->
+    <!-- Explanation (required, written by the teacher) -->
     <div class="form-group mt-2">
       <label>
-        Explanation
-        <span class="text-xs text-muted">(shown after exam if enabled)</span>
+        Explanation <span class="required-mark">*</span>
+        <span class="text-xs text-muted">(your own words — shown after exam if enabled)</span>
       </label>
       <textarea
         v-model="q.explanation"
         class="input-field"
+        :class="{ 'input-invalid': !hasExplanation }"
         rows="2"
-        placeholder="Explain the correct answer…"
+        placeholder="Explain why the correct answer is correct…"
       />
+      <p v-if="!hasExplanation" class="field-error">
+        Required — write your own explanation before saving.
+      </p>
     </div>
 
   </div>
@@ -285,6 +289,11 @@ export default {
       if (Array.isArray(this.q.correct_answer))  return this.q.correct_answer
       if (this.q.correct_answer != null && this.q.correct_answer !== '') return [this.q.correct_answer]
       return ['']
+    },
+
+    // the backend rejects a question without a teacher-written explanation
+    hasExplanation() {
+      return !!(this.q.explanation || '').trim()
     }
   },
 
@@ -477,6 +486,23 @@ export default {
 </script>
 
 <style scoped>
+.required-mark {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.input-invalid {
+  border-color: #fca5a5;
+  background: #fff7f7;
+}
+
+.field-error {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
 /* ══ Question card header ══════════════════════════════════ */
 .qe-header {
   display: flex;

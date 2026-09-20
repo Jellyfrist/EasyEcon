@@ -16,6 +16,8 @@ Student routes  (require_student):
     POST   /exam/attempts                         submit answers -> graded immediately
     GET    /exam/attempts/{id}                    get my attempt result
     GET    /exam/sessions/{id}/my-attempts        list all my attempts for a session
+    GET    /exam/attempts/{id}/wrong-topics       wrong topics + lessons to review
+    GET    /exam/attempts/{id}/topics/{tag}/go    redirect to that topic's lesson
 
 Every ExamAttemptResponse carries three percentile blocks computed per
 request (nothing extra stored): session_percentile (vs this session),
@@ -29,10 +31,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db import get_db
 from app.models.exam_attempt import ExamAttempt
+from app.models.learning_page import LearningPage
+from app.models.module import Module
 from app.models.exam_session import ExamSession
 from app.models.exam_template import ExamTemplate
 from app.models.user import User
@@ -46,6 +52,9 @@ from app.schemas.exam import (
     ExamTemplateResponse,
     ExamTemplateSummary,
     ExamTemplateUpdate,
+    TopicLessonLink,
+    WrongQuestionDetail,
+    WrongTopicReview,
 )
 from app.security import require_student, require_teacher
 
@@ -82,6 +91,149 @@ def _strip_answers_from_questions(questions: List[Dict[str, Any]]) -> List[Dict[
         q.pop("linked_learning_page_id", None)
         stripped.append(q)
     return stripped
+
+
+# weak-topic -> lesson helper
+
+def _study_url(page: LearningPage, module: Optional[Module]) -> str:
+    '''frontend path of a lesson: /courses/{courseId}/modules/{moduleId}/pages/{pageId}'''
+    course_id = module.course_id if module else None
+    return f"/courses/{course_id}/modules/{page.module_id}/pages/{page.id}"
+
+
+def _lessons_for_topic(
+    db: Session,
+    attempt_id: int,
+    topic_tag: str,
+    page_ids: List[int],
+) -> List[TopicLessonLink]:
+    '''
+    lessons a student should review for a topic.
+
+    two sources, in order:
+      1. pages the teacher linked on the question (linked_learning_page_id)
+      2. published pages carrying the same topic_tag
+    unpublished pages are only kept when the teacher linked them explicitly.
+    '''
+    pages: List[LearningPage] = []
+    seen: set = set()
+
+    if page_ids:
+        linked = db.query(LearningPage).filter(LearningPage.id.in_(page_ids)).all()
+        by_id = {p.id: p for p in linked}
+        for pid in page_ids:                     # keep the teacher's order
+            page = by_id.get(pid)
+            if page and page.id not in seen:
+                seen.add(page.id)
+                pages.append(page)
+
+    if topic_tag and topic_tag != "untagged":
+        tagged = (
+            db.query(LearningPage)
+            .filter(
+                LearningPage.topic_tag == topic_tag,
+                LearningPage.is_published == True,
+            )
+            .order_by(LearningPage.order_index)
+            .all()
+        )
+        for page in tagged:
+            if page.id not in seen:
+                seen.add(page.id)
+                pages.append(page)
+
+    module_ids = {p.module_id for p in pages}
+    modules = (
+        {m.id: m for m in db.query(Module).filter(Module.id.in_(module_ids)).all()}
+        if module_ids
+        else {}
+    )
+
+    return [
+        TopicLessonLink(
+            page_id = page.id,
+            title = page.title,
+            module_id = page.module_id,
+            module_title = modules[page.module_id].title if page.module_id in modules else None,
+            course_id = modules[page.module_id].course_id if page.module_id in modules else None,
+            topic_tag = page.topic_tag,
+            is_published = bool(page.is_published),
+            study_url = _study_url(page, modules.get(page.module_id)),
+            redirect_url = (
+                f"{router.prefix}/attempts/{attempt_id}/topics/{topic_tag}/go"
+                f"?page_id={page.id}"
+            ),
+        )
+        for page in pages
+    ]
+
+
+def _attempt_for_reader_or_403(attempt_id: int, db: Session, reader: User) -> ExamAttempt:
+    '''an attempt the reader is allowed to see: its owner, or any teacher/admin'''
+    attempt = db.get(ExamAttempt, attempt_id)
+    if not attempt:
+        raise HTTPException(status_code = 404, detail = "Attempt not found")
+    if attempt.student_id != reader.id and reader.role not in ("teacher", "admin"):
+        raise HTTPException(status_code = 403, detail = "Not your attempt")
+    return attempt
+
+
+def _reveals_answers(attempt: ExamAttempt) -> bool:
+    '''
+    whether this attempt may show correct answers and explanations back to the
+    student — the template's show_correct_after flag. a session whose template
+    is gone keeps them hidden.
+    '''
+    template = attempt.session.template if attempt.session else None
+    return bool(template and template.show_correct_after)
+
+
+def _wrong_topic_reviews(db: Session, attempt: ExamAttempt) -> List[WrongTopicReview]:
+    '''
+    group this attempt's wrong answers by topic and attach the lessons to
+    review. topic_stats (built at grading time) supplies the per-topic score.
+
+    each topic also carries the questions themselves; the teacher's
+    explanation rides along only when the template reveals answers.
+    '''
+    stats: Dict[str, Any] = attempt.topic_stats or {}
+    grouped: Dict[str, Dict[str, Any]] = {}
+
+    for q in attempt.wrong_questions(include_answers = _reveals_answers(attempt)):
+        tag = q["topic_tag"]
+        bucket = grouped.setdefault(tag, {"question_ids": [], "page_ids": [], "questions": []})
+        bucket["question_ids"].append(q["question_id"])
+        bucket["questions"].append(WrongQuestionDetail(**q))
+        page_id = q["linked_learning_page_id"]
+        if page_id and page_id not in bucket["page_ids"]:
+            bucket["page_ids"].append(page_id)
+
+    messages = {
+        w.get("topic_tag"): w.get("message")
+        for w in (attempt.weakness_report or [])
+    }
+
+    reviews: List[WrongTopicReview] = []
+    for tag, bucket in grouped.items():
+        topic_stat = stats.get(tag, {})
+        lessons = _lessons_for_topic(db, attempt.id, tag, bucket["page_ids"])
+        reviews.append(
+            WrongTopicReview(
+                topic_tag = tag,
+                wrong_count = len(bucket["question_ids"]),
+                total_questions = topic_stat.get("total", len(bucket["question_ids"])),
+                score_pct = topic_stat.get("score_pct", 0.0),
+                is_weak = bool(topic_stat.get("is_weak", False)),
+                message = messages.get(tag),
+                question_ids = bucket["question_ids"],
+                questions = bucket["questions"],
+                lessons = lessons,
+                redirect_url = lessons[0].redirect_url if lessons else None,
+            )
+        )
+
+    reviews.sort(key = lambda r: (r.score_pct, -r.wrong_count))
+    return reviews
 
 
 # percentile helper
@@ -420,6 +572,84 @@ def get_attempt(
     if attempt.student_id != student.id and student.role not in ("teacher", "admin"):
         raise HTTPException(status_code=403, detail="Not your attempt")
     return _attach_percentiles(db, [attempt])[0]
+
+
+# topics answered wrong -> lessons to review
+@router.get("/attempts/{attempt_id}/wrong-topics", response_model = List[WrongTopicReview])
+def attempt_wrong_topics(
+    attempt_id: int,
+    weak_only: bool = False,
+    db: Session = Depends(get_db),
+    student: User = Depends(require_student),
+):
+    '''
+    what the student got wrong, grouped by topic, worst topic first.
+
+    every row carries `questions` (the wrong questions, each with the
+    teacher's explanation when the template has show_correct_after),
+    `lessons` (the learning pages covering that topic) and `redirect_url` —
+    the click target that sends the student straight to the first lesson.
+    weak_only=true keeps only topics below the 60% threshold.
+    '''
+    attempt = _attempt_for_reader_or_403(attempt_id, db, student)
+    if attempt.submitted_at is None:
+        raise HTTPException(status_code = 400, detail = "This attempt is not submitted yet")
+
+    reviews = _wrong_topic_reviews(db, attempt)
+    return [r for r in reviews if r.is_weak] if weak_only else reviews
+
+
+# click target: jump from a wrong topic to its lesson
+@router.get("/attempts/{attempt_id}/topics/{topic_tag}/go", status_code = 307)
+def go_to_topic_lesson(
+    attempt_id: int,
+    topic_tag: str,
+    page_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    student: User = Depends(require_student),
+):
+    '''
+    redirect (307) to the learning page for a topic the student answered wrong.
+
+    page_id picks one of the topic's lessons; without it the first suggested
+    lesson wins. 404 when the topic has no lesson linked yet.
+    '''
+    attempt = _attempt_for_reader_or_403(attempt_id, db, student)
+    if attempt.submitted_at is None:
+        raise HTTPException(status_code = 400, detail = "This attempt is not submitted yet")
+
+    page_ids = [
+        q["linked_learning_page_id"]
+        for q in attempt.wrong_questions()
+        if q["topic_tag"] == topic_tag and q["linked_learning_page_id"]
+    ]
+    if not page_ids and topic_tag not in {q["topic_tag"] for q in attempt.wrong_questions()}:
+        raise HTTPException(
+            status_code = 404,
+            detail = f"Topic '{topic_tag}' was not answered wrong in this attempt",
+        )
+
+    lessons = _lessons_for_topic(db, attempt.id, topic_tag, page_ids)
+    if not lessons:
+        raise HTTPException(
+            status_code = 404,
+            detail = f"No learning page is linked to topic '{topic_tag}' yet",
+        )
+
+    target = lessons[0]
+    if page_id is not None:
+        target = next((l for l in lessons if l.page_id == page_id), None)
+        if target is None:
+            raise HTTPException(
+                status_code = 404,
+                detail = f"Page {page_id} is not a lesson for topic '{topic_tag}'",
+            )
+
+    return RedirectResponse(
+        url = f"{settings.frontend_url.rstrip('/')}{target.study_url}",
+        status_code = 307,
+    )
+
 
 # list all my attempts for a session
 @router.get("/sessions/{session_id}/my-attempts", response_model = List[ExamAttemptResponse])

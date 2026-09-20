@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # question inside a template
@@ -32,11 +32,31 @@ class ExamQuestion(BaseModel):
     text: str
     options: Optional[List[str]] = None       # none for fill in the blank / short answer
     correct_answer: Any                       # str or list[str] for multi select
-    explanation: Optional[str] = None
+    explanation: str = Field(
+        "",
+        description = "why the correct answer is correct — written by the teacher, required "
+                      "(empty or missing is rejected by the validator below)",
+    )
     points: int = 1
     topic_tag: Optional[str] = None
     order_index: int = 0
     linked_learning_page_id: Optional[int] = None  # cross page suggestion if wrong
+
+    @model_validator(mode="after")
+    def explanation_written_by_teacher(self) -> "ExamQuestion":
+        '''
+        every question must carry its own explanation.
+        nothing is generated or copied for the teacher — a blank or
+        whitespace-only explanation is rejected, naming the question.
+        '''
+        if not (self.explanation or "").strip():
+            label = self.id or "this question"
+            raise ValueError(
+                f"Question '{label}': an explanation is required. "
+                "Write your own explanation of the correct answer."
+            )
+        self.explanation = self.explanation.strip()
+        return self
 
 
 '''
@@ -172,6 +192,68 @@ class ExamAttemptSubmit(BaseModel):
         ...,
         description='{"q1": "A", "q2": "demand", "q3": ["A","C"]}',
     )
+
+# a lesson a student can jump to after getting a topic wrong
+class TopicLessonLink(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    page_id: int
+    title: str
+    module_id: int
+    module_title: Optional[str] = None
+    course_id: Optional[int] = None
+    topic_tag: Optional[str] = None
+    is_published: bool = True
+    study_url: str = Field(
+        ...,
+        description="frontend path of the lesson, e.g. /courses/1/modules/3/pages/42",
+    )
+    redirect_url: str = Field(
+        ...,
+        description="backend route that 307-redirects straight to study_url",
+    )
+
+
+# one question the student got wrong, with the teacher's explanation
+class WrongQuestionDetail(BaseModel):
+    '''
+    correct_answer and explanation are only filled when the exam template has
+    show_correct_after = True; otherwise both stay None.
+    '''
+
+    question_id: str
+    type: Optional[str] = None
+    text: Optional[str] = None
+    topic_tag: Optional[str] = None
+    points: int = 1
+    answered: bool = True              # false = left blank
+    your_answer: Optional[Any] = None
+    correct_answer: Optional[Any] = None
+    explanation: Optional[str] = None
+    linked_learning_page_id: Optional[int] = None
+
+
+# one wrongly-answered topic + where to go review it
+class WrongTopicReview(BaseModel):
+    topic_tag: str
+    wrong_count: int
+    total_questions: int
+    score_pct: float
+    is_weak: bool                      # below WEAK_THRESHOLD (60%)
+    message: Optional[str] = None
+    question_ids: List[str] = Field(default_factory=list)
+    questions: List[WrongQuestionDetail] = Field(
+        default_factory=list,
+        description="the wrong questions themselves, with the teacher's explanation "
+                    "when the template reveals answers after submission",
+    )
+    lessons: List[TopicLessonLink] = Field(default_factory=list)
+    redirect_url: Optional[str] = Field(
+        None,
+        description="click target: redirects to the first suggested lesson; "
+                    "null when no lesson is linked to this topic yet",
+    )
+
 
 # percentile standing of one score inside a reference group
 class PercentileReport(BaseModel):

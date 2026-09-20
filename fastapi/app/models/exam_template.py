@@ -14,12 +14,16 @@ question_data item schema:
   "text": "What happens when supply increases?",
   "options": ["A) Price rises", "B) Price falls", "C) No change", "D) Demand rises"],
   "correct_answer": "B",             # string, or list[str] for multi-select
-  "explanation": "When supply increases ...",
+  "explanation": "When supply increases ...",  # REQUIRED — written by the teacher
   "points": 5,
   "topic_tag": "supply_demand_basics",   # REQUIRED — used for weakness analysis
   "order_index": 0,
   "linked_learning_page_id": 12          # page suggested if student answers wrong
 }
+
+explanation is required on every question and must be written by the teacher:
+the schema rejects a blank or missing one (app/schemas/exam.py). mini quiz
+questions follow the same rule (app/schemas/learning.py, ContentBlock).
 
 topic_tag is on exam questions (unlike mini quiz where it's optional)
 b/c the whole point of the exam system is to analyse weaknesses and
