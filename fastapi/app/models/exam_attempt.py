@@ -5,6 +5,16 @@ stores:
     - raw answers keyed by question ID
     - auto-graded score and pass/fail
     - percentile rank among all attempts for this session
+
+percentile helpers (no extra columns, nothing written to the DB):
+    ExamAttempt.percentile_of(score, population, method=...)   pure math
+    ExamAttempt.collect_scores(db, session_id=/template_id=)   reference group
+    ExamAttempt.score_report(db, score, ...)                   rank one score
+    ExamAttempt.student_percentile(db, student_id, ...)        one user vs all
+    ExamAttempt.leaderboard(db, ...)                           everyone ranked
+scope = a session (session_id), an exam template across every launch
+(template_id), or the whole platform (neither) — so a score can be shown
+against all users' scores, not only the classmates in one session.
     - weakness analysis: topic tags where student performed poorly,
     each linked back to suggested LearningPage IDs for review
 
@@ -41,8 +51,9 @@ weakness_report schema (list), derived from topic_stats, sorted by score_pct asc
 
 from __future__ import annotations
 
+import statistics
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, Session as OrmSession
@@ -215,6 +226,347 @@ class ExamAttempt(Base):
         for attempt in attempts:
             below = sum(1 for s in scores if s < attempt.score_pct)
             attempt.percentile = round(below / n * 100, 2)
+
+    # ------------------------------------------------------------------
+    # percentile analytics (read-only)
+    # ------------------------------------------------------------------
+    # these helpers never write to the DB and need no new columns.
+    # the stored `percentile` column stays session-scoped (filled by
+    # recalculate_percentiles); the methods below compute a percentile
+    # against any other reference group on demand — a single session, every
+    # session launched from one template, or every graded attempt by every
+    # user on the platform.
+
+    @staticmethod
+    def percentile_of(
+        score_pct: float,
+        population: Sequence[float],
+        method: str = "midpoint",
+    ) -> Optional[float]:
+        '''
+        percentile of `score_pct` inside `population` (0-100).
+
+        method:
+            "below"       — % of scores strictly lower (matches the stored column)
+            "midpoint"    — % below + half of the ties; fairest for equal scores
+            "at_or_below" — % lower or equal (a top score gives 100)
+
+        returns None when the population is empty.
+        '''
+        scores = [s for s in population if s is not None]
+        n = len(scores)
+        if n == 0:
+            return None
+
+        below = sum(1 for s in scores if s < score_pct)
+        equal = sum(1 for s in scores if s == score_pct)
+
+        if method == "below":
+            ratio = below / n
+        elif method == "at_or_below":
+            ratio = (below + equal) / n
+        elif method == "midpoint":
+            ratio = (below + equal / 2) / n
+        else:
+            raise ValueError(f"unknown percentile method: {method!r}")
+
+        return round(ratio * 100, 2)
+
+    @staticmethod
+    def _scores_by_student(
+        attempts: Iterable["ExamAttempt"],
+        per_user: str = "best",
+    ) -> Dict[int, float]:
+        '''
+        one representative score per student.
+
+        per_user: "best" (highest), "latest" (newest submission), "mean".
+        '''
+        buckets: Dict[int, List["ExamAttempt"]] = {}
+        for a in attempts:
+            buckets.setdefault(a.student_id, []).append(a)
+
+        out: Dict[int, float] = {}
+        for student_id, student_attempts in buckets.items():
+            if per_user == "best":
+                out[student_id] = max(a.score_pct for a in student_attempts)
+            elif per_user == "latest":
+                newest = max(
+                    student_attempts,
+                    key=lambda a: (a.submitted_at or datetime.min, a.id or 0),
+                )
+                out[student_id] = newest.score_pct
+            elif per_user == "mean":
+                vals = [a.score_pct for a in student_attempts]
+                out[student_id] = round(sum(vals) / len(vals), 2)
+            else:
+                raise ValueError(f"unknown per_user mode: {per_user!r}")
+        return out
+
+    @classmethod
+    def _one_score_per_student(
+        cls,
+        attempts: Iterable["ExamAttempt"],
+        per_user: Optional[str],
+    ) -> List[float]:
+        '''
+        collapse attempts into the score list used as a reference population.
+        per_user=None keeps every graded attempt (retakes included).
+        '''
+        attempts = list(attempts)
+        if per_user is None:
+            return [a.score_pct for a in attempts]
+        return list(cls._scores_by_student(attempts, per_user).values())
+
+    @staticmethod
+    def population_with(
+        scores_by_student: Dict[int, float],
+        student_id: int,
+        score_pct: float,
+    ) -> List[float]:
+        '''
+        population where `student_id` is represented by `score_pct` itself
+        instead of their aggregate.
+
+        without this, ranking one attempt against a "best score per student"
+        population compares a student against their own better attempt — a
+        retake could end up ranked below the population size.
+        '''
+        population = [s for sid, s in scores_by_student.items() if sid != student_id]
+        population.append(score_pct)
+        return population
+
+    @classmethod
+    def _scoped_query(
+        cls,
+        orm_session: OrmSession,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        student_id: Optional[int] = None,
+    ):
+        '''graded attempts narrowed to a scope (intersection of the filters).'''
+        query = orm_session.query(cls).filter(cls.submitted_at.isnot(None))
+
+        if session_id is not None:
+            query = query.filter(cls.session_id == session_id)
+
+        if template_id is not None:
+            from .exam_session import ExamSession
+
+            query = query.join(
+                ExamSession, cls.session_id == ExamSession.id
+            ).filter(ExamSession.template_id == template_id)
+
+        if student_id is not None:
+            query = query.filter(cls.student_id == student_id)
+
+        return query
+
+    @classmethod
+    def collect_scores_by_student(
+        cls,
+        orm_session: OrmSession,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        per_user: str = "best",
+    ) -> Dict[int, float]:
+        '''
+        { student_id: representative score } for a scope.
+        passing no scope filter means "every graded attempt by every user".
+        '''
+        attempts = cls._scoped_query(
+            orm_session, session_id=session_id, template_id=template_id
+        ).all()
+        return cls._scores_by_student(attempts, per_user)
+
+    @classmethod
+    def collect_scores(
+        cls,
+        orm_session: OrmSession,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        student_id: Optional[int] = None,
+        per_user: Optional[str] = "best",
+    ) -> List[float]:
+        '''score_pct values of all graded attempts in a scope.'''
+        attempts = cls._scoped_query(
+            orm_session,
+            session_id=session_id,
+            template_id=template_id,
+            student_id=student_id,
+        ).all()
+        return cls._one_score_per_student(attempts, per_user)
+
+    @classmethod
+    def build_report(
+        cls,
+        score_pct: float,
+        scores: Sequence[float],
+        *,
+        method: str = "midpoint",
+        per_user: Optional[str] = "best",
+        scope: Optional[dict] = None,
+    ) -> dict:
+        '''
+        rank one score against an already-collected population:
+
+        {
+          "score_pct": 78.0,
+          "percentile": 82.5,     # None when the population is empty
+          "rank": 4,              # 1 = best, ties share the better rank
+          "population": 40,       # how many scores back the percentile
+          "mean": 63.1, "median": 65.0, "highest": 98.0, "lowest": 12.0,
+          "scope": {...}, "per_user": "best", "method": "midpoint"
+        }
+        '''
+        scores = [s for s in scores if s is not None]
+        population = len(scores)
+
+        return {
+            "score_pct": round(score_pct, 2),
+            "percentile": cls.percentile_of(score_pct, scores, method=method),
+            "rank": (sum(1 for s in scores if s > score_pct) + 1) if population else None,
+            "population": population,
+            "mean": round(statistics.fmean(scores), 2) if population else None,
+            "median": round(statistics.median(scores), 2) if population else None,
+            "highest": max(scores) if population else None,
+            "lowest": min(scores) if population else None,
+            "scope": scope or {},
+            "per_user": per_user,
+            "method": method,
+        }
+
+    @classmethod
+    def score_report(
+        cls,
+        orm_session: OrmSession,
+        score_pct: float,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        student_id: Optional[int] = None,
+        per_user: Optional[str] = "best",
+        method: str = "midpoint",
+    ) -> dict:
+        '''
+        rank one score against everybody else in the scope (one query).
+
+        pass `student_id` when the score belongs to a student already in the
+        population: their own aggregate is then replaced by this score, so a
+        retake is never ranked against its own better attempt.
+        '''
+        if per_user is None or student_id is None:
+            scores = cls.collect_scores(
+                orm_session,
+                session_id=session_id,
+                template_id=template_id,
+                per_user=per_user,
+            )
+        else:
+            by_student = cls.collect_scores_by_student(
+                orm_session,
+                session_id=session_id,
+                template_id=template_id,
+                per_user=per_user,
+            )
+            scores = cls.population_with(by_student, student_id, score_pct)
+
+        return cls.build_report(
+            score_pct,
+            scores,
+            method=method,
+            per_user=per_user,
+            scope={"session_id": session_id, "template_id": template_id},
+        )
+
+    @classmethod
+    def student_percentile(
+        cls,
+        orm_session: OrmSession,
+        student_id: int,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        aggregate: str = "best",
+        per_user: Optional[str] = "best",
+        method: str = "midpoint",
+    ) -> Optional[dict]:
+        '''
+        one student's standing against all users in the scope.
+
+        `aggregate` picks the student's own representative score
+        ("best" / "latest" / "mean"); `per_user` does the same for everybody
+        they are compared with.
+
+        returns None when the student has no graded attempt in the scope.
+        adds "student_id", "attempts_counted" and "aggregate" to the payload.
+        '''
+        own_attempts = cls._scoped_query(
+            orm_session,
+            session_id=session_id,
+            template_id=template_id,
+            student_id=student_id,
+        ).all()
+        if not own_attempts:
+            return None
+
+        own_score = cls._scores_by_student(own_attempts, aggregate)[student_id]
+
+        report = cls.score_report(
+            orm_session,
+            own_score,
+            session_id=session_id,
+            template_id=template_id,
+            student_id=student_id,
+            per_user=per_user,
+            method=method,
+        )
+        report["student_id"] = student_id
+        report["attempts_counted"] = len(own_attempts)
+        report["aggregate"] = aggregate
+        return report
+
+    @classmethod
+    def leaderboard(
+        cls,
+        orm_session: OrmSession,
+        *,
+        session_id: Optional[int] = None,
+        template_id: Optional[int] = None,
+        per_user: str = "best",
+        method: str = "midpoint",
+        limit: Optional[int] = None,
+    ) -> List[dict]:
+        '''
+        every student in the scope with their score, rank and percentile,
+        best first — one row per student.
+        '''
+        attempts = cls._scoped_query(
+            orm_session, session_id=session_id, template_id=template_id
+        ).all()
+
+        attempts_per_student: Dict[int, int] = {}
+        for a in attempts:
+            attempts_per_student[a.student_id] = attempts_per_student.get(a.student_id, 0) + 1
+
+        per_student = cls._scores_by_student(attempts, per_user)
+        scores = list(per_student.values())
+
+        rows = [
+            {
+                "student_id": student_id,
+                "score_pct": round(score, 2),
+                "percentile": cls.percentile_of(score, scores, method=method),
+                "rank": sum(1 for s in scores if s > score) + 1,
+                "attempts": attempts_per_student[student_id],
+            }
+            for student_id, score in per_student.items()
+        ]
+        rows.sort(key=lambda r: (-r["score_pct"], r["student_id"]))
+        return rows[:limit] if limit else rows
 
     def __repr__(self) -> str:
         return (

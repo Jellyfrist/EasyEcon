@@ -16,6 +16,11 @@ Student routes  (require_student):
     POST   /exam/attempts                         submit answers -> graded immediately
     GET    /exam/attempts/{id}                    get my attempt result
     GET    /exam/sessions/{id}/my-attempts        list all my attempts for a session
+
+Every ExamAttemptResponse carries three percentile blocks computed per
+request (nothing extra stored): session_percentile (vs this session),
+exam_percentile (vs every launch of the exam template) and
+overall_percentile (vs all users' scores platform-wide).
 '''
 
 import copy
@@ -77,6 +82,83 @@ def _strip_answers_from_questions(questions: List[Dict[str, Any]]) -> List[Dict[
         q.pop("linked_learning_page_id", None)
         stripped.append(q)
     return stripped
+
+
+# percentile helper
+
+def _attach_percentiles(
+    db: Session,
+    attempts: List[ExamAttempt],
+    *,
+    per_user: str = "best",
+    method: str = "midpoint",
+) -> List[ExamAttempt]:
+    '''
+    attach session / exam / platform percentile reports to attempts.
+
+    computed per request and set as plain (unmapped) attributes — nothing is
+    written to the DB. each reference population is queried once and reused
+    for every attempt, so a list endpoint stays at a handful of queries.
+
+    per_user = "best" means every other student is represented by their best
+    score; the attempt's own student is represented by this attempt, so a
+    retake is never ranked against its own better attempt.
+    '''
+    graded = [a for a in attempts if a.submitted_at is not None]
+    if not graded:
+        for a in attempts:
+            a.session_percentile = None
+            a.exam_percentile = None
+            a.overall_percentile = None
+        return attempts
+
+    overall_by_student = ExamAttempt.collect_scores_by_student(db, per_user = per_user)
+    session_by_student: Dict[int, Dict[int, float]] = {}
+    template_by_student: Dict[int, Dict[int, float]] = {}
+
+    for attempt in graded:
+        if attempt.session_id not in session_by_student:
+            session_by_student[attempt.session_id] = ExamAttempt.collect_scores_by_student(
+                db, session_id = attempt.session_id, per_user = per_user
+            )
+
+        template_id = attempt.session.template_id if attempt.session else None
+        if template_id is not None and template_id not in template_by_student:
+            template_by_student[template_id] = ExamAttempt.collect_scores_by_student(
+                db, template_id = template_id, per_user = per_user
+            )
+
+    def _report(by_student: Dict[int, float], attempt: ExamAttempt, scope: Dict[str, Any]) -> Dict[str, Any]:
+        return ExamAttempt.build_report(
+            attempt.score_pct,
+            ExamAttempt.population_with(by_student, attempt.student_id, attempt.score_pct),
+            method = method,
+            per_user = per_user,
+            scope = scope,
+        )
+
+    for attempt in attempts:
+        if attempt.submitted_at is None:
+            attempt.session_percentile = None
+            attempt.exam_percentile = None
+            attempt.overall_percentile = None
+            continue
+
+        template_id = attempt.session.template_id if attempt.session else None
+
+        attempt.session_percentile = _report(
+            session_by_student[attempt.session_id],
+            attempt,
+            {"session_id": attempt.session_id},
+        )
+        attempt.exam_percentile = (
+            _report(template_by_student[template_id], attempt, {"template_id": template_id})
+            if template_id is not None
+            else None
+        )
+        attempt.overall_percentile = _report(overall_by_student, attempt, {})
+
+    return attempts
 
 
 '''
@@ -197,14 +279,18 @@ def session_results(
     db: Session = Depends(get_db),
     teacher: User = Depends(require_teacher),
 ):
-    '''teacher views all student results + weakness reports for a session'''
+    '''
+    teacher views all student results + weakness reports for a session.
+    each row also carries session / exam / platform percentile reports.
+    '''
     _get_session_or_404(session_id, db)
-    return (
+    attempts = (
         db.query(ExamAttempt)
         .filter(ExamAttempt.session_id == session_id)
         .order_by(ExamAttempt.score_pct.desc())
         .all()
     )
+    return _attach_percentiles(db, attempts)
 
 
 '''
@@ -312,11 +398,13 @@ def submit_attempt(
     attempt.grade(passing_score_pct=passing_pct)
     db.commit()
 
-    # recalculate percentiles for everyone in this session
+    # recalculate the stored session percentile for everyone in this session
     ExamAttempt.recalculate_percentiles(db, session_id = body.session_id)
     db.commit()
     db.refresh(attempt)
-    return attempt
+
+    # plus the computed standing against other users (session / exam / platform)
+    return _attach_percentiles(db, [attempt])[0]
 
 # get my attempt result
 @router.get("/attempts/{attempt_id}", response_model = ExamAttemptResponse)
@@ -331,7 +419,7 @@ def get_attempt(
         raise HTTPException(status_code=404, detail="Attempt not found")
     if attempt.student_id != student.id and student.role not in ("teacher", "admin"):
         raise HTTPException(status_code=403, detail="Not your attempt")
-    return attempt
+    return _attach_percentiles(db, [attempt])[0]
 
 # list all my attempts for a session
 @router.get("/sessions/{session_id}/my-attempts", response_model = List[ExamAttemptResponse])
@@ -340,8 +428,8 @@ def my_attempts(
     db: Session = Depends(get_db),
     student: User = Depends(require_student),
 ):
-    '''list all of the student's attempts for a session'''
-    return (
+    '''list all of the student's attempts for a session, with percentiles'''
+    attempts = (
         db.query(ExamAttempt)
         .filter(
             ExamAttempt.session_id == session_id,
@@ -350,3 +438,4 @@ def my_attempts(
         .order_by(ExamAttempt.submitted_at.desc())
         .all()
     )
+    return _attach_percentiles(db, attempts)

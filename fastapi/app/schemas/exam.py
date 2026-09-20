@@ -5,6 +5,9 @@ Flow:
   Teacher  ->  creates ExamTemplate  (question_data JSON)
            ->  launches ExamSession  (snapshot frozen at launch)
   Student  ->  submits ExamAttempt   (graded, weakness_report, percentile)
+
+Every attempt response also carries PercentileReport blocks comparing the
+score with other users: session, exam template, and platform-wide.
 '''
 
 from __future__ import annotations
@@ -170,6 +173,30 @@ class ExamAttemptSubmit(BaseModel):
         description='{"q1": "A", "q2": "demand", "q3": ["A","C"]}',
     )
 
+# percentile standing of one score inside a reference group
+class PercentileReport(BaseModel):
+    '''
+    payload built by ExamAttempt.build_report / score_report / student_percentile.
+    "scope" says which attempts the percentile was measured against:
+    {"session_id": 3} = one session, {"template_id": 7} = every launch of
+    that exam, {} = every graded attempt by every user.
+    '''
+
+    model_config = ConfigDict(from_attributes=True)
+
+    score_pct: float
+    percentile: Optional[float] = None   # None when nobody else has a score
+    rank: Optional[int] = None           # 1 = best, ties share the better rank
+    population: int                      # how many scores back the percentile
+    mean: Optional[float] = None
+    median: Optional[float] = None
+    highest: Optional[float] = None
+    lowest: Optional[float] = None
+    scope: Dict[str, Any] = Field(default_factory=dict)
+    per_user: Optional[str] = None       # best | latest | mean | None (every attempt)
+    method: Optional[str] = None         # below | midpoint | at_or_below
+
+
 # attempt response
 class ExamAttemptResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -181,8 +208,14 @@ class ExamAttemptResponse(BaseModel):
     max_score: float
     score_pct: float
     passed: bool
-    percentile: Optional[float]
+    percentile: Optional[float]          # stored, session-scoped (legacy)
     topic_stats: Dict[str, Any]
     weakness_report: List[Dict[str, Any]]
     started_at: datetime
     submitted_at: Optional[datetime]
+
+    # computed per request, never stored: where this score stands against
+    # other students' scores. null while the attempt is not graded yet.
+    session_percentile: Optional[PercentileReport] = None   # vs this session
+    exam_percentile: Optional[PercentileReport] = None      # vs every launch of the exam
+    overall_percentile: Optional[PercentileReport] = None   # vs all users, all exams
