@@ -93,6 +93,9 @@
             placeholder="Lesson title…"
             maxlength="120"
           />
+          <label for="lesson-topic-tag">Topic Tag (used to match exam questions)</label>
+          <input id="lesson-topic-tag" v-model.trim="lesson.topic_tag" class="le-section-name-input"
+            placeholder="e.g. Supply & Demand" maxlength="100" />
 
           <!-- section name -->
           <input
@@ -275,6 +278,7 @@ const isEditMode = computed(() => !!pageIdParam)
 const lesson = ref({
   id: isEditMode.value ? parseInt(pageIdParam, 10) : null,
   title: '',
+  topic_tag: '',
   module_id: parseInt(moduleIdParam, 10),
   sections: [{ id: Date.now(), title: '', content: '' }]
 })
@@ -397,6 +401,7 @@ const loadLessonData = async () => {
     const res  = await learningService.getPage(lesson.value.id)
     const data = res.data
     lesson.value.title     = data.title
+    lesson.value.topic_tag = data.topic_tag || ''
     lesson.value.module_id = data.module_id
     isPublished.value      = data.is_published ?? true
 
@@ -494,6 +499,7 @@ const saveLesson = async () => {
 
     const payload = {
       title: lesson.value.title.trim(),
+      topic_tag: lesson.value.topic_tag.trim() || null,
       module_id: lesson.value.module_id,
       order_index: 0,
       template_type: 'standard_text',

@@ -261,8 +261,10 @@
             :key="q._lid"
             :q="q"
             :index="qi"
+            :lesson-options="lessonOptions"
             @remove="removeLocalQuestion"
           />
+          <p v-if="lessonOptionsError" class="text-muted">{{ lessonOptionsError }}</p>
         </div>
 
         <button class="btn-add-question" @click="addEmptyQuestion">
@@ -350,6 +352,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/store/examStore'
 import QuestionEditor from '@/components/QuestionEditor.vue'
+import learningService from '@/services/learningService'
 
 const router = useRouter()
 const route = useRoute()
@@ -380,6 +383,18 @@ function togglePublish() {
 
 
 const localQuestions = ref([])
+const lessonOptions = ref([])
+const lessonOptionsError = ref('')
+
+async function loadLessonOptions() {
+  try {
+    const res = await learningService.listLessonOptions(courseId)
+    lessonOptions.value = res.data ?? []
+    lessonOptionsError.value = ''
+  } catch (err) {
+    lessonOptionsError.value = 'Could not load published lessons for this course.'
+  }
+}
 
 const totalPoints = computed(() => {
   return localQuestions.value.reduce((sum, q) => sum + (q.points ?? 0), 0)
@@ -577,6 +592,7 @@ async function deleteExam() {
 }
 
 onMounted(() => {
+  loadLessonOptions()
 
   if (templateId) {
     loadTemplate()

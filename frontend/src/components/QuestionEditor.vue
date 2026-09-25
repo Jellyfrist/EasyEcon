@@ -99,8 +99,13 @@
         <input v-model="q.topic_tag" class="input-field" placeholder="e.g. Supply & Demand" />
       </div>
       <div class="form-group">
-        <label>Linked Learning Page ID</label>
-        <input type="number" v-model.number="q.linked_learning_page_id" class="input-field" placeholder="Optional" />
+        <label>Review Lesson</label>
+        <select :value="q.linked_learning_page_id ?? ''" class="input-field" @change="selectLesson">
+          <option value="">No linked lesson</option>
+          <option v-for="page in lessonOptions" :key="page.page_id" :value="page.page_id">
+            {{ page.module_title }} → {{ page.title }}
+          </option>
+        </select>
       </div>
     </div>
 
@@ -264,7 +269,8 @@ export default {
   props: {
     // ExamQuestion object — mutated reactively in-place (parent holds the array)
     q:     { type: Object, required: true },
-    index: { type: Number, required: true }
+    index: { type: Number, required: true },
+    lessonOptions: { type: Array, default: () => [] }
   },
 
   emits: ['remove'],
@@ -305,6 +311,14 @@ export default {
   },
 
   methods: {
+    selectLesson(event) {
+      const id = Number(event.target.value) || null
+      this.q.linked_learning_page_id = id
+      const lesson = this.lessonOptions.find(page => page.page_id === id)
+      if (lesson && (!this.q.topic_tag || this.q.topic_tag === 'untagged')) {
+        this.q.topic_tag = lesson.topic_tag || lesson.title
+      }
+    },
 
     /*  Rich-text  */
     execCmd(cmd) {

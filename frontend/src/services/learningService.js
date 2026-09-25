@@ -31,6 +31,10 @@ const learningService = {
         return api.get('/learning/modules', { params: { course_id: courseId } })
     },
 
+    listLessonOptions(courseId) {
+        return api.get(`/learning/courses/${courseId}/lesson-options`)
+    },
+
     listPages(moduleId) {
         return api.get(`/learning/modules/${moduleId}/pages`)
     },
