@@ -76,6 +76,14 @@ class ContentBlock(BaseModel):
             question["explanation"] = explanation
         return self
 
+
+class ContentBlockRead(BaseModel):
+    """Stored blocks may predate write validation or have quiz answers hidden."""
+
+    id: str
+    type: str
+    data: Dict[str, Any] = Field(default_factory=dict)
+
 '''
 module
 '''
@@ -137,7 +145,7 @@ class LearningPageResponse(BaseModel):
     module_id: int
     title: str
     template_type: str
-    content_blocks: List[ContentBlock]
+    content_blocks: List[ContentBlockRead]
     order_index: int
     preview: Optional[str]
     topic_tag: Optional[str]
@@ -158,7 +166,7 @@ class LearningPageStudentResponse(BaseModel):
     module_id: int
     title: str
     template_type: str
-    content_blocks: List[ContentBlock]   # correct_answers stripped by router
+    content_blocks: List[ContentBlockRead]   # answers stripped by router
     order_index: int
     preview: Optional[str]
 
