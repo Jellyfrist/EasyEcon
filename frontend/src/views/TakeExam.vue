@@ -70,6 +70,8 @@
               </div>
     
               <p class="q-text">{{ currentQ.text }}</p>
+              <img v-for="(url, imageIndex) in currentQ.image_urls || []" :key="imageIndex"
+                :src="url" alt="Question image" class="q-image" />
     
               <div v-if="currentQ.type === 'multiple_choice'" class="options-list">
                 <label
@@ -1059,4 +1061,5 @@ function goExamSet() {
         flex-direction: column;
     }
 }
+.q-image { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0 20px; }
 </style>

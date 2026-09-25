@@ -57,6 +57,14 @@
         @input="onEditorInput"
         @blur="syncText"
       ></div>
+      <div v-if="q.image_urls?.length" class="question-images">
+        <div v-for="(url, imageIndex) in q.image_urls" :key="url + imageIndex" class="question-image">
+          <img :src="url" alt="Question image" />
+          <button type="button" class="btn btn-outline" @click="q.image_urls.splice(imageIndex, 1)">Remove image</button>
+        </div>
+      </div>
+      <p v-if="q._pendingUploads" class="text-muted">Uploading image…</p>
+      <p v-if="imageError" class="text-muted" role="alert">{{ imageError }}</p>
       
       <!-- Math modal -->
       <div v-if="showMathModal" @click.self="showMathModal = false">
@@ -248,6 +256,7 @@
 </template>
 
 <script>
+import examService from '@/services/examService'
 // import katex from 'katex'
 // import 'katex/dist/katex.min.css'
 
@@ -281,6 +290,7 @@ export default {
       showMathModal: false,
       mathInput:     '',
       savedRange:    null,
+      imageError:    '',
       // Derive from initial value — true when correct_answer is already a list
       isMultiSelect: Array.isArray(this.q.correct_answer)
     }
@@ -304,7 +314,7 @@ export default {
   },
 
   mounted() {
-    // Populate contenteditable from q.text (plain text; _html is UI-only)
+    // Populate the text editor; uploaded images are shown separately.
     if (this.$refs.editor) {
       this.$refs.editor.innerHTML = this.q._html || this.q.text || ''
     }
@@ -388,20 +398,26 @@ export default {
     // }
 
     /*  Image  */
-    insertImage(evt) {
+    async insertImage(evt) {
       const file = evt.target.files[0]
       if (!file) return
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.$refs.editor.focus()
-        document.execCommand(
-          'insertHTML', false,
-          `<img src="${e.target.result}" style="max-width:100%;border-radius:6px;margin:4px 0" />`
-        )
-        this.syncText()
-      }
-      reader.readAsDataURL(file)
       evt.target.value = ''
+      this.imageError = ''
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 3 * 1024 * 1024) {
+        this.imageError = 'Choose a JPEG, PNG, WebP, or GIF image smaller than 3 MB.'
+        return
+      }
+      this.q._pendingUploads = (this.q._pendingUploads || 0) + 1
+      try {
+        const response = await examService.uploadQuestionImage(file)
+        if (!response.data?.url) throw new Error('Image upload returned no URL')
+        if (!this.q.image_urls) this.q.image_urls = []
+        this.q.image_urls.push(response.data.url)
+      } catch (error) {
+        this.imageError = error.response?.data?.detail || error.message || 'Image upload failed.'
+      } finally {
+        this.q._pendingUploads--
+      }
     },
 
     /*  Multiple Choice helpers (options: List[str])  */
@@ -781,4 +797,7 @@ export default {
   background: #fee2e2;
   color: #ef4444;
 }
+.question-images { display: grid; gap: 12px; margin-top: 12px; }
+.question-image { display: flex; align-items: flex-start; gap: 12px; }
+.question-image img { max-width: min(100%, 320px); max-height: 240px; object-fit: contain; }
 </style>

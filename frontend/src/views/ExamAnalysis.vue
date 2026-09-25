@@ -91,6 +91,8 @@
                         {{ typeLabel(q.type) }}
                       </span>
                       <p class="weakness-q-text">{{ q.text || 'No question text available.' }}</p>
+                      <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex"
+                        :src="url" alt="Question image" class="review-question-image" />
                     </div>
 
                     <div class="answer-row">
@@ -834,4 +836,5 @@ function goExamHistory() {
         flex-direction: column;
     }
 }
+.review-question-image { display: block; max-width: 100%; max-height: 360px; object-fit: contain; margin: 8px 0; }
 </style>

@@ -306,6 +306,8 @@
             </p>
 
             <p class="font-semibold mb-2" v-html="q.text || '<em>(No question text yet)</em>'"></p>
+            <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex" :src="url"
+              alt="Question image" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:12px 0" />
 
             <template v-if="q.type === 'multiple_choice'">
               <ul class="preview-options">
@@ -410,6 +412,7 @@ function newQuestion() {
     id: '',
     type: 'multiple_choice',
     text: '',
+    image_urls: [],
     _html: '',                        // UI-only rich HTML for RTE
     options: ['', '', '', ''],        // List[str]
     correct_answer: '',               // str (matches first option after user types)
@@ -457,6 +460,7 @@ function buildPayload() {
       id: `q${i+1}`,
       type: q.type,
       text: q.text,
+      image_urls: q.image_urls || [],
       options: q.options ?? null,
       correct_answer: q.correct_answer,
       explanation: (q.explanation || '').trim(),
@@ -495,6 +499,9 @@ async function save() {
   error.value = null
 
   try {
+    if (localQuestions.value.some(q => q._pendingUploads)) {
+      throw new Error('Wait for question images to finish uploading before saving.')
+    }
 
     const missing = questionsMissingExplanation()
     if (missing.length) {
@@ -558,6 +565,7 @@ async function loadTemplate() {
     id: q.id,
     type: q.type || 'multiple_choice',
     text: q.text || '',
+    image_urls: q.image_urls || [],
     _html: q.text || '',                // plain text as initial HTML
     options: q.options ?? [],
     correct_answer: q.correct_answer ?? '',
