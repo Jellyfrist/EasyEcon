@@ -81,6 +81,19 @@ def _own_template_or_403(template: ExamTemplate, teacher: User) -> None:
         raise HTTPException(status_code=403, detail="Not your exam template")
 
 
+def _validate_question_lessons(db: Session, course_id: int, questions: List[Any]) -> None:
+    page_ids = {q.linked_learning_page_id for q in questions if q.linked_learning_page_id}
+    if not page_ids:
+        return
+    valid = {
+        page.id for page in db.query(LearningPage).join(Module)
+        .filter(LearningPage.id.in_(page_ids), Module.course_id == course_id,
+                LearningPage.is_published.is_(True)).all()
+    }
+    if valid != page_ids:
+        raise HTTPException(status_code=422, detail="Linked lessons must be published pages in this exam's course")
+
+
 def _strip_answers_from_questions(questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     '''remove correct answer, explanation, and linked learning page id from question'''
     stripped = []
@@ -104,6 +117,7 @@ def _study_url(page: LearningPage, module: Optional[Module]) -> str:
 def _lessons_for_topic(
     db: Session,
     attempt_id: int,
+    course_id: Optional[int],
     topic_tag: str,
     page_ids: List[int],
 ) -> List[TopicLessonLink]:
@@ -118,8 +132,10 @@ def _lessons_for_topic(
     pages: List[LearningPage] = []
     seen: set = set()
 
-    if page_ids:
-        linked = db.query(LearningPage).filter(LearningPage.id.in_(page_ids)).all()
+    if page_ids and course_id is not None:
+        linked = (db.query(LearningPage).join(Module)
+                  .filter(LearningPage.id.in_(page_ids), Module.course_id == course_id,
+                          LearningPage.is_published.is_(True)).all())
         by_id = {p.id: p for p in linked}
         for pid in page_ids:                     # keep the teacher's order
             page = by_id.get(pid)
@@ -127,12 +143,14 @@ def _lessons_for_topic(
                 seen.add(page.id)
                 pages.append(page)
 
-    if topic_tag and topic_tag != "untagged":
+    if course_id is not None and topic_tag and topic_tag != "untagged":
         tagged = (
             db.query(LearningPage)
+            .join(Module)
             .filter(
                 LearningPage.topic_tag == topic_tag,
                 LearningPage.is_published == True,
+                Module.course_id == course_id,
             )
             .order_by(LearningPage.order_index)
             .all()
@@ -216,7 +234,8 @@ def _wrong_topic_reviews(db: Session, attempt: ExamAttempt) -> List[WrongTopicRe
     reviews: List[WrongTopicReview] = []
     for tag, bucket in grouped.items():
         topic_stat = stats.get(tag, {})
-        lessons = _lessons_for_topic(db, attempt.id, tag, bucket["page_ids"])
+        course_id = attempt.session.template.course_id if attempt.session and attempt.session.template else None
+        lessons = _lessons_for_topic(db, attempt.id, course_id, tag, bucket["page_ids"])
         reviews.append(
             WrongTopicReview(
                 topic_tag = tag,
@@ -329,6 +348,7 @@ def create_template(
     - questions are stored as JSON *no in DB
     - topic tag is required on each question for weakness analysis
     '''
+    _validate_question_lessons(db, body.course_id, body.question_data)
     data = body.model_dump()
     data["question_data"] = [q.model_dump() for q in body.question_data]
     template = ExamTemplate(**data, created_by_user_id=teacher.id)
@@ -378,7 +398,16 @@ def update_template(
     _own_template_or_403(template, teacher)
     data = body.model_dump(exclude_unset = True)
     if "question_data" in data and data["question_data"] is not None:
+        _validate_question_lessons(db, data.get("course_id", template.course_id), body.question_data)
         data["question_data"] = [q.model_dump() for q in body.question_data]
+    elif "course_id" in data:
+        page_ids = {q.get("linked_learning_page_id") for q in template.question_data or [] if q.get("linked_learning_page_id")}
+        if page_ids:
+            valid = {p.id for p in db.query(LearningPage).join(Module).filter(
+                LearningPage.id.in_(page_ids), Module.course_id == data["course_id"],
+                LearningPage.is_published.is_(True)).all()}
+            if valid != page_ids:
+                raise HTTPException(status_code=422, detail="Existing linked lessons do not belong to the new course")
     for field, value in data.items():
         setattr(template, field, value)
     db.commit()
@@ -629,7 +658,8 @@ def go_to_topic_lesson(
             detail = f"Topic '{topic_tag}' was not answered wrong in this attempt",
         )
 
-    lessons = _lessons_for_topic(db, attempt.id, topic_tag, page_ids)
+    course_id = attempt.session.template.course_id if attempt.session and attempt.session.template else None
+    lessons = _lessons_for_topic(db, attempt.id, course_id, topic_tag, page_ids)
     if not lessons:
         raise HTTPException(
             status_code = 404,

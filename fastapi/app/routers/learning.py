@@ -145,6 +145,7 @@ def create_page(
         "template_type": body.template_type,
         "order_index": body.order_index,
         "preview": body.preview,
+        "topic_tag": body.topic_tag,
         "is_published": body.is_published,
         "content_blocks": blocks,
         "created_by_user_id": teacher.id,    
@@ -182,14 +183,33 @@ def update_page(
             b.model_dump() for b in body.content_blocks
         ]
         
-    data.pop("topic_tag", None)
-
     for field, value in data.items():
         setattr(page, field, value)
     page.last_edited_by_user_id = teacher.id
     db.commit()
     db.refresh(page)
     return page
+
+
+@router.get("/courses/{course_id}/lesson-options")
+def lesson_options(
+    course_id: int,
+    db: Session = Depends(get_db),
+    teacher: User = Depends(require_teacher),
+):
+    """Published lessons available for linking to an exam in this course."""
+    rows = (
+        db.query(LearningPage, Module)
+        .join(Module, LearningPage.module_id == Module.id)
+        .filter(Module.course_id == course_id, LearningPage.is_published.is_(True))
+        .order_by(Module.order_index, LearningPage.order_index)
+        .all()
+    )
+    return [
+        {"page_id": page.id, "title": page.title, "module_id": module.id,
+         "module_title": module.title, "topic_tag": page.topic_tag}
+        for page, module in rows
+    ]
 
 # delete page
 @router.delete("/pages/{page_id}", status_code=204)
