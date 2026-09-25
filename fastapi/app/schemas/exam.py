@@ -30,6 +30,7 @@ class ExamQuestion(BaseModel):
         description = "multiple_choice | fill_in_the_blank | true_false | short_answer",
     )
     text: str
+    image_urls: List[str] = Field(default_factory=list)
     options: Optional[List[str]] = None       # none for fill in the blank / short answer
     correct_answer: Any                       # str or list[str] for multi select
     explanation: str = Field(
@@ -224,6 +225,7 @@ class WrongQuestionDetail(BaseModel):
     question_id: str
     type: Optional[str] = None
     text: Optional[str] = None
+    image_urls: List[str] = Field(default_factory=list)
     topic_tag: Optional[str] = None
     points: int = 1
     answered: bool = True              # false = left blank

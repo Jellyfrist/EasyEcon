@@ -277,6 +277,7 @@ class ExamAttempt(Base):
                 "question_id": qid,
                 "type": q.get("type"),
                 "text": q.get("text"),
+                "image_urls": q.get("image_urls") or [],
                 "topic_tag": q.get("topic_tag") or "untagged",
                 "linked_learning_page_id": q.get("linked_learning_page_id"),
                 "points": q.get("points", 1),
