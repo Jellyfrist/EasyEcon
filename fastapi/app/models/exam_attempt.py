@@ -121,22 +121,25 @@ class ExamAttempt(Base):
 
     # grading logic
     @staticmethod
-    def is_answer_correct(student_answer, correct_answer) -> bool:
+    def is_answer_correct(student_answer, correct_answer, question_type: str | None = None) -> bool:
         '''
         case/whitespace-insensitive comparison used by grading and by
-        wrong_questions(). a list correct_answer is a multi-select: order
-        does not matter, the set of choices must match exactly.
+        wrong_questions(). Short-answer lists are accepted alternatives;
+        multiple-choice lists are multi-select answers and must match exactly.
         '''
         if student_answer is None:
             return False
         if isinstance(correct_answer, list):
+            if question_type in ("short_answer", "fill_in_the_blank"):
+                answer = str(student_answer).strip().casefold()
+                return any(answer == str(choice).strip().casefold() for choice in correct_answer)
             if not isinstance(student_answer, list):
                 return False
             return (
                 sorted(str(a).strip().lower() for a in student_answer)
                 == sorted(str(a).strip().lower() for a in correct_answer)
             )
-        return str(student_answer).strip().lower() == str(correct_answer).strip().lower()
+        return str(student_answer).strip().casefold() == str(correct_answer).strip().casefold()
 
     def grade(self, passing_score_pct: int = 60) -> None:
         '''
@@ -171,7 +174,7 @@ class ExamAttempt(Base):
             if student_ans is None:
                 continue
 
-            if self.is_answer_correct(student_ans, correct):
+            if self.is_answer_correct(student_ans, correct, q.get("type")):
                 raw_score += points
                 topic_buckets[tag]["correct"] += 1
 
@@ -270,7 +273,7 @@ class ExamAttempt(Base):
         for q in questions:
             qid = q.get("id")
             student_ans = answers.get(qid)
-            if self.is_answer_correct(student_ans, q.get("correct_answer")):
+            if self.is_answer_correct(student_ans, q.get("correct_answer"), q.get("type")):
                 continue
 
             entry = {

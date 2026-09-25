@@ -257,6 +257,37 @@ def _wrong_topic_reviews(db: Session, attempt: ExamAttempt) -> List[WrongTopicRe
 
 # percentile helper
 
+def _repair_short_answer_scores(db: Session, attempts: List[ExamAttempt]) -> None:
+    """Correct scores saved before short-answer alternatives were supported."""
+    changed_sessions = set()
+    for attempt in attempts:
+        if not attempt.submitted_at or not attempt.session:
+            continue
+        questions = attempt.session.question_snapshot or []
+        has_matched_alternative = any(
+            q.get("type") in ("short_answer", "fill_in_the_blank")
+            and isinstance(q.get("correct_answer"), list)
+            and not isinstance((attempt.answers or {}).get(q.get("id")), list)
+            and ExamAttempt.is_answer_correct(
+                (attempt.answers or {}).get(q.get("id")),
+                q.get("correct_answer"), q.get("type"),
+            )
+            for q in questions
+        )
+        if not has_matched_alternative:
+            continue
+        old_score = attempt.score
+        passing_pct = attempt.session.template.passing_score_pct if attempt.session.template else 60
+        attempt.grade(passing_score_pct=passing_pct)
+        if attempt.score != old_score:
+            changed_sessions.add(attempt.session_id)
+
+    if changed_sessions:
+        db.commit()
+        for session_id in changed_sessions:
+            ExamAttempt.recalculate_percentiles(db, session_id=session_id)
+        db.commit()
+
 def _attach_percentiles(
     db: Session,
     attempts: List[ExamAttempt],
@@ -282,6 +313,8 @@ def _attach_percentiles(
             a.exam_percentile = None
             a.overall_percentile = None
         return attempts
+
+    _repair_short_answer_scores(db, graded)
 
     overall_by_student = ExamAttempt.collect_scores_by_student(db, per_user = per_user)
     session_by_student: Dict[int, Dict[int, float]] = {}
@@ -624,6 +657,7 @@ def attempt_wrong_topics(
     if attempt.submitted_at is None:
         raise HTTPException(status_code = 400, detail = "This attempt is not submitted yet")
 
+    _repair_short_answer_scores(db, [attempt])
     reviews = _wrong_topic_reviews(db, attempt)
     return [r for r in reviews if r.is_weak] if weak_only else reviews
 
