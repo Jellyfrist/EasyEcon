@@ -92,7 +92,6 @@ class Settings(BaseSettings):
     mail_from: str = ""
     mail_port: int = 587
     mail_server: str = "smtp.gmail.com"
-    
     frontend_login_success_uri: str = "http://localhost:8080/login-success"  # Default
 
     # origin of the Vue app (env: FRONTEND_URL), used to build redirect links

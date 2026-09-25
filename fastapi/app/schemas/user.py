@@ -7,7 +7,7 @@ class StudentProfileResponse(BaseModel):
     id: int
     username: str
     password: Optional[str] = Field(default=None, alias="hashed_password")  # shown as "********", not editable
-    email: str        # shown but not editable
+    email: str  # shown but not editable
     role: str
 
     model_config = {"from_attributes": True, "populate_by_name": True}
