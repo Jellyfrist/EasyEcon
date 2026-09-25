@@ -672,6 +672,7 @@ function goExamSet() {
     color: #111827;
     line-height: 1.6;
     margin-bottom: 2.5rem;
+    white-space: pre-wrap;
 }
 
 /* Options */

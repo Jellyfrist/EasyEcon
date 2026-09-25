@@ -305,7 +305,7 @@
               <span class="badge badge-yellow">{{ q.points || 1 }} pt</span>
             </p>
 
-            <p class="font-semibold mb-2" v-html="q.text || '<em>(No question text yet)</em>'"></p>
+            <p class="font-semibold mb-2 preview-question-text">{{ q.text || '(No question text yet)' }}</p>
             <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex" :src="url"
               alt="Question image" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:12px 0" />
 
@@ -1318,4 +1318,5 @@ onMounted(() => {
   .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .header-actions { width: 100%; justify-content: flex-start; }
 }
+.preview-question-text { white-space: pre-wrap; }
 </style>

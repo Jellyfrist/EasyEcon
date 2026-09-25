@@ -617,6 +617,7 @@ function goExamHistory() {
     font-size: 0.84rem;
     color: var(--text-main);
     line-height: 1.55;
+    white-space: pre-wrap;
 }
 
 .answer-row {
@@ -660,7 +661,9 @@ function goExamHistory() {
     font-size: 0.8125rem;
     color: var(--text-main);
     line-height: 1.6;
+    white-space: pre-wrap;
 }
+
 
 /* ── Review Link ── */
 

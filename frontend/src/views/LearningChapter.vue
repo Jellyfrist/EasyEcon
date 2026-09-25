@@ -673,6 +673,7 @@ const handleNext = async () => {
     color: #1f2937;
     margin-bottom: 1.25rem;
     line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .options-list {
@@ -760,8 +761,10 @@ input[type="radio"] {
     font-size: 0.95rem;
     color: #065f46;
     line-height: 1.6;
+    white-space: pre-wrap;
     animation: slideDown 0.25s ease-out;
 }
+
 
 @keyframes slideDown {
     from {
