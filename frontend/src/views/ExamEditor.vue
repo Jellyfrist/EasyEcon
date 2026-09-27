@@ -387,7 +387,9 @@ function togglePublish() {
 
 const localQuestions = ref([])
 function previewQuestionHtml(q) {
-  return q.text ? questionHtml({ ...q, text_html: q._html || q.text_html }) : '(No question text yet)'
+  return q.text || q._html || q.text_html
+    ? questionHtml({ ...q, text_html: q._html || q.text_html })
+    : '(No question text yet)'
 }
 const lessonOptions = ref([])
 const lessonOptionsError = ref('')
@@ -1326,4 +1328,5 @@ onMounted(() => {
   .header-actions { width: 100%; justify-content: flex-start; }
 }
 .preview-question-text { white-space: pre-wrap; font-weight: 400; }
+.preview-question-text :deep(img) { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0; }
 </style>

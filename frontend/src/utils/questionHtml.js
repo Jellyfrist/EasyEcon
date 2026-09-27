@@ -1,6 +1,18 @@
 // Keep only the formatting supported by the question editor. Question HTML can
 // come from pasted content or the API, so never pass it straight to v-html.
-const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'BR', 'P', 'DIV', 'SPAN'])
+const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'BR', 'P', 'DIV', 'SPAN', 'IMG'])
+
+function safeImageSource(src) {
+  if (!src.trim()) return null
+  if (/^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(src)) return src
+  try {
+    const url = new URL(src, window.location.origin)
+    if (url.protocol === 'https:' || url.protocol === 'http:') return src
+  } catch {
+    // Invalid URLs are dropped.
+  }
+  return null
+}
 
 export function sanitizeQuestionHtml(html) {
   if (!html) return ''
@@ -15,6 +27,15 @@ export function sanitizeQuestionHtml(html) {
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         if (!allowedTags.has(node.tagName)) {
           copyChildren(node, to)
+          continue
+        }
+        if (node.tagName === 'IMG') {
+          const src = safeImageSource(node.getAttribute('src') || '')
+          if (!src) continue
+          const image = document.createElement('img')
+          image.src = src
+          image.alt = node.getAttribute('alt') || 'Question image'
+          to.append(image)
           continue
         }
         const element = document.createElement(node.tagName.toLowerCase())

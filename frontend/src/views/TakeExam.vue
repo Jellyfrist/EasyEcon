@@ -675,6 +675,7 @@ function goExamSet() {
     margin-bottom: 2.5rem;
     white-space: pre-wrap;
 }
+.q-text :deep(img) { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0 20px; }
 
 /* Options */
 
