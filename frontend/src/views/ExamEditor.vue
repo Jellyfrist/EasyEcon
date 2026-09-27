@@ -305,7 +305,7 @@
               <span class="badge badge-yellow">{{ q.points || 1 }} pt</span>
             </p>
 
-            <p class="font-semibold mb-2 preview-question-text">{{ q.text || '(No question text yet)' }}</p>
+            <div class="mb-2 preview-question-text" v-html="previewQuestionHtml(q)"></div>
             <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex" :src="url"
               alt="Question image" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:12px 0" />
 
@@ -354,6 +354,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/store/examStore'
 import QuestionEditor from '@/components/QuestionEditor.vue'
+import { questionHtml, sanitizeQuestionHtml } from '@/utils/questionHtml'
 import learningService from '@/services/learningService'
 
 const router = useRouter()
@@ -385,6 +386,9 @@ function togglePublish() {
 
 
 const localQuestions = ref([])
+function previewQuestionHtml(q) {
+  return q.text ? questionHtml({ ...q, text_html: q._html || q.text_html }) : '(No question text yet)'
+}
 const lessonOptions = ref([])
 const lessonOptionsError = ref('')
 
@@ -412,8 +416,9 @@ function newQuestion() {
     id: '',
     type: 'multiple_choice',
     text: '',
+    text_html: '',
     image_urls: [],
-    _html: '',                        // UI-only rich HTML for RTE
+    _html: '',                        // editor copy of persisted text_html
     options: ['', '', '', ''],        // List[str]
     correct_answer: '',               // str (matches first option after user types)
     explanation: '',
@@ -460,6 +465,7 @@ function buildPayload() {
       id: `q${i+1}`,
       type: q.type,
       text: q.text,
+      text_html: sanitizeQuestionHtml(q._html || q.text_html || ''),
       image_urls: q.image_urls || [],
       options: q.options ?? null,
       correct_answer: q.correct_answer,
@@ -565,8 +571,9 @@ async function loadTemplate() {
     id: q.id,
     type: q.type || 'multiple_choice',
     text: q.text || '',
+    text_html: q.text_html || '',
     image_urls: q.image_urls || [],
-    _html: q.text || '',                // plain text as initial HTML
+    _html: q.text_html || q.text || '',
     options: q.options ?? [],
     correct_answer: q.correct_answer ?? '',
     explanation: q.explanation || '',
@@ -1318,5 +1325,5 @@ onMounted(() => {
   .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .header-actions { width: 100%; justify-content: flex-start; }
 }
-.preview-question-text { white-space: pre-wrap; }
+.preview-question-text { white-space: pre-wrap; font-weight: 400; }
 </style>

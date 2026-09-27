@@ -30,6 +30,7 @@ class ExamQuestion(BaseModel):
         description = "multiple_choice | fill_in_the_blank | true_false | short_answer",
     )
     text: str
+    text_html: Optional[str] = None  # rich formatting of the question text
     image_urls: List[str] = Field(default_factory=list)
     options: Optional[List[str]] = None       # none for fill in the blank / short answer
     correct_answer: Any                       # str or list[str] for multi select

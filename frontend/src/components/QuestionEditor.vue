@@ -257,6 +257,7 @@
 
 <script>
 import examService from '@/services/examService'
+import { questionHtml } from '@/utils/questionHtml'
 // import katex from 'katex'
 // import 'katex/dist/katex.min.css'
 
@@ -316,7 +317,10 @@ export default {
   mounted() {
     // Populate the text editor; uploaded images are shown separately.
     if (this.$refs.editor) {
-      this.$refs.editor.innerHTML = this.q._html || this.q.text || ''
+      this.$refs.editor.innerHTML = questionHtml({
+        text: this.q.text,
+        text_html: this.q._html || this.q.text_html
+      })
     }
   },
 
@@ -334,11 +338,11 @@ export default {
     execCmd(cmd) {
       this.$refs.editor.focus()
       document.execCommand(cmd, false, null)
+      this.syncText()
     },
 
     onEditorInput() {
-      // q.text  → plain text → stored in DB / schema
-      // q._html → rich HTML  → UI display only (not in schema)
+      // Keep plain text for search and grading reports, and HTML for display.
       this.q.text  = this.$refs.editor.innerText
       this.q._html = this.$refs.editor.innerHTML
     },

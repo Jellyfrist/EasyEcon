@@ -69,7 +69,7 @@
                 </span>
               </div>
     
-              <p class="q-text">{{ currentQ.text }}</p>
+              <div class="q-text" v-html="questionHtml(currentQ)"></div>
               <img v-for="(url, imageIndex) in currentQ.image_urls || []" :key="imageIndex"
                 :src="url" alt="Question image" class="q-image" />
     
@@ -178,6 +178,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
+import { questionHtml } from '@/utils/questionHtml'
 
 const route = useRoute()
 const router = useRouter()
@@ -668,7 +669,7 @@ function goExamSet() {
 
 .q-text {
     font-size: 1.4rem;
-    font-weight: 800;
+    font-weight: 400;
     color: #111827;
     line-height: 1.6;
     margin-bottom: 2.5rem;
