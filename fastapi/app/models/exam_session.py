@@ -3,7 +3,8 @@ exam session = a launched copy of an exam templete sent to students
 
 analogous to clicking "Send" in Google Forms
 
-one template can be launched multiple times e.g. different classes, makeup exams, retakes
+one template can be launched multiple times; each new launch replaces the
+previous student-facing session while retaining old attempts for history
 
 the session stores a snapshot of question_data at launch time so that
 teachers can later edit the template without affecting in-progress sessions

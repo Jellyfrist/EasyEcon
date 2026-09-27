@@ -76,6 +76,17 @@ def _get_session_or_404(session_id: int, db: Session) -> ExamSession:
         raise HTTPException(status_code = 404, detail = "Exam session not found")
     return s
 
+
+def _is_latest_session(session: ExamSession, db: Session) -> bool:
+    latest_id = (
+        db.query(ExamSession.id)
+        .filter(ExamSession.template_id == session.template_id)
+        .order_by(ExamSession.id.desc())
+        .limit(1)
+        .scalar()
+    )
+    return session.id == latest_id
+
 def _own_template_or_403(template: ExamTemplate, teacher: User) -> None:
     if template.created_by_user_id != teacher.id and teacher.role != "admin":
         raise HTTPException(status_code=403, detail="Not your exam template")
@@ -475,6 +486,12 @@ def launch_session(
     - question snapshot is frozen at this moment: safe to edit template later
     '''
     template = _get_template_or_404(body.template_id, db)
+    # A new launch replaces the previous student-facing copy of this template.
+    # Keep old sessions and attempts for result/history pages.
+    db.query(ExamSession).filter(
+        ExamSession.template_id == body.template_id,
+        ExamSession.is_active.is_(True),
+    ).update({ExamSession.is_active: False}, synchronize_session=False)
     session = ExamSession(
         **body.model_dump(),
         # frozen copy
@@ -524,11 +541,15 @@ def list_open_sessions(
         .join(ExamTemplate)
         .filter(
             ExamTemplate.course_id == course_id,
-            ExamSession.is_active == True,
         )
+        .order_by(ExamSession.id.desc())
         .all()
     )
-    return [s for s in sessions if s.is_open]
+    # Also hide superseded sessions created before replacement was enforced.
+    latest_by_template = {}
+    for session in sessions:
+        latest_by_template.setdefault(session.template_id, session)
+    return [s for s in latest_by_template.values() if s.is_open]
 
 # get session with questions (answers stripped)
 @router.get("/sessions/{session_id}/open", response_model = ExamSessionStudentResponse)
@@ -543,7 +564,7 @@ def open_session_for_student(
     all stripped out, so student only sees the question text and options.
     '''
     session = _get_session_or_404(session_id, db)
-    if not session.is_open:
+    if not session.is_open or not _is_latest_session(session, db):
         raise HTTPException(status_code = 400, detail = "This exam is not currently open")
 
     safe_questions = _strip_answers_from_questions(session.question_snapshot)
@@ -571,7 +592,7 @@ def submit_attempt(
     - returns full result including weakness report and suggested page IDs.
     '''
     session = _get_session_or_404(body.session_id, db)
-    if not session.is_open:
+    if not session.is_open or not _is_latest_session(session, db):
         raise HTTPException(status_code = 400, detail = "This exam is not currently open")
 
     '''
