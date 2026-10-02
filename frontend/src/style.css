@@ -3,6 +3,8 @@
 ========================================================= */
 
 :root {
+    --feature-width: 1120px;
+    --feature-gutter: 24px;
     /* Color Palette */
     --primary-pink: #ed4081;
     --primary-hover: #d13570;

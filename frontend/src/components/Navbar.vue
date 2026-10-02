@@ -181,6 +181,21 @@ const router = useRouter()
 const route = useRoute();
 const authStore = useAuthStore();
 
+const outsideHandlers = new WeakMap();
+const vClickOutside = {
+    mounted(element, binding) {
+        const handler = event => {
+            if (!element.contains(event.target)) binding.value();
+        };
+        outsideHandlers.set(element, handler);
+        document.addEventListener('pointerdown', handler);
+    },
+    unmounted(element) {
+        document.removeEventListener('pointerdown', outsideHandlers.get(element));
+        outsideHandlers.delete(element);
+    },
+};
+
 const activeDropdown = ref(null);
 
 // userInitials
@@ -636,6 +651,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
+    .user-meta { display: none; }
     .logo-icon {
         width: 32px;
         height: 32px;

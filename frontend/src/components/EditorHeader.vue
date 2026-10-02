@@ -1,5 +1,5 @@
 <template>
-  <header ref="header" class="editor-topbar" :style="{ top: navbarOffset + 'px' }">
+  <header ref="header" class="editor-topbar" :class="{ 'editor-topbar-inline': inline }" :style="{ top: navbarOffset + 'px' }">
     <div class="topbar-main">
       <router-link v-if="backTo" :to="backTo" class="editor-back" aria-label="Back">
         <span class="material-symbols-outlined">arrow_back</span>
@@ -25,7 +25,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useNavbarOffset } from '@/composables/useNavbarOffset'
 
-defineProps({ title: String, breadcrumbs: { type: Array, required: true }, backTo: [String, Object] })
+defineProps({ title: String, breadcrumbs: { type: Array, required: true }, backTo: [String, Object], inline: Boolean })
 const emit = defineEmits(['resize'])
 const header = ref(null)
 const navbarOffset = useNavbarOffset()
@@ -41,7 +41,7 @@ onUnmounted(() => observer?.disconnect())
 /* Shared editor navigation; retain its existing visual identity. */
 .editor-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; padding: 0.85rem 2.5rem; background: #ffffff;
+  gap: 1rem; padding: 16px var(--feature-gutter); background: var(--white);
   border-bottom: 1px solid #e8edf3; position: sticky; z-index: 100;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -52,10 +52,11 @@ onUnmounted(() => observer?.disconnect())
 .crumb-link:hover, .crumb-current:hover { color: #ed4081; }
 .crumb-sep { color: #cbd5e1; font-size: 0.7rem; }
 .crumb-current { color: #475569; font-weight: 600; text-decoration: none; }
-.topbar-title { font-size: 1rem; font-weight: 700; color: #0f172a; letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
+.topbar-title { font-size: 1.25rem; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
 .topbar-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .editor-back { display: flex; align-items: center; justify-content: center; color: var(--text-muted); width: 36px; height: 36px; flex-shrink: 0; text-decoration: none; }
 .editor-topbar :is(a, button):focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
+.editor-topbar-inline { position: static; padding: 0; box-shadow: none; border: 0; margin-bottom: 28px; }
 @media (max-width: 900px) {
   .editor-topbar { flex-wrap: wrap; padding: 0.85rem 1.25rem; gap: 0.75rem; }
   .topbar-main { flex: 1 1 100%; }
