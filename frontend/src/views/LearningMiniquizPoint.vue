@@ -1,22 +1,31 @@
 <template>
-    <div class="layout-wrapper">
-    
+    <FeaturePage class="module-result-page" fluid>
+        <template #header>
+            <EditorHeader title="Module Complete"
+                :back-to="{ name: 'ModulesList', params: { courseId } }"
+                :breadcrumbs="[
+                    { label: 'Courses', to: { name: 'Dashboard' } },
+                    { label: 'Modules', to: { name: 'ModulesList', params: { courseId } } },
+                    { label: 'Complete', to: route.fullPath },
+                ]" />
+        </template>
+
         <LearningLessonSidebar v-if="dashboardData"
-            :dashboard="dashboardData" complete
+            :dashboard="dashboardData" complete reader
             @back="router.push(`/courses/${courseId}/modules`)" />
-    
+
         <main class="main-content center-content">
-    
+
             <div v-if="isLoading" class="loading-state">
                 <div class="spinner"></div>
                 <p>Calculating your score...</p>
             </div>
-    
+
             <div v-else class="result-card">
                 <div class="icon-confetti">🎉</div>
                 <h1 class="result-title">Module Complete!</h1>
                 <p class="result-desc">You have successfully studied all lessons and completed the quizzes in this module.</p>
-    
+
                 <!-- <div class="score-circle">
               <div class="circle-chart" :style="{ background: `conic-gradient(#df4a7d ${accuracy}%, #fce4ec 0)` }">
                 <div class="circle-inner">
@@ -25,7 +34,7 @@
                 </div>
               </div>
             </div> -->
-    
+
                 <div class="stats-row">
                     <div class="stat-box">
                         <span class="stat-title"><span class="material-symbols-outlined text-sm">schedule</span> Time Spent</span>
@@ -36,12 +45,12 @@
                 <strong class="stat-value">{{ accuracy }}%</strong>
               </div> -->
                 </div>
-    
+
                 <div class="action-buttons">
                     <!-- <button @click="goToNextModule" class="btn-primary"> -->
                     <template v-if="hasNextModule">
                         <button @click="goToNextModule" class="btn-primary">
-                            Go to Next Module 
+                            Go to Next Module
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                             <polyline points="12 5 19 12 12 19"></polyline>
@@ -51,7 +60,7 @@
 
 <template v-else>
     <button @click="goToLearningModule" class="btn-primary">
-                            Back to Learning Modules 
+                            Back to Learning Modules
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -67,10 +76,12 @@
 
     </main>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue';
+import EditorHeader from '@/components/EditorHeader.vue';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -184,24 +195,12 @@ const reviewLessons = () => {
    Layout Wrapper
    ===================================================== */
 
-.layout-wrapper {
-    height: calc(100vh - 64px);
-    display: flex;
-    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
-    font-family: 'DM Sans', 'Sarabun', sans-serif;
-    padding: 2rem;
-    gap: 2rem;
-    box-sizing: border-box;
-    overflow: hidden;
-    align-items: stretch;
-}
-
 .material-symbols-outlined {
     vertical-align: middle;
 }
 
 /* =====================================================
-   Sidebar 
+   Sidebar
    ===================================================== */
 
 .main-content {
@@ -232,16 +231,11 @@ const reviewLessons = () => {
    ===================================================== */
 
 .result-card {
-    background: #ffffff;
-    padding: 3.5rem 4rem;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    max-width: 800px;
-    width: 100%;
+    width: min(100%, 800px);
     margin: auto;
-    animation: slideUp 0.4s ease-out;
-    border: 1px solid #ffffff;
+    padding: 32px;
+    background: var(--white);
+    text-align: center;
 }
 
 @keyframes slideUp {
@@ -460,12 +454,7 @@ const reviewLessons = () => {
 /* Responsive */
 
 @media (max-width: 768px) {
-    .layout-wrapper {
-        flex-direction: column;
-        overflow: auto;
-        padding: 1rem;
-        gap: 1rem;
-    }
+
     .sidebar {
         width: 100%;
         height: auto;
@@ -478,9 +467,12 @@ const reviewLessons = () => {
         padding: 0;
     }
     .result-card {
-        padding: 2.5rem 1.5rem;
-        border-radius: 20px;
-    }
+    width: min(100%, 800px);
+    margin: auto;
+    padding: 32px;
+    background: var(--white);
+    text-align: center;
+}
     .circle-chart {
         width: 160px;
         height: 160px;
@@ -492,5 +484,15 @@ const reviewLessons = () => {
     .score-text {
         font-size: 2.5rem !important;
     }
+}
+.module-result-page :deep(.feature-body) {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    min-height: calc(100dvh - 180px);
+}
+.module-result-page .main-content { min-width: 0; }
+@media (max-width: 768px) {
+    .module-result-page :deep(.feature-body) { grid-template-columns: minmax(0, 1fr); }
+    .module-result-page .sidebar { width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--card-border); }
 }
 </style>

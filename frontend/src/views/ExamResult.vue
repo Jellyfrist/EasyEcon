@@ -1,18 +1,14 @@
 <template>
-  <div class="page">
+  <FeaturePage class="page">
+    <template #header>
+        <EditorHeader title="Exam Result" :back-to="attempt?.session_id ? { name: 'ExamSession', params: { sessionId: attempt.session_id } } : { name: 'Dashboard' }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: attempt?.session_id ? { name: 'ExamSession', params: { sessionId: attempt.session_id } } : { name: 'Dashboard' } }, { label: 'Result', to: route.fullPath }]">
+            <template #status><p v-if="attempt" class="header-status">Attempt #{{ attempt.id }}</p></template>
+        </EditorHeader>
+    </template>
 
     <div v-if="isLoading" class="loading-state">Loading result...</div>
 
     <template v-else-if="attempt">
-
-      <div class="header">
-        <div class="header-left">
-          <div class="header-text">
-            <p class="breadcrumb">Attempt #{{ attempt.id }}</p>
-            <h1 class="page-title">Exam Result</h1>
-          </div>
-        </div>
-      </div>
 
       <div :class="['score-hero', attempt.passed ? 'pass' : 'fail']">
         <div class="score-circle">
@@ -88,10 +84,12 @@
     <div v-if="historyError" class="error-banner" role="alert">{{ historyError }}</div>
     <div v-if="error" class="error-banner" role="alert">ERROR: {{ error }}</div>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, watch } from 'vue'
 import ExamQuestionReview from '@/components/ExamQuestionReview.vue'
 import ExamAttemptHistory from '@/components/ExamAttemptHistory.vue'
@@ -191,96 +189,8 @@ function formatTime(dt) {
 
 <style scoped>
 /* ── Page ── */
-.page {
-  min-height: 100vh;
-  padding: 2rem 2.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
 
 /* ── Header ── */
-.header {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 8px 24px rgba(237, 64, 129, 0.28);
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: white;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.page-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
 
 /* ── Score Hero ── */
 .score-hero {
@@ -607,7 +517,7 @@ function formatTime(dt) {
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .page { padding: 1.25rem 1rem; }
+
   .score-hero { flex-direction: column; align-items: center; text-align: center; }
   .hero-stats { justify-content: center; }
   .actions-row { flex-direction: column; }

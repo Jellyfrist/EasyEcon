@@ -1,32 +1,21 @@
 <template>
-  <div class="cd-root">
+  <FeaturePage class="cd-root" fluid>
+    <template #navigation><CourseNavigation :course-id="courseId" current="overview" /></template>
+    <template #header>
+        <EditorHeader :title="store.currentCourse?.title || 'Course'" :back-to="{ name: 'Dashboard' }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: route.fullPath }]"></EditorHeader>
+    </template>
+
     <div v-if="store.loading" class="cd-state-box"><div class="cd-spinner"></div><p>Loading course...</p></div>
     <div v-else-if="store.error" class="cd-state-box">
       <p class="cd-error-msg">{{ store.error }}</p>
       <button class="cd-btn-back" @click="goToDashboard">Go Back</button>
     </div>
     <template v-else-if="store.currentCourse">
+
       <div class="course-workspace">
-        <aside class="course-outline">
-          <h2>{{ store.currentCourse.title }}</h2>
-          <nav aria-label="Course navigation">
-            <router-link :to="{ name: 'Courses', params: { courseId } }" class="outline-link current" aria-current="page">
-              <span class="material-symbols-outlined">home</span> Course Overview
-            </router-link>
-            <router-link :to="{ name: 'ModulesList', params: { courseId } }" class="outline-link">
-              <span class="material-symbols-outlined">menu_book</span> Modules <span class="outline-count">{{ store.currentCourse.module_count ?? 0 }}</span>
-            </router-link>
-            <router-link :to="`/exam/${courseId}`" class="outline-link">
-              <span class="material-symbols-outlined">quiz</span> Exams <span class="outline-count">{{ store.currentCourse.exam_template_count ?? 0 }}</span>
-            </router-link>
-          </nav>
-        </aside>
+
         <main class="course-content">
-          <nav class="course-breadcrumb" aria-label="Breadcrumb">
-            <router-link :to="{ name: 'Dashboard' }">Home</router-link><span>/</span>
-            <router-link :to="{ name: 'Courses', params: { courseId } }" aria-current="page">Course Overview</router-link>
-          </nav>
-          <h1>{{ store.currentCourse.title }}</h1>
+
           <p v-if="store.currentCourse.description" class="course-description">{{ store.currentCourse.description }}</p>
           <dl class="course-stats">
             <div><dt>Total Modules</dt><dd>{{ store.currentCourse.module_count ?? 0 }}</dd></div>
@@ -52,10 +41,13 @@
         <router-link :to="{ name: 'ModulesList', params: { courseId } }">Modules <span class="material-symbols-outlined">chevron_right</span></router-link>
       </nav>
     </template>
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import CourseNavigation from '@/components/CourseNavigation.vue'
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, onUnmounted, computed } from 'vue'
 import { useCourseStore } from '@/store/courseStore'
@@ -83,16 +75,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.cd-root { background: var(--white); min-height: 100vh; font-family: 'DM Sans', 'Outfit', 'Segoe UI', sans-serif; }
-.course-workspace { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100vh - 110px); }
-.course-outline { border-right: 1px solid var(--card-border); padding: 1.5rem 0; background: var(--white); }
-.course-outline h2 { font-size: 1.1rem; line-height: 1.5; font-weight: 600; padding: 0 1.25rem 1rem; overflow-wrap: anywhere; }
-.course-outline nav { position: sticky; top: 80px; }
-.outline-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; text-decoration: none; font-size: 0.85rem; color: var(--text-muted); }
-.outline-link .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
-.outline-count { margin-left: auto; }
-.outline-link.current { background: var(--primary-pink); color: var(--white); }
-.outline-link:not(.current):hover { background: var(--gray-light); color: var(--primary-pink); }
+
+.course-workspace { display: grid;  min-height: calc(100vh - 110px); }
+
 .course-content { width: 100%; max-width: 760px; justify-self: center; padding: 2.5rem 2.5rem 4rem; min-width: 0; }
 .course-breadcrumb { display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.75rem; margin-bottom: 1rem; color: var(--text-muted); }
 .course-breadcrumb a { color: var(--primary-pink); text-decoration: none; }
@@ -125,10 +110,7 @@ onUnmounted(() => {
 .cd-btn-back { padding: 0.6rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-pink); color: var(--white); cursor: pointer; }
 @media (max-width: 768px) {
   .course-workspace { display: flex; flex-direction: column; }
-  .course-outline { border-right: 0; border-bottom: 1px solid var(--card-border); padding: 1rem 0 0; }
-  .course-outline h2 { font-size: 1rem; padding-bottom: 0.75rem; }
-  .course-outline nav { position: static; display: flex; flex-wrap: wrap; }
-  .outline-link { flex: 1 1 50%; padding: 0.75rem 1rem; }
+
   .course-content { padding: 1.5rem 1.25rem 2.5rem; }
   .course-content h1 { font-size: 1.4rem; }
   .study-tool { padding: 1.25rem; gap: 0.75rem; }

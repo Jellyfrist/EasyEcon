@@ -1,27 +1,11 @@
 <template>
-    <div class="exam-page">
-    
-        <div v-if="isLoading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Preparing your exam...</p>
-        </div>
-    
-        <template v-else-if="session">
-    
-          <div class="top-bar" :style="{ top: navbarOffset + 'px' }">
-            <div class="top-bar-left">
-              <div class="header-title-row">
-                <button class="back-btn" aria-label="Back to exam session" @click="goExamSet">
-                  <span class="material-symbols-outlined">arrow_back</span>
-                </button>
-                <div class="header-text-group">
-                  <span class="course-badge">COURSE EXAM</span>
-                  <h1 class="exam-title">{{ session.title }}</h1>
-                </div>
-              </div>
+    <FeaturePage class="exam-page">
+    <template #header>
+        <EditorHeader v-if="session" class="top-bar" :title="session?.title || 'Exam'" :back-to="{ name: 'ExamSession', params: { sessionId } }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exam', to: { name: 'ExamSession', params: { sessionId } } }, { label: 'Take Exam', to: route.fullPath }]"><template #status><div class="progress-track-container">
+            <div class="progress-track">
+              <div class="progress-fill" :style="{ width: progressPct + '%' }"></div>
             </div>
-            
-            <div class="top-bar-right">
+          </div></template><div class="top-bar-right">
               <div class="progress-pill">
                 <span class="progress-pill-text">{{ answeredCount }} of {{ session.questions.length }} answered</span>
               </div>
@@ -29,15 +13,16 @@
                 <span class="material-symbols-outlined timer-icon">timer</span>
                 {{ formattedTime }}
               </div>
-            </div>
-          </div>
-    
-          <div class="progress-track-container">
-            <div class="progress-track">
-              <div class="progress-fill" :style="{ width: progressPct + '%' }"></div>
-            </div>
-          </div>
-    
+            </div></EditorHeader>
+    </template>
+
+        <div v-if="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Preparing your exam...</p>
+        </div>
+
+        <template v-else-if="session">
+
           <form class="question-container" @submit.prevent="submit">
             <div class="exam-info" aria-label="Exam information">
               <span>{{ session.questions.length }} questions</span>
@@ -47,7 +32,7 @@
               <p v-if="session.instructions" class="exam-instructions">{{ session.instructions }}</p>
             </div>
             <section v-for="(q, index) in session.questions" :key="q.id" class="question-block">
-    
+
               <p class="q-points">Question {{ index + 1 }} of {{ session.questions.length }}</p>
               <div class="q-header">
                 <span :class="['q-type-badge', q.type]">{{ typeLabel(q.type) }}</span>
@@ -56,11 +41,11 @@
                   {{ q.points ?? 1 }} pt{{ (q.points ?? 1) > 1 ? 's' : '' }}
                 </span>
               </div>
-    
+
               <div class="q-text" v-html="questionHtml(q)"></div>
               <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex"
                 :src="url" alt="Question image" class="q-image" />
-    
+
               <div v-if="q.type === 'multiple_choice'" class="options-list">
                 <label
                   v-for="(opt, oi) in q.options"
@@ -79,7 +64,7 @@
                   <span v-if="answers[q.id] === opt" class="material-symbols-outlined check-icon">check_circle</span>
                 </label>
               </div>
-    
+
               <div v-else-if="q.type === 'true_false'" class="tf-group">
                 <label :class="['tf-btn', { selected: answers[q.id] === 'True' }]">
                   <input type="radio" :name="q.id" value="True" v-model="answers[q.id]"
@@ -92,7 +77,7 @@
                   <span class="tf-label">False</span>
                 </label>
               </div>
-    
+
               <div v-else-if="q.type === 'short_answer' || q.type === 'fill_in_the_blank'" class="fill-wrap">
                 <textarea
                   v-model="answers[q.id]"
@@ -102,9 +87,9 @@
                   placeholder="Type your answer here..."
                 ></textarea>
               </div>
-    
+
             </section>
-    
+
             <div class="submission-summary">
               <p class="modal-body-text" aria-live="polite">You have answered <strong>{{ answeredCount }} out of {{ session.questions.length }}</strong> questions.</p>
               <div v-if="unansweredCount > 0" class="warn-box">
@@ -128,19 +113,16 @@
       {{ error }}
     </div>
 
-
-
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 import { questionHtml } from '@/utils/questionHtml'
-import { useNavbarOffset } from '@/composables/useNavbarOffset'
-
-const navbarOffset = useNavbarOffset()
 
 const route = useRoute()
 const router = useRouter()
@@ -260,14 +242,6 @@ function goExamSet() {
    Base Layout
    ===================================================== */
 
-.exam-page {
-    background: linear-gradient(135deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
-    min-height: 100vh;
-    font-family: 'DM Sans', 'Sarabun', sans-serif;
-    display: flex;
-    flex-direction: column;
-}
-
 .material-symbols-outlined {
     vertical-align: middle;
 }
@@ -281,46 +255,10 @@ function goExamSet() {
    Top Bar
    ===================================================== */
 
-.top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2.5rem 3rem 1.5rem;
-    background: transparent;
-    box-shadow: none;
-    border-bottom: none !important;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-}
-
 .header-title-row {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 1.5px solid #fce4ec;
-    color: #df4a7d;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(223, 74, 125, 0.1);
-    padding: 0;
-}
-
-.back-btn:hover {
-    background: #df4a7d;
-    color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(223, 74, 125, 0.2);
 }
 
 .header-text-group {
@@ -412,13 +350,7 @@ function goExamSet() {
    Progress Track
    ===================================================== */
 
-.progress-track-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 0 2rem;
-    box-sizing: border-box;
-}
+.progress-track-container { width: min(320px, 100%); margin-top: 8px; }
 
 .progress-track {
     height: 6px;
@@ -793,12 +725,7 @@ function goExamSet() {
 /* Responsive */
 
 @media (max-width: 768px) {
-    .top-bar {
-        padding: 1.5rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
-    }
+
     .top-bar-right {
         width: 100%;
         justify-content: space-between;
@@ -816,17 +743,17 @@ function goExamSet() {
 .q-image { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0 20px; }
 
 /* One document surface, with a compact header below the shared navbar. */
-.top-bar { padding: 0.75rem 2rem; background: #ffffff; gap: 1rem; }
+
 .header-title-row { gap: 0.75rem; }
 .top-bar-left, .header-text-group { min-width: 0; }
 .exam-title { font-size: 1.15rem; overflow-wrap: anywhere; }
 .course-badge { font-size: 0.65rem; }
-.back-btn { width: 36px; height: 36px; flex-shrink: 0; }
+
 .top-bar-right { gap: 0.75rem; flex-shrink: 0; }
 .progress-pill { padding: 6px 12px; }
 .progress-pill-text { font-size: 0.8rem; }
 .timer { font-size: 0.9rem; padding: 6px 12px; min-width: 88px; }
-.progress-track-container { padding-top: 1rem; }
+.progress-track-container { width: min(320px, 100%); margin-top: 8px; }
 .question-container {
     flex: none; max-width: 800px; width: calc(100% - 4rem);
     margin: 1.5rem auto 3rem; padding: 0 2.5rem;
@@ -850,7 +777,7 @@ function goExamSet() {
 .exam-instructions { flex-basis: 100%; margin: 0.25rem 0 0; white-space: pre-wrap; color: #111827; }
 .question-container :is(button, input, textarea):focus-visible { outline: 2px solid #df4a7d; outline-offset: 3px; }
 @media (max-width: 768px) {
-    .top-bar { padding: 0.75rem 1rem; gap: 0.5rem; }
+
     .question-container { width: calc(100% - 2rem); padding: 0 1.25rem; }
     .question-block { padding: 1.5rem 0; }
     .exam-title { font-size: 1rem; }

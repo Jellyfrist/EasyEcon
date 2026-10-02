@@ -1,21 +1,12 @@
 <template>
-  <div class="page">
+  <FeaturePage class="page">
+    <template #header>
+        <EditorHeader :title="session?.title || 'Exam'" :back-to="session?.course_id ? { name: 'ExamDashboard', params: { courseId: session.course_id } } : { name: 'Dashboard' }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: session?.course_id ? { name: 'ExamDashboard', params: { courseId: session.course_id } } : { name: 'Dashboard' } }, { label: 'Exam', to: route.fullPath }]"></EditorHeader>
+    </template>
 
     <div v-if="isLoading" class="loading-state">Loading exam info...</div>
 
     <template v-else-if="session">
-
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="goToDashboard">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">Exam Session</p>
-            <h1 class="page-title">{{ session.title }}</h1>
-          </div>
-        </div>
-      </div>
 
       <!-- stat cards -->
       <div class="info-grid">
@@ -81,10 +72,12 @@
 
     <div v-if="error" class="error-banner">ERROR: {{ error }}</div>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
@@ -144,28 +137,28 @@ function questionTypeLabel(type) {
 }
 
 function startExam() {
-  router.push({ 
-    name: 'TakeExam', 
-    params: { sessionId: sessionId } 
+  router.push({
+    name: 'TakeExam',
+    params: { sessionId: sessionId }
   })
 }
 
 function goToDashboard() {
   let courseId = route.query.courseId || localStorage.getItem('currentCourseId');
-  
+
   if (!courseId && session.value) {
     courseId = session.value.course_id || session.value.courseId || session.value.course?.id;
   }
   console.log("Course ID:", courseId);
 
   if (courseId && courseId !== 'undefined' && courseId !== 'null') {
-    router.push({ 
-      name: 'ExamDashboard', 
-      params: { courseId: courseId } 
+    router.push({
+      name: 'ExamDashboard',
+      params: { courseId: courseId }
     });
   } else {
     console.warn("not found courseId");
-    router.push('/student/courses'); 
+    router.push('/student/courses');
   }
 }
 
@@ -173,96 +166,8 @@ function goToDashboard() {
 
 <style scoped>
 /* ── Page wrapper ── */
-.page {
-  min-height: 100vh;
-  padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
 
 /* ── Header ── */
-.header {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  border-radius: var(--radius-lg);
-  padding: 2rem 2.5rem;
-  box-shadow: 0 8px 24px rgba(237, 64, 129, 0.28);
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: white;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.page-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
 
 /* ── Info Grid (top 3 cards) ── */
 .info-grid {
@@ -479,7 +384,7 @@ function goToDashboard() {
 
 /* ── Responsive ── */
 @media (max-width: 700px) {
-  .page        { padding: 1.25rem 1rem; }
+
   .info-grid   { grid-template-columns: 1fr; }
   .qtype-card  { flex-direction: column; align-items: stretch; gap: 0.75rem; }
   .qtype-header {

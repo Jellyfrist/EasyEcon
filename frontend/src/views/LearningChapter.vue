@@ -4,28 +4,32 @@
             <span class="material-symbols-outlined" aria-hidden="true">menu_book</span> Lessons
             <span class="material-symbols-outlined" aria-hidden="true">{{ showOutline ? 'close' : 'expand_more' }}</span>
         </button>
-    
+
         <LearningLessonSidebar v-if="dashboardData" id="lesson-outline" reader :class="{ 'outline-open': showOutline }"
             :dashboard="dashboardData" :page-id="pageId"
             @back="router.push({ name: 'ModulesList', params: { courseId } })"
             @select="goToLesson" />
-    
+
         <main class="main-content" id="main-scroll">
-    
+
             <div v-if="pageData" class="study-container">
-    
+
                     <article class="content-article">
-                        <span class="topic-tag">TOPIC {{ currentIndex + 1 }}</span>
-                        <h1 class="page-title">{{ pageData.title }}</h1>
-    
+                        <EditorHeader inline :title="pageData.title"
+                            :breadcrumbs="[
+                                { label: 'Courses', to: { name: 'Dashboard' } },
+                                { label: 'Modules', to: { name: 'ModulesList', params: { courseId } } },
+                                { label: 'Lesson', to: route.fullPath },
+                            ]" />
+
                         <div v-for="block in pageData.content_blocks" :key="block.id" class="content-block">
-    
+
                             <div v-if="block.type === 'rich_text_section'" class="rich-text">
                                 <div v-html="block.data.html" class="html-content"></div>
                             </div>
-    
+
                             <div v-else-if="block.type === 'mini_quiz' && hasValidQuiz(block.data)" class="quiz-card">
-    
+
                                 <div class="quiz-header">
                                     <div class="quiz-icon-box">
                                         <span class="material-symbols-outlined">quiz</span>
@@ -35,11 +39,11 @@
                                         <p class="quiz-subtitle">CHECK YOUR UNDERSTANDING</p>
                                     </div>
                                 </div>
-    
+
                                 <div class="quiz-body">
                                     <div v-for="(q, qIndex) in block.data.questions" :key="q.id || qIndex" class="question-block">
                                         <p class="question-text"><strong>Q{{ qIndex + 1 }}:</strong> {{ q.text }}</p>
-    
+
                                         <div class="options-list">
                                             <label v-for="(opt, optIndex) in q.options" :key="optIndex" class="option-label" :class="{
                               selected: studentAnswers[q.id] === optIndex && !isQuizSubmitted,
@@ -59,31 +63,31 @@
                             <span v-if="isQuizSubmitted && studentAnswers[q.id] === optIndex && optIndex !== q.correct_index" class="material-symbols-outlined icon-wrong">cancel</span>
                           </label>
                                         </div>
-    
+
                                         <div v-if="isQuizSubmitted && q.explanation" class="explanation-box">
                                             <strong>Explanation:</strong> {{ q.explanation }}
                                         </div>
                                     </div>
-    
+
                                     <div class="quiz-footer">
                                         <p v-if="isQuizSubmitted" class="feedback-text" :class="calculateScore(block.data.questions) === block.data.questions.length ? 'text-green' : 'text-amber'">
                                             {{ calculateScore(block.data.questions) === block.data.questions.length ? 'Perfect score!' : `Score: ${calculateScore(block.data.questions)} / ${block.data.questions.length}` }}
                                         </p>
                                         <p v-else class="feedback-text text-muted">Please select an answer for every question.</p>
-    
+
                                         <button @click="submitQuiz(block.data.questions)" class="submit-btn" :disabled="isQuizSubmitted || Object.keys(studentAnswers).length !== block.data.questions.length">
                           {{ isQuizSubmitted ? 'Submitted' : 'Submit Answer' }}
                         </button>
                                     </div>
-    
+
                                 </div>
                             </div>
-    
+
                         </div>
                     </article>
 
             </div>
-    
+
             <div v-else-if="dashboardData && dashboardData.pages.length === 0" class="loading-state">
                 <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
                 <p>No published lessons in this module yet.</p>
@@ -93,7 +97,7 @@
                 <div class="spinner"></div>
                 <p>Preparing lesson...</p>
             </div>
-    
+
         </main>
         <footer v-if="pageData" class="bottom-nav" aria-label="Lesson navigation">
             <button class="prev-btn" :class="{ invisible: currentIndex === 0 }" @click="goPrevLesson">
@@ -110,6 +114,7 @@
 
 <script setup>
 import { useNavbarOffset } from '@/composables/useNavbarOffset';
+import EditorHeader from '@/components/EditorHeader.vue';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -307,22 +312,7 @@ const handleNext = async () => {
     margin: 0 auto;
     padding: 36px 48px 64px;
 }
-.topic-tag {
-    display: block;
-    color: var(--primary-pink);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    margin-bottom: 12px;
-}
-.page-title {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin: 0 0 28px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-}
+
 .content-block { margin-bottom: 32px; }
 .html-content { overflow-wrap: anywhere; }
 .html-content :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
@@ -381,7 +371,7 @@ const handleNext = async () => {
     background: #ffffff;
     border: 1.5px solid #fce4ec;
     border-radius: 20px;
-    padding: 2.5rem;
+    padding: var(--feature-gutter);
     margin-top: 3rem;
     box-shadow: 0 8px 24px rgba(223, 74, 125, 0.06);
 }
@@ -530,7 +520,6 @@ input[type="radio"] {
     animation: slideDown 0.25s ease-out;
 }
 
-
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -576,7 +565,7 @@ input[type="radio"] {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
+    background: var(--primary-pink);
     color: white;
     border: none;
     padding: 14px 28px;
@@ -703,7 +692,7 @@ input[type="radio"] {
     .main-content { grid-column: 1; grid-row: 2; }
     .bottom-nav { grid-row: 3; padding-inline: 12px; }
     .study-container { padding: 24px 20px 40px; }
-    .page-title { font-size: 1.5rem; }
+
     .quiz-card { padding: 20px; }
     .quiz-footer { flex-direction: column; align-items: stretch; }
     .submit-btn { width: 100%; justify-content: center; }

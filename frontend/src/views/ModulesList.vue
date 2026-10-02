@@ -1,41 +1,24 @@
 <template>
-    <div class="ml-root">
-    
+    <FeaturePage class="ml-root">
+    <template #navigation><CourseNavigation :course-id="courseId" current="modules" /></template>
+    <template #header>
+        <EditorHeader :title="'Modules'" :back-to="{ name: 'Courses', params: { courseId } }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]"></EditorHeader>
+    </template>
+
         <div class="ml-container">
-    
-            <div class="ml-hero">
-                <div class="ml-hero-top">
-                    <button class="back-btn" @click="router.push({ name: 'Courses', params: { courseId } })">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 12H5M12 5l-7 7 7 7"/>
-                </svg>
-              </button>
-    
-                    <div class="ml-breadcrumb">
-                        <span class="ml-label clickable" @click="router.push({ name: 'Courses', params: { courseId } })">Course</span>
-                        <span class="separator">›</span>
-                        <span class="ml-label">Learning Modules</span>
-                    </div>
-                </div>
-    
-                <div class="ml-hero-inner">
-                    <h1 class="ml-title">Learning Modules</h1>
-                    <p class="ml-desc">Select a module to start learning.</p>
-                </div>
-            </div>
-    
+
             <div class="ml-body">
-    
+
                 <div v-if="loading" class="ml-state">
                     <div class="ml-spinner"></div>
                     <p>Loading modules...</p>
                 </div>
-    
+
                 <div v-else-if="error" class="ml-state error-state">
                     <span class="material-symbols-outlined">error_outline</span>
                     <p>{{ error }}</p>
                 </div>
-    
+
                 <div v-else-if="modules.length === 0" class="ml-empty">
                     <div class="ml-empty-icon">
                         <span class="material-symbols-outlined">menu_book</span>
@@ -43,43 +26,46 @@
                     <h3>No content yet</h3>
                     <p>No modules have been added to this course.<br>Check back later when your instructor publishes content.</p>
                 </div>
-    
+
                 <div v-else class="ml-grid">
                     <div v-for="(mod, index) in modules" :key="mod.id" class="ml-card" @click="goToLesson(mod.id)">
                         <div class="ml-card-body">
-    
+
                             <div class="ml-card-top">
                                 <div class="ml-icon-wrapper" :style="{ color: barColors[index % barColors.length], backgroundColor: barColors[index % barColors.length] + '20' }">
                                     <span class="material-symbols-outlined">menu_book</span>
                                 </div>
-    
+
                                 <span class="ml-lesson-pill">
                       {{ mod.learning_pages?.length || 0 }} lessons
                     </span>
                             </div>
-    
+
                             <div class="ml-card-content">
                                 <span class="ml-module-num">Module {{ index + 1 }}</span>
                                 <h2 class="ml-card-title">{{ mod.title }}</h2>
                             </div>
-    
+
                             <div class="ml-card-footer">
                                 <span class="ml-start-link" :style="{ color: barColors[index % barColors.length] }">
                       Start learning
                       <span class="material-symbols-outlined">arrow_forward</span>
                                 </span>
                             </div>
-    
+
                         </div>
                     </div>
                 </div>
-    
+
             </div>
         </div>
-    </div>
+    </FeaturePage>
 </template>
 
 <script setup>
+import CourseNavigation from '@/components/CourseNavigation.vue'
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import learningService from '@/services/learningService'
@@ -144,60 +130,14 @@ const goToLesson = moduleId => {
  Root Layout & Background
  ===================================================== */
 
-.ml-root {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
-    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-    padding: 2rem;
-    box-sizing: border-box;
-}
-
 .ml-container {
-    max-width: 1100px;
+
     margin: 0 auto;
 }
 
 /* =====================================================
  Hero Banner
  ===================================================== */
-
-.ml-hero {
-    background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    color: #fff;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 25px rgba(223, 74, 125, 0.15);
-}
-
-.ml-hero-top {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.back-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    background: transparent;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 0;
-    flex-shrink: 0;
-}
-
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.6);
-}
 
 .ml-breadcrumb {
     display: flex;
@@ -432,12 +372,7 @@ const goToLesson = moduleId => {
  ===================================================== */
 
 @media (max-width: 768px) {
-    .ml-root {
-        padding: 1rem;
-    }
-    .ml-hero {
-        padding: 1.5rem;
-    }
+
     .ml-grid {
         grid-template-columns: 1fr;
     }
