@@ -4,7 +4,8 @@
         <div class="sidebar-header">
             <button class="nav-btn" type="button" :aria-label="reader ? 'All modules' : 'Back to Modules'" :title="reader && collapsed ? 'All modules' : undefined" @click="$emit('back')">
                 <div class="back-icon-circle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <span v-if="reader" class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                    <svg v-else aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
