@@ -108,6 +108,16 @@
 
         <div v-if="error" class="error-banner">⚠️ {{ error }}</div>
 
+        <Teleport to="body">
+            <dialog ref="startDialog" class="exam-start-dialog" aria-labelledby="exam-start-title" aria-describedby="exam-start-message" @close="closeStartDialog">
+                <h2 id="exam-start-title">ยืนยันเริ่มข้อสอบ</h2>
+                <p id="exam-start-message">{{ pendingSession?.time_limit_minutes ? 'เมื่อกดยืนยัน นาฬิกาจะเริ่มจับเวลา และไม่สามารถหยุดพักได้' : 'เมื่อกดยืนยัน จะเข้าสู่หน้าทำข้อสอบ' }}</p>
+                <div class="exam-start-actions">
+                    <button class="btn-ghost" autofocus @click="startDialog.close()">ยกเลิก</button>
+                    <button class="btn-primary" @click="confirmStartExam">ยืนยันและเริ่มสอบ</button>
+                </div>
+            </dialog>
+        </Teleport>
     </FeaturePage>
 </template>
 
@@ -212,7 +222,25 @@ function formatDate(dt) {
     return new Date(dt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+const startDialog = ref(null)
+const pendingSession = ref(null)
+let startTrigger
+
 function openExam(session) {
+    pendingSession.value = session
+    startTrigger = document.activeElement
+    startDialog.value.showModal()
+}
+
+function closeStartDialog() {
+    pendingSession.value = null
+    startTrigger?.focus()
+}
+
+function confirmStartExam() {
+    const session = pendingSession.value
+    if (!session) return
+    startDialog.value.close()
     router.push({
         name: 'TakeExam',
         params: { sessionId: session.id },
@@ -712,4 +740,12 @@ function viewResult(session) {
         flex-wrap: wrap;
     }
 }
+.exam-start-dialog { margin: auto; width: min(440px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); background: var(--white); color: var(--text-main); }
+.exam-start-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+.exam-start-dialog h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; }
+.exam-start-dialog p { font-size: 0.9rem; line-height: 1.7; color: var(--text-muted); }
+.exam-start-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.exam-start-actions button { min-height: 40px; border-radius: 8px; }
+.exam-start-actions .btn-primary { background: var(--primary-pink); }
+.exam-start-dialog button:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
 </style>

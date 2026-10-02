@@ -12,8 +12,9 @@ layout/navigation. The course data loading and API remain unchanged.
 
 ## Direct exam start
 
-Start Exam and Retake now both open TakeExam in one click. `ExamSet.vue` is
-removed. The existing ExamSession route name and `/exam/session/:sessionId`
+Start Exam and Retake show a confirmation popup explaining that the timer
+starts on confirmation. Cancel/Escape stay on the list without opening the exam;
+confirmation enters TakeExam directly. `ExamSet.vue` is removed. The existing ExamSession route name and `/exam/session/:sessionId`
 URL redirect to TakeExam with the query preserved. Exam and result Back links
 return to the exam list (Dashboard fallback for old result links without course
 context). Submission carries the course query to the result page. The existing
