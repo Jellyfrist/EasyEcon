@@ -1,21 +1,29 @@
 <template>
     <div class="ce-page">
 
-        <!-- page header -->
-        <div class="ce-page-header">
-            <div class="ce-breadcrumb">
-                <button class="ce-back-btn" @click="router.back()">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Courses
-                </button>
-                <span class="ce-breadcrumb-sep">/</span>
-                <span class="ce-breadcrumb-current">{{ isEditMode ? 'Edit Course' : 'New Course' }}</span>
-            </div>
-            <h1 class="ce-page-title">{{ isEditMode ? 'Edit Course' : 'Create New Course' }}</h1>
-            <p class="ce-page-sub">{{ isEditMode ? 'Update course details and manage course content below.' : 'Fill in the details to create a new course.' }}</p>
-        </div>
+        <EditorHeader :title="isEditMode ? 'Edit Course' : 'Create New Course'"
+            :back-to="{ name: 'Teacher' }"
+            :breadcrumbs="[
+                { label: 'Dashboard', to: { name: 'Teacher' } },
+                { label: isEditMode ? 'Edit Course' : 'New Course', to: route.fullPath },
+            ]">
+                    <div class="ce-form-actions">
+                        <button
+                            class="ce-btn ce-btn-primary"
+                            :disabled="isSaving || store.loading || !title.trim()"
+                            @click="handleSubmit"
+                        >
+                            <svg v-if="isSaving || store.loading" class="ce-spin" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"/>
+                            </svg>
+                            {{ isSaving || store.loading ? 'Saving...' : (isEditMode ? 'Save Course' : 'Create Course') }}
+                        </button>
+                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="router.back()">
+                            Cancel
+                        </button>
+                    </div>
+
+        </EditorHeader>
 
         <!-- main 2-column layout: form left, action cards right -->
         <div class="ce-layout">
@@ -81,21 +89,6 @@
                         {{ saveError || store.error }}
                     </div>
 
-                    <div class="ce-form-actions">
-                        <button
-                            class="ce-btn ce-btn-primary"
-                            :disabled="isSaving || store.loading || !title.trim()"
-                            @click="handleSubmit"
-                        >
-                            <svg v-if="isSaving || store.loading" class="ce-spin" width="15" height="15" viewBox="0 0 15 15" fill="none">
-                                <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"/>
-                            </svg>
-                            {{ isSaving || store.loading ? 'Saving...' : (isEditMode ? 'Save Course' : 'Create Course') }}
-                        </button>
-                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="router.back()">
-                            Cancel
-                        </button>
-                    </div>
                 </div>
 
                 <!-- danger zone: only in edit mode -->
@@ -215,6 +208,7 @@
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
 import { useCourseStore } from '@/store/courseStore'

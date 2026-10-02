@@ -2,31 +2,17 @@
 
   <div class="designer-page">
     
-    <!-- ================= PAGE CARD HEADER ================= -->
-    <div class="page-card">
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-              Course #{{ courseId }}
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-              Exam Editor
-            </p>
-            <h1 class="page-title">{{ templateId ? 'Edit Exam' : 'New Exam' }}</h1>
-            <p class="page-subtitle">
-              <span class="status-dot" :class="{ 'is-published': isPublished }">
-                {{ isPublished ? 'Published' : 'Draft' }} · Last saved {{ lastSavedText || 'never' }}
-              </span>
-              <span v-if="sessionOpened" class="status-dot">Session opened for students</span>
-            </p>
-          </div>
-        </div>
-
-        <div class="header-actions">
+    <EditorHeader :title="templateId ? 'Edit Exam' : 'New Exam'"
+      :back-to="{ name: 'TeacherExamDashboard', params: { courseId } }"
+      :breadcrumbs="[
+        { label: 'Dashboard', to: { name: 'Teacher' } },
+        { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId } } },
+        { label: 'Exams', to: { name: 'TeacherExamDashboard', params: { courseId } } },
+        { label: templateId ? 'Edit Exam' : 'New Exam', to: route.fullPath },
+      ]">
+      <template #status>
+        <p class="editor-save-status">{{ isPublished ? 'Published' : 'Draft' }} · Last saved {{ lastSavedText || 'never' }}<span v-if="sessionOpened"> · Session opened for students</span></p>
+      </template>
           <button v-if="templateId" class="btn-header-danger" @click="showDeleteConfirm = true" :disabled="isDeleting">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
             Delete
@@ -45,9 +31,7 @@
           <div v-if="error" class="toast toast-error" role="alert">
             ERROR: {{ error }}
           </div>
-        </div>
-      </div>
-    </div>
+    </EditorHeader>
 
     <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="modal">
@@ -380,6 +364,7 @@
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/store/examStore'
@@ -1396,4 +1381,10 @@ onMounted(() => {
 }
 .preview-question-text { white-space: pre-wrap; font-weight: 400; }
 .preview-question-text :deep(img) { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0; }
+.editor-save-status { font-size: 0.75rem; color: var(--text-muted); }
+.btn-header-ghost { color: var(--text-main); background: var(--white); border-color: var(--card-border); }
+.btn-header-ghost:hover { background: var(--gray-light); border-color: var(--light-pink); }
+.btn-header-save { background: var(--primary-pink); color: var(--white); }
+.btn-header-save:hover { background: var(--primary-hover); }
+.btn-header-danger { color: #dc2626; border-color: #fca5a5; background: #fff; }
 </style>

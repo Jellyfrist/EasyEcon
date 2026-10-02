@@ -3,26 +3,15 @@
     
         <main class="cd-container">
     
-            <div class="cd-hero">
-                <div class="cd-hero-top">
-                    <button @click="router.push(`/teacher/learning/${courseId}`)" class="back-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M19 12H5M12 5l-7 7 7 7"/>
-                    </svg>
-                  </button>
-                    <div class="cd-breadcrumb">
-                        <span class="cd-label clickable" @click="router.push(`/teacher/learning/${courseId}`)">Learning Overview</span>
-                        <span class="separator">›</span>
-                        <span class="cd-label">Manage Modules</span>
-                    </div>
-                </div>
-    
-                <div class="cd-hero-inner">
-                    <h1 class="cd-title">Manage Course Structure</h1>
-                    <p class="cd-desc">Create main modules and manage lesson content for your course.</p>
-                </div>
-            </div>
-    
+            <EditorHeader title="Manage Course Structure"
+                :back-to="{ name: 'TeacherLearningDashboard', params: { courseId } }"
+                :breadcrumbs="[
+                    { label: 'Dashboard', to: { name: 'Teacher' } },
+                    { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId } } },
+                    { label: 'Learning Overview', to: { name: 'TeacherLearningDashboard', params: { courseId } } },
+                    { label: 'Manage Modules', to: route.fullPath },
+                ]" />
+
             <div class="cd-body">
     
                 <div class="action-card">
@@ -145,6 +134,7 @@
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import learningService from '@/services/learningService';

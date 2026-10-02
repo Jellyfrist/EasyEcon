@@ -1,21 +1,15 @@
 <template>
-  <div class="le-root">
+  <div class="le-root" :style="{ '--topbar-h': editorHeaderHeight + 'px', '--navbar-h': navbarOffset + 'px' }">
 
-    <!-- sticky topbar -->
-    <header class="le-topbar">
-      <div class="le-topbar-left">
-        <button class="le-back-btn" @click="router.push(`/teacher/modules/${courseIdParam}`)">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <nav class="le-breadcrumb">
-          <button class="le-bc-link" @click="router.push(`/teacher/modules/${courseIdParam}`)">Modules</button>
-          <span class="le-bc-sep">›</span>
-          <span class="le-bc-cur">{{ isEditMode ? 'Edit Lesson' : 'New Lesson' }}</span>
-        </nav>
-      </div>
-
-      <div class="le-topbar-center">
-        <!-- tab switcher -->
+    <EditorHeader :title="isEditMode ? 'Edit Lesson' : 'New Lesson'"
+      :back-to="{ name: 'LearningModule', params: { courseId: courseIdParam } }"
+      :breadcrumbs="[
+        { label: 'Dashboard', to: { name: 'Teacher' } },
+        { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId: courseIdParam } } },
+        { label: 'Modules', to: { name: 'LearningModule', params: { courseId: courseIdParam } } },
+        { label: isEditMode ? 'Edit Lesson' : 'New Lesson', to: route.fullPath },
+      ]" @resize="editorHeaderHeight = $event">
+      <template #tools>
         <div class="le-tabs">
           <button class="le-tab" :class="{ 'le-tab-active': activeTab === 'content' }" @click="activeTab = 'content'">
             <span class="material-symbols-outlined">article</span> Content
@@ -25,9 +19,7 @@
             <span v-if="quiz.isEnabled && quiz.questions.length > 0" class="le-tab-badge">{{ quiz.questions.length }}</span>
           </button>
         </div>
-      </div>
-
-      <div class="le-topbar-right">
+      </template>
         <span class="le-publish-label">Published</span>
         <label class="le-toggle">
           <input type="checkbox" v-model="isPublished">
@@ -41,8 +33,7 @@
           <span class="material-symbols-outlined">{{ isSaving ? 'hourglass_empty' : (isEditMode ? 'save' : 'add_circle') }}</span>
           {{ isSaving ? 'Saving…' : (isEditMode ? 'Save' : 'Create Lesson') }}
         </button>
-      </div>
-    </header>
+    </EditorHeader>
 
     <!-- loading -->
     <div v-if="isLoading" class="le-loading">
@@ -257,9 +248,14 @@
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import learningService from '@/services/learningService'
+import { useNavbarOffset } from '@/composables/useNavbarOffset'
+
+const navbarOffset = useNavbarOffset()
+const editorHeaderHeight = ref(80)
 
 const route  = useRoute()
 const router = useRouter()
@@ -647,7 +643,7 @@ onMounted(() => {
 /* ── loading ──────────────────────────────────────────── */
 .le-loading {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: calc(100vh - var(--topbar-h));
+  height: calc(100vh - var(--topbar-h) - var(--navbar-h, 0px));
   gap: 1rem; color: var(--muted); font-size: 0.9rem;
 }
 .le-spinner {
@@ -662,7 +658,7 @@ onMounted(() => {
 /* ── content tab layout ───────────────────────────────── */
 .le-content-layout {
   display: flex;
-  height: calc(100vh - var(--topbar-h));
+  height: calc(100dvh - var(--topbar-h) - var(--navbar-h, 0px));
   overflow: hidden;
 }
 

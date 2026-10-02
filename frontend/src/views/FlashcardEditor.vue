@@ -1,30 +1,18 @@
 <template>
     <div class="editor-page">
     
-        <!-- top bar -->
-        <div class="editor-topbar">
-            <div class="topbar-left">
-                <!-- breadcrumb -->
-                <nav class="topbar-breadcrumb">
-                    <router-link :to="{ name: 'Teacher' }" class="crumb-link">Dashboard</router-link>
-                    <span class="crumb-sep">/</span>
-                    <router-link :to="{ name: 'CoursesEditor', params: { courseId } }" class="crumb-link">Edit Course</router-link>
-                    <span class="crumb-sep">/</span>
-                    <router-link :to="backLink" class="crumb-link">Flashcard Sets</router-link>
-                    <span class="crumb-sep">/</span>
-                    <span class="crumb-current">{{ isEditMode ? 'Edit Set' : 'Create Set' }}</span>
-                </nav>
-                <h1 class="topbar-title">
-                    {{ isEditMode ? 'Edit Flashcard Set' : 'Create a new flashcard set' }}
-                </h1>
-            </div>
-            <div class="topbar-actions">
-                <button class="btn-light" :disabled="store.loading || !setForm.title.trim()" @click="saveSet">
+        <EditorHeader :title="isEditMode ? 'Edit Flashcard Set' : 'Create a new flashcard set'"
+            :breadcrumbs="[
+                { label: 'Dashboard', to: { name: 'Teacher' } },
+                { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId } } },
+                { label: 'Flashcard Sets', to: backLink },
+                { label: isEditMode ? 'Edit Set' : 'Create Set', to: route.fullPath },
+            ]">
+            <button class="btn-light" :disabled="store.loading || !setForm.title.trim()" @click="saveSet">
                         {{ isEditMode ? 'Save' : 'Create' }}
                     </button>
-            </div>
-        </div>
-    
+        </EditorHeader>
+
         <!-- set title + description -->
         <div class="meta-section">
             <div class="meta-card">
@@ -166,6 +154,7 @@
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFlashcardStore } from '../store/flashcardStore'
@@ -345,72 +334,6 @@ async function doDeleteCard() {
     padding-bottom: 5rem;
     background: #f8f9fb;
     font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-}
-
-/* top bar */
-
-.editor-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.85rem 2.5rem;
-    background: #ffffff;
-    border-bottom: 1px solid #e8edf3;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.topbar-left {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-/* breadcrumb */
-
-.topbar-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.75rem;
-}
-
-.crumb-link {
-    color: #94a3b8;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.15s;
-}
-
-.crumb-link:hover {
-    color: #ed4081;
-}
-
-.crumb-sep {
-    color: #cbd5e1;
-    font-size: 0.7rem;
-}
-
-.crumb-current {
-    color: #475569;
-    font-weight: 600;
-}
-
-.topbar-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #0f172a;
-    letter-spacing: -0.01em;
-    margin: 0;
-}
-
-.topbar-actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
 }
 
 .btn-light {
