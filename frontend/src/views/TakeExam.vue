@@ -2,7 +2,7 @@
     <FeaturePage class="exam-page">
     <template #header>
         <EditorHeader v-if="session" class="top-bar" :title="session?.title || 'Exam'" :back-to="examListRoute" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: examListRoute }, { label: 'Take Exam', to: route.fullPath }]"><template #status><div class="progress-track-container">
-            <div class="progress-track">
+            <div class="progress-track" role="progressbar" aria-label="Exam progress" :aria-valuenow="answeredCount" :aria-valuemax="session.questions.length" aria-valuemin="0">
               <div class="progress-fill" :style="{ width: progressPct + '%' }"></div>
             </div>
           </div></template><div class="top-bar-right">
@@ -348,14 +348,13 @@ function typeLabel(type) {
    Progress Track
    ===================================================== */
 
-.progress-track-container { width: min(320px, 100%); margin-top: 8px; }
+.progress-track-container { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; margin: 0; }
 
 .progress-track {
     height: 6px;
     background: rgba(0, 0, 0, 0.05);
     width: 100%;
-    max-width: 1000px;
-    border-radius: 99px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -751,7 +750,7 @@ function typeLabel(type) {
 .progress-pill { padding: 6px 12px; }
 .progress-pill-text { font-size: 0.8rem; }
 .timer { font-size: 0.9rem; padding: 6px 12px; min-width: 88px; }
-.progress-track-container { width: min(320px, 100%); margin-top: 8px; }
+.progress-track-container { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; margin: 0; }
 .question-container {
     flex: none; max-width: 800px; width: calc(100% - 4rem);
     margin: 1.5rem auto 3rem; padding: 0 2.5rem;
