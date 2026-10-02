@@ -17,10 +17,10 @@
                     <article class="content-article">
                         <h1 class="lesson-title">{{ pageData.title }}</h1>
 
-                        <div v-for="block in pageData.content_blocks" :key="block.id" class="content-block">
+                        <div v-for="(block, blockIndex) in pageData.content_blocks" :key="block.id" class="content-block">
 
                             <div v-if="block.type === 'rich_text_section'" class="rich-text">
-                                <LessonRichText :html="block.data.html" class="html-content" />
+                                <LessonRichText :html="block.data.html" :omit-leading-title="blockIndex === 0 ? pageData.title : ''" class="html-content" />
                             </div>
 
                             <div v-else-if="block.type === 'mini_quiz' && hasValidQuiz(block.data)" class="quiz-card">

@@ -266,7 +266,7 @@
         </div>
         <article class="le-preview-article">
           <h1>{{ lesson.title || 'Untitled Lesson' }}</h1>
-          <LessonRichText v-for="section in lesson.sections" :key="section.id" :html="section.content" class="le-preview-section" />
+          <LessonRichText v-for="(section, index) in lesson.sections" :key="section.id" :html="section.content" :omit-leading-title="index === 0 ? lesson.title : ''" class="le-preview-section" />
         </article>
       </dialog>
     </Teleport>
