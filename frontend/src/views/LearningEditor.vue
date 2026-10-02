@@ -20,6 +20,9 @@
           </button>
         </div>
       </template>
+        <button class="le-add-section-btn le-header-add-section" @click="addSection">
+          <span class="material-symbols-outlined">add</span> Add section
+        </button>
         <span class="le-publish-label">Published</span>
         <label class="le-toggle">
           <input type="checkbox" v-model="isPublished">
@@ -729,6 +732,7 @@ onMounted(() => {
 }
 .le-add-section-btn .material-symbols-outlined { font-size: 16px; }
 .le-add-section-btn:hover { border-color: var(--pink); color: var(--pink); }
+.le-header-add-section { display: none; margin: 0; width: auto; }
 
 /* ── editor area ──────────────────────────────────────── */
 .le-editor-area {
@@ -975,6 +979,7 @@ onMounted(() => {
 /* ── responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
   .le-outline { display: none; }
+  .le-header-add-section { display: inline-flex; }
   .le-lesson-meta { padding: 0 1.25rem; }
   .le-lesson-title-input,
   .le-section-name-input { padding-left: 0; padding-right: 0; }
