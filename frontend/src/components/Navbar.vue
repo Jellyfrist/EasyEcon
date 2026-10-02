@@ -61,6 +61,8 @@
                             Searching...
                         </div>
 
+                        <div v-else-if="searchError" class="search-empty" role="alert">{{ searchError }}</div>
+
                         <!-- No results -->
                         <div v-else-if="searchResults.total === 0 && !isSearching" class="search-empty">
                             No results for "{{ searchQuery }}"
@@ -180,6 +182,7 @@ import ThemeToggle from '@/components/ThemeToggle.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
+import api from '@/services/api';
 
 const navbar = ref(null)
 const navbarHeight = ref(64)
@@ -239,34 +242,35 @@ const handleLogout = async () => {
 const searchQuery = ref('')
 const isSearchFocused = ref(false)
 const isSearching = ref(false)
+const searchError = ref('')
+let searchVersion = 0
 const searchResults = ref({ courses: [], learning: [], exams: [], total: 0 })
 
 let debounceTimer = null
 
 const onSearchInput = () => {
     clearTimeout(debounceTimer)
-    if (searchQuery.value.trim().length < 1) {
-        searchResults.value = { courses: [], learning: [], exams: [], total: 0 }
-        return
-    }
-    isSearching.value = true
-    debounceTimer = setTimeout(() => fetchSearch(), 350)
+    const version = ++searchVersion
+    const query = searchQuery.value.trim()
+    searchError.value = ''
+    searchResults.value = { courses: [], learning: [], exams: [], total: 0 }
+    isSearching.value = query.length > 0
+    if (!query) return
+    debounceTimer = setTimeout(() => fetchSearch(query, version), 350)
 }
 
-const fetchSearch = async () => {
+const fetchSearch = async (query, version) => {
     try {
-        const endpoint = authStore.isTeacher
-            ? `${BACKEND_URL}/search/teacher`
-            : `${BACKEND_URL}/search/student`
-
-        const { data } = await axios.get(endpoint, {
-            params: { q: searchQuery.value.trim() }
-        })
-        searchResults.value = data
+        const endpoint = authStore.isTeacher ? '/search/teacher' : '/search/student'
+        const { data } = await api.get(endpoint, { params: { q: query } })
+        if (version === searchVersion) searchResults.value = data
     } catch (err) {
-        console.error('Search error:', err)
+        if (version === searchVersion) {
+            searchError.value = 'Search unavailable. Please try again.'
+            console.error('Search error:', err)
+        }
     } finally {
-        isSearching.value = false
+        if (version === searchVersion) isSearching.value = false
     }
 }
 
@@ -292,6 +296,10 @@ const goToResult = (item) => {
 }
 
 const closeSearch = () => {
+    clearTimeout(debounceTimer)
+    searchVersion++
+    isSearching.value = false
+    searchError.value = ''
     isSearchFocused.value = false
     searchQuery.value = ''
     searchResults.value = { courses: [], learning: [], exams: [], total: 0 }
@@ -312,6 +320,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    clearTimeout(debounceTimer)
+    searchVersion++
     navbarObserver?.disconnect()
     document.removeEventListener('click', closeDropdowns);
 });
