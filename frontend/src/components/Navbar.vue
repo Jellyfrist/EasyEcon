@@ -1,5 +1,6 @@
 <template>
-    <nav class="navbar">
+    <div class="navbar-space" :style="{ height: navbarHeight + 'px' }">
+    <nav ref="navbar" class="navbar">
         <div class="container">
             <div class="nav-left">
                 <!-- Logo: route to each role dashboard -->
@@ -171,6 +172,7 @@
             </div>
         </div>
     </nav>
+    </div>
 </template>
 
 <script setup>
@@ -178,6 +180,10 @@ import ThemeToggle from '@/components/ThemeToggle.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
+
+const navbar = ref(null)
+const navbarHeight = ref(64)
+let navbarObserver
 
 const router = useRouter()
 const route = useRoute();
@@ -297,11 +303,16 @@ watch(() => route.path, () => {
 });
 
 onMounted(() => {
+    const measureNavbar = () => { navbarHeight.value = navbar.value.getBoundingClientRect().height }
+    navbarObserver = new ResizeObserver(measureNavbar)
+    navbarObserver.observe(navbar.value)
+    measureNavbar()
     document.addEventListener('click', closeDropdowns);
     authStore.refreshUser();
 });
 
 onUnmounted(() => {
+    navbarObserver?.disconnect()
     document.removeEventListener('click', closeDropdowns);
 });
 
@@ -312,8 +323,10 @@ onUnmounted(() => {
     background: var(--surface);
     border-bottom: 1px solid var(--theme-border-e5e7eb);
     padding: 0;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
