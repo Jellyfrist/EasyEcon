@@ -68,3 +68,8 @@ Each topic has its own commit. Only frontend files are staged.
 - Baseline production build: passed, no warnings.
 - Shared sidebar: DOM and computed styles match the original at 1440px and
   390px on both study and module-completion pages.
+- Continuous exam: all questions and one final submit button verified at
+  1440px and 390px. Multiple choice, true/false, short answer and fill-in answers
+  retain the existing submission payload. A failed submission retains answers
+  and allows retry. Timer expiry sends exactly one submission.
+- Verification intercepted exam POST requests; it did not modify server data.

@@ -11,7 +11,7 @@
           <div class="top-bar">
             <div class="top-bar-left">
               <div class="header-title-row">
-                <button class="back-btn" @click="goExamSet">
+                <button class="back-btn" aria-label="Back to exam session" @click="goExamSet">
                   <span class="material-symbols-outlined">arrow_back</span>
                 </button>
                 <div class="header-text-group">
@@ -23,7 +23,7 @@
             
             <div class="top-bar-right">
               <div class="progress-pill">
-                <span class="progress-pill-text">Question {{ currentIndex + 1 }} of {{ session.questions.length }}</span>
+                <span class="progress-pill-text">{{ answeredCount }} of {{ session.questions.length }} answered</span>
               </div>
               <div v-if="session.time_limit_minutes" :class="['timer', timerWarning ? 'warning' : '']">
                 <span class="material-symbols-outlined timer-icon">timer</span>
@@ -38,144 +38,97 @@
             </div>
           </div>
     
-          <div class="q-nav-wrap">
-            <button class="q-nav-arrow" :disabled="dotWindowStart === 0" @click="shiftWindow(-1)">
-              <span class="material-symbols-outlined">chevron_left</span>
-            </button>
-            <div class="q-nav">
-              <button
-                v-for="q in visibleQuestions"
-                :key="q.id"
-                :class="['q-dot', {
-                  active: q.idx === currentIndex,
-                  answered: answers[q.id] !== undefined && answers[q.id] !== '' && answers[q.id] !== null,
-                }]"
-                @click="currentIndex = q.idx"
-              >{{ q.idx + 1 }}</button>
-            </div>
-            <button class="q-nav-arrow" :disabled="dotWindowStart + DOT_WINDOW >= session.questions.length" @click="shiftWindow(1)">
-              <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
+          <form class="question-container" @submit.prevent="submit">
+            <div v-for="(q, index) in session.questions" :key="q.id" class="question-card">
     
-          <div class="question-container">
-            <div class="question-card">
-    
+              <p class="q-points">Question {{ index + 1 }} of {{ session.questions.length }}</p>
               <div class="q-header">
-                <span :class="['q-type-badge', currentQ.type]">{{ typeLabel(currentQ.type) }}</span>
+                <span :class="['q-type-badge', q.type]">{{ typeLabel(q.type) }}</span>
                 <span class="q-points">
                   <span class="material-symbols-outlined icon-sm">stars</span>
-                  {{ currentQ.points ?? 1 }} pt{{ (currentQ.points ?? 1) > 1 ? 's' : '' }}
+                  {{ q.points ?? 1 }} pt{{ (q.points ?? 1) > 1 ? 's' : '' }}
                 </span>
               </div>
     
-              <div class="q-text" v-html="questionHtml(currentQ)"></div>
-              <img v-for="(url, imageIndex) in currentQ.image_urls || []" :key="imageIndex"
+              <div class="q-text" v-html="questionHtml(q)"></div>
+              <img v-for="(url, imageIndex) in q.image_urls || []" :key="imageIndex"
                 :src="url" alt="Question image" class="q-image" />
     
-              <div v-if="currentQ.type === 'multiple_choice'" class="options-list">
+              <div v-if="q.type === 'multiple_choice'" class="options-list">
                 <label
-                  v-for="(opt, oi) in currentQ.options"
+                  v-for="(opt, oi) in q.options"
                   :key="oi"
-                  :class="['option', { selected: answers[currentQ.id] === opt }]"
+                  :class="['option', { selected: answers[q.id] === opt }]"
                 >
                   <input
                     type="radio"
-                    :name="currentQ.id"
+                    :name="q.id"
                     :value="opt"
-                    v-model="answers[currentQ.id]"
+                    v-model="answers[q.id]"
+                  :disabled="isSubmitting"
                     hidden
                   />
                   <span class="option-letter">{{ String.fromCharCode(65 + oi) }}</span>
                   <span class="option-text">{{ opt }}</span>
-                  <span v-if="answers[currentQ.id] === opt" class="material-symbols-outlined check-icon">check_circle</span>
+                  <span v-if="answers[q.id] === opt" class="material-symbols-outlined check-icon">check_circle</span>
                 </label>
               </div>
     
-              <div v-else-if="currentQ.type === 'true_false'" class="tf-group">
-                <label :class="['tf-btn', { selected: answers[currentQ.id] === 'True' }]">
-                  <input type="radio" :name="currentQ.id" value="True" v-model="answers[currentQ.id]" hidden />
+              <div v-else-if="q.type === 'true_false'" class="tf-group">
+                <label :class="['tf-btn', { selected: answers[q.id] === 'True' }]">
+                  <input type="radio" :name="q.id" value="True" v-model="answers[q.id]"
+                    :disabled="isSubmitting" hidden />
                   <span class="tf-label">True</span>
                 </label>
-                <label :class="['tf-btn', { selected: answers[currentQ.id] === 'False' }]">
-                  <input type="radio" :name="currentQ.id" value="False" v-model="answers[currentQ.id]" hidden />
+                <label :class="['tf-btn', { selected: answers[q.id] === 'False' }]">
+                  <input type="radio" :name="q.id" value="False" v-model="answers[q.id]"
+                    :disabled="isSubmitting" hidden />
                   <span class="tf-label">False</span>
                 </label>
               </div>
     
-              <div v-else-if="currentQ.type === 'short_answer'" class="fill-wrap">
+              <div v-else-if="q.type === 'short_answer' || q.type === 'fill_in_the_blank'" class="fill-wrap">
                 <textarea
-                  v-model="answers[currentQ.id]"
+                  v-model="answers[q.id]"
+                    :disabled="isSubmitting"
                   class="fill-input short"
-                  rows="5"
+                  :rows="q.type === 'short_answer' ? 5 : 1"
                   placeholder="Type your answer here..."
                 ></textarea>
               </div>
     
             </div>
     
-            <div class="nav-row">
-              <button class="btn-outline" :disabled="currentIndex === 0" @click="currentIndex--">
-                <span class="material-symbols-outlined">arrow_back</span>
-                Previous
-              </button>
-              
-              <button
-                v-if="currentIndex < session.questions.length - 1"
-                class="btn-primary"
-                @click="currentIndex++"
-              >
-                Next Question
-                <span class="material-symbols-outlined">arrow_forward</span>
-              </button>
-              
-              <button
-                v-else
-                class="btn-primary"
-                @click="confirmSubmit = true"
-              >
-                <span class="material-symbols-outlined">send</span>
-                Submit Exam
-              </button>
+            <div class="question-card">
+              <p class="modal-body-text" aria-live="polite">You have answered <strong>{{ answeredCount }} out of {{ session.questions.length }}</strong> questions.</p>
+              <div v-if="unansweredCount > 0" class="warn-box">
+                <span class="material-symbols-outlined">warning</span>
+                <span>You have <strong>{{ unansweredCount }}</strong> unanswered question{{ unansweredCount > 1 ? 's' : '' }}.</span>
+              </div>
+              <p class="modal-hint">Once submitted, you cannot change your answers.</p>
+              <div class="nav-row">
+                <button type="submit" class="btn-primary" :disabled="isSubmitting">
+                  <span class="material-symbols-outlined" aria-hidden="true">send</span>
+                  {{ isSubmitting ? 'Submitting...' : 'Submit Exam' }}
+                </button>
+              </div>
+              <div v-if="error" class="error-banner" role="alert">{{ error }}</div>
             </div>
-          </div>
+          </form>
 </template>
 
-    <div v-if="error" class="error-banner">
+    <div v-if="error && !session" class="error-banner" role="alert">
       <span class="material-symbols-outlined">error</span>
       {{ error }}
     </div>
 
-    <Teleport to="body">
-      <div v-if="confirmSubmit" class="modal-overlay" @click.self="confirmSubmit = false">
-        <div class="modal">
-          <div class="modal-icon">
-            <span class="material-symbols-outlined">task_alt</span>
-          </div>
-          <h2 class="modal-title">Ready to Submit?</h2>
-          <div class="modal-body-text">
-            <p>You have answered <strong>{{ answeredCount }} out of {{ session?.questions.length }}</strong> questions.</p>
-            <div v-if="unansweredCount > 0" class="warn-box">
-              <span class="material-symbols-outlined">warning</span>
-              <span>You have <strong>{{ unansweredCount }}</strong> unanswered question{{ unansweredCount > 1 ? 's' : '' }}.</span>
-            </div>
-          </div>
-          <p class="modal-hint">Once submitted, you cannot change your answers.</p>
-          <div class="modal-actions">
-            <button class="btn-cancel" @click="confirmSubmit = false" :disabled="isSubmitting">Review Answers</button>
-            <button class="btn-confirm" @click="submit" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Submitting...' : 'Confirm Submit' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 import { questionHtml } from '@/utils/questionHtml'
@@ -189,9 +142,7 @@ const session = ref(null)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const error = ref(null)
-const currentIndex = ref(0)
 const answers = ref({})
-const confirmSubmit = ref(false)
 
 // --- Timer ---
 const timeLeft = ref(0)
@@ -216,38 +167,6 @@ function startTimer(minutes) {
     }, 1000)
 }
 
-// --- Q-nav window ---
-const isMobile = ref(window.innerWidth <= 600)
-const DOT_WINDOW = computed(() => isMobile.value ? 5 : 10)
-const dotWindowStart = ref(0)
-
-function onResize() {
-    const wasMobile = isMobile.value
-    isMobile.value = window.innerWidth <= 600
-    if (wasMobile !== isMobile.value) {
-        dotWindowStart.value = Math.floor(currentIndex.value / DOT_WINDOW.value) * DOT_WINDOW.value
-    }
-}
-
-const visibleQuestions = computed(() => {
-    if (!session.value) return []
-    return session.value.questions
-        .map((q, idx) => ({ ...q, idx }))
-        .slice(dotWindowStart.value, dotWindowStart.value + DOT_WINDOW.value)
-})
-
-function shiftWindow(dir) {
-    const total = session.value ?.questions.length ?? 0
-    const max = Math.max(0, total - DOT_WINDOW.value)
-    dotWindowStart.value = Math.min(max, Math.max(0, dotWindowStart.value + dir * DOT_WINDOW.value))
-}
-
-watch(currentIndex, (idx) => {
-    if (idx < dotWindowStart.value || idx >= dotWindowStart.value + DOT_WINDOW.value) {
-        dotWindowStart.value = Math.floor(idx / DOT_WINDOW.value) * DOT_WINDOW.value
-    }
-})
-
 // --- Load ---
 async function loadSession() {
     isLoading.value = true
@@ -270,17 +189,15 @@ onMounted(() => loadSession())
 onUnmounted(() => clearInterval(timerInterval))
 
 // --- Computed ---
-const currentQ = computed(() => session.value ?.questions[currentIndex.value])
-
 const progressPct = computed(() => {
-    if (!session.value) return 0
-    return ((currentIndex.value + 1) / session.value.questions.length) * 100
+    const total = session.value?.questions.length ?? 0
+    return total ? (answeredCount.value / total) * 100 : 0
 })
 
 const answeredCount = computed(() =>
     session.value ?.questions.filter(q => {
         const a = answers.value[q.id]
-        return a !== undefined && a !== '' && a !== null
+        return a !== undefined && a !== null && String(a).trim() !== ''
     }).length ?? 0
 )
 const unansweredCount = computed(() =>
@@ -289,9 +206,9 @@ const unansweredCount = computed(() =>
 
 // --- Submit ---
 async function submit() {
+    if (isSubmitting.value || !session.value) return
     isSubmitting.value = true
     error.value = null
-    clearInterval(timerInterval)
     try {
         const payload = {
             session_id: Number(sessionId),
@@ -299,12 +216,12 @@ async function submit() {
         }
         const res = await examService.submitAttempt(payload)
         const attempt = res.data ?? res
+        clearInterval(timerInterval)
         router.replace({ name: 'ExamResult', params: { attemptId: attempt.id } })
     } catch (err) {
         console.error('Failed to submit', err)
         error.value = err ?.response ?.data ?.detail ?? 'Submission failed. Please try again.'
         isSubmitting.value = false
-        confirmSubmit.value = false
     }
 }
 
@@ -514,92 +431,6 @@ function goExamSet() {
    Question Navigator
    ===================================================== */
 
-.q-nav-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 2rem 2rem 0;
-}
-
-.q-nav-arrow {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.6);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.2s;
-}
-
-.q-nav-arrow:hover:not(:disabled) {
-    background: #ffffff;
-    color: #111827;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-}
-
-.q-nav-arrow:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.q-nav {
-    display: flex;
-    gap: 8px;
-}
-
-.q-dot {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: #ffffff;
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: inherit;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.q-dot:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    color: #111827;
-}
-
-.q-dot.active {
-    background: #df4a7d;
-    color: #ffffff;
-    transform: scale(1.1);
-    box-shadow: 0 6px 15px rgba(223, 74, 125, 0.3);
-}
-
-.q-dot.answered {
-    background: #ffffff;
-    border: 2px solid #10b981;
-    color: #10b981;
-}
-
-.q-dot.active.answered {
-    background: #10b981;
-    color: #ffffff;
-    border: none;
-    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
-}
-
-/* =====================================================
-   Question Content Area
-   ===================================================== */
-
 .question-container {
     flex: 1;
     display: flex;
@@ -609,6 +440,7 @@ function goExamSet() {
     max-width: 860px;
     margin: 0 auto;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .question-card {
@@ -881,57 +713,6 @@ function goExamSet() {
    Modal
    ===================================================== */
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 24, 39, 0.6);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 1.5rem;
-}
-
-.modal {
-    background: #ffffff;
-    border-radius: 24px;
-    width: 100%;
-    max-width: 450px;
-    padding: 2.5rem;
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-    animation: modalPop 0.3s ease-out;
-}
-
-@keyframes modalPop {
-    0% {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.modal-icon {
-    font-size: 48px;
-    color: #10b981;
-    margin-bottom: 1rem;
-}
-
-.modal-icon .material-symbols-outlined {
-    font-size: 56px;
-}
-
-.modal-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    color: #111827;
-    margin: 0 0 1rem;
-}
-
 .modal-body-text {
     font-size: 1.1rem;
     color: #4b5563;
@@ -955,47 +736,6 @@ function goExamSet() {
     font-size: 0.9rem;
     color: #9ca3af;
     margin-bottom: 2rem;
-}
-
-.modal-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.btn-confirm {
-    background: #10b981;
-    color: #ffffff;
-    border: none;
-    padding: 16px;
-    border-radius: 99px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-}
-
-.btn-confirm:hover {
-    background: #059669;
-}
-
-.btn-cancel {
-    background: transparent;
-    color: #6b7280;
-    border: 2px solid #e5e7eb;
-    padding: 14px;
-    border-radius: 99px;
-    font-size: 1rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-}
-
-.btn-cancel:hover {
-    background: #f9fafb;
-    color: #111827;
 }
 
 /* Loading & Error */
