@@ -63,7 +63,7 @@
               @click="setActiveSection(section.id)"
             >
               <span class="le-outline-num">{{ i + 1 }}</span>
-              <span class="le-outline-name">{{ section.title || `Section ${i + 1}` }}</span>
+              <span class="le-outline-name">{{ `Section ${i + 1}` }}</span>
               <button
                 v-if="lesson.sections.length > 1"
                 class="le-outline-del"
@@ -87,23 +87,10 @@
               <div>
                 <label for="lesson-title">Lesson title</label>
                 <input id="lesson-title" v-model="lesson.title" class="le-lesson-title-input"
-                  placeholder="Lesson title…" maxlength="120" aria-describedby="lesson-title-help" />
-                <p id="lesson-title-help" class="le-field-help">Shown at the top of the student lesson.</p>
-              </div>
-              <div v-if="activeSection">
-                <label for="section-title">Section title <span class="le-optional">(optional)</span></label>
-                <input id="section-title" v-model="activeSection.title" class="le-section-name-input"
-                  placeholder="Section name (e.g. Why Prices Change)" aria-describedby="section-title-help" />
-                <p id="section-title-help" class="le-field-help">Names this part in the editor sidebar.</p>
+                  placeholder="Lesson title…" maxlength="100" aria-describedby="lesson-title-help" />
+                <p id="lesson-title-help" class="le-field-help">Also used automatically as the section title and exam Topic Tag.</p>
               </div>
             </div>
-            <details class="le-extra-settings">
-              <summary>Exam matching settings</summary>
-              <label for="lesson-topic-tag">Topic Tag</label>
-              <p id="topic-tag-help">Used to match this lesson with exam questions. Leave empty if not needed.</p>
-              <input id="lesson-topic-tag" v-model.trim="lesson.topic_tag" class="le-section-name-input"
-                aria-describedby="topic-tag-help" placeholder="e.g. Supply & Demand" maxlength="100" />
-            </details>
             <label class="le-content-label" for="lesson-content">Lesson content</label>
           </div>
 
@@ -282,7 +269,7 @@
 import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import LessonRichText from '@/components/LessonRichText.vue'
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import learningService from '@/services/learningService'
 import { useNavbarOffset } from '@/composables/useNavbarOffset'
@@ -317,6 +304,12 @@ const quiz = ref({
   title: 'Check Your Understanding',
   questions: []
 })
+
+watch([() => lesson.value.title, () => lesson.value.sections], ([title, sections]) => {
+  const name = title.trim()
+  lesson.value.topic_tag = name
+  sections.forEach(section => { section.title = name })
+}, { immediate: true })
 
 const activeSectionId = ref(lesson.value.sections[0].id)
 const contentArea     = ref(null)
@@ -466,7 +459,7 @@ const setActiveSection = async id => {
 }
 
 const addSection = () => {
-  const s = { id: Date.now(), title: '', content: '' }
+  const s = { id: Date.now(), title: lesson.value.title.trim(), content: '' }
   lesson.value.sections.push(s)
   setActiveSection(s.id)
 }
@@ -565,7 +558,7 @@ const saveLesson = async () => {
     const contentBlocks = lesson.value.sections.map((sec, i) => ({
       id: `sec_${i}_${Date.now()}`,
       type: 'rich_text_section',
-      data: { title: sec.title, html: sec.content }
+      data: { title: lesson.value.title.trim(), html: sec.content }
     }))
 
     if (quiz.value.isEnabled && quiz.value.questions.length > 0) {
@@ -602,7 +595,7 @@ const saveLesson = async () => {
 
     const payload = {
       title: lesson.value.title.trim(),
-      topic_tag: lesson.value.topic_tag.trim() || null,
+      topic_tag: lesson.value.title.trim() || null,
       module_id: lesson.value.module_id,
       order_index: 0,
       template_type: 'standard_text',
@@ -841,18 +834,12 @@ onMounted(() => {
 }
 
 .le-lesson-meta { width: 100%; max-width: 960px; margin: 0 auto; padding: 24px 32px 0; }
-.le-title-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.le-title-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .le-lesson-meta label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0 0 8px; }
-.le-field-help { margin-top: 6px; font-size: 0.75rem; color: var(--text-muted); }
-.le-optional { font-weight: 400; color: var(--text-muted); }
-.le-lesson-title-input, .le-section-name-input { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 8px; background: var(--white); color: var(--text-main); font: inherit; font-size: 0.95rem; }
-.le-lesson-title-input:focus, .le-section-name-input:focus { outline: 2px solid var(--primary-pink); outline-offset: 1px; }
-.le-lesson-title-input::placeholder, .le-section-name-input::placeholder { color: var(--text-muted); }
-.le-extra-settings { margin: 16px 0 24px; font-size: 0.8rem; color: var(--text-muted); }
-.le-extra-settings summary { cursor: pointer; padding: 6px 0; }
-.le-extra-settings[open] summary { margin-bottom: 12px; }
-.le-extra-settings p { margin-bottom: 8px; }
-.le-extra-settings .le-section-name-input { max-width: 440px; }
+.le-field-help { margin-top: 6px; margin-bottom: 24px; font-size: 0.75rem; color: var(--text-muted); }
+.le-lesson-title-input { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 8px; background: var(--white); color: var(--text-main); font: inherit; font-size: 0.95rem; }
+.le-lesson-title-input:focus { outline: 2px solid var(--primary-pink); outline-offset: 1px; }
+.le-lesson-title-input::placeholder { color: var(--text-muted); }
 .le-lesson-meta .le-content-label { margin-bottom: 12px; }
 .le-rich-text:empty::before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
 
