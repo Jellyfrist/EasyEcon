@@ -749,5 +749,5 @@ function viewResult(session) {
 .exam-start-actions button { min-height: 40px; border-radius: 8px; }
 .exam-start-actions .btn-primary { background: var(--primary-pink); }
 .exam-start-dialog button:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
-.dashboard :deep(.exam-page-heading) { margin-bottom: 16px; }
+.dashboard :deep(.exam-page-heading) { position: static; margin-bottom: 16px; }
 </style>
