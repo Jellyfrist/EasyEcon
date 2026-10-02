@@ -15,17 +15,12 @@
             <div v-if="pageData" class="study-container">
 
                     <article class="content-article">
-                        <EditorHeader inline :title="pageData.title"
-                            :breadcrumbs="[
-                                { label: 'Courses', to: { name: 'Dashboard' } },
-                                { label: 'Modules', to: { name: 'ModulesList', params: { courseId } } },
-                                { label: 'Lesson', to: route.fullPath },
-                            ]" />
+                        <h1 class="lesson-title">{{ pageData.title }}</h1>
 
                         <div v-for="block in pageData.content_blocks" :key="block.id" class="content-block">
 
                             <div v-if="block.type === 'rich_text_section'" class="rich-text">
-                                <div v-html="block.data.html" class="html-content"></div>
+                                <LessonRichText :html="block.data.html" class="html-content" />
                             </div>
 
                             <div v-else-if="block.type === 'mini_quiz' && hasValidQuiz(block.data)" class="quiz-card">
@@ -84,6 +79,11 @@
                             </div>
 
                         </div>
+                        <button v-if="!isLastPage" class="up-next" @click="handleNext">
+                            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                            <span><small>UP NEXT</small><strong>{{ dashboardData?.pages[currentIndex + 1]?.title }}</strong></span>
+                            <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                        </button>
                     </article>
 
             </div>
@@ -114,7 +114,7 @@
 
 <script setup>
 import { useNavbarOffset } from '@/composables/useNavbarOffset';
-import EditorHeader from '@/components/EditorHeader.vue';
+import LessonRichText from '@/components/LessonRichText.vue';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -293,7 +293,7 @@ const handleNext = async () => {
     inset: var(--navbar-offset, 64px) 0 0;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) 60px;
+    grid-template-rows: minmax(0, 1fr) 44px;
     background: white;
     font-family: 'DM Sans', 'Sarabun', sans-serif;
     overflow: hidden;
@@ -310,58 +310,17 @@ const handleNext = async () => {
 .study-container {
     width: min(100%, 800px);
     margin: 0 auto;
-    padding: 36px 48px 64px;
+    padding: 24px 40px 48px;
 }
 
 .content-block { margin-bottom: 32px; }
-.html-content { overflow-wrap: anywhere; }
-.html-content :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
-.html-content :deep(iframe) { max-width: 100%; }
-.html-content :deep(blockquote) {
-    border-left: 2px solid var(--primary-pink);
-    padding-left: 16px;
-    margin: 24px 0;
-}
-
-/* rich text */
-
-.html-content :deep(h1) {
-    font-size: 1.8rem;
-    font-weight: 800;
-    margin: 2rem 0 1rem;
-    color: #111827;
-}
-
-.html-content :deep(h2) {
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin: 1.5rem 0 0.75rem;
-    color: #111827;
-}
-
-.html-content :deep(p) {
-    line-height: 1.8;
-    color: #4b5563;
-    margin-bottom: 1.2rem;
-    font-size: 1.05rem;
-}
-
-.html-content :deep(ul),
-.html-content :deep(ol) {
-    padding-left: 1.5rem;
-    margin-bottom: 1.2rem;
-    color: #4b5563;
-    line-height: 1.8;
-    font-size: 1.05rem;
-}
-
-.html-content :deep(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: 16px;
-    margin: 2rem 0;
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.1);
-}
+.up-next { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 560px; margin: 32px auto 0; padding: 20px 24px; border: 0; border-radius: var(--radius-lg); background: var(--text-main); color: var(--white); text-align: left; font: inherit; cursor: pointer; }
+.up-next > span:first-child { padding: 12px; border-radius: 8px; background: var(--primary-pink); }
+.up-next > span:last-child { margin-left: auto; }
+.up-next small { display: block; color: var(--primary-yellow); font-size: 0.65rem; letter-spacing: 0.08em; }
+.up-next strong { font-size: 0.95rem; font-weight: 500; }
+.up-next:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
+.lesson-title { font-size: 1.8rem; font-weight: 400; line-height: 1.4; margin: 0 0 24px; overflow-wrap: anywhere; }
 
 /* =====================================================
    Quiz Card
@@ -601,7 +560,7 @@ input[type="radio"] {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 20px;
+    padding: 4px 12px;
     border-top: 1px solid var(--card-border);
     background: white;
     z-index: 2;
@@ -612,12 +571,12 @@ input[type="radio"] {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    min-height: 44px;
-    padding: 8px 14px;
+    min-height: 32px;
+    padding: 4px 10px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 3px;
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     cursor: pointer;
 }
 .prev-btn { background: white; color: var(--primary-pink); }
@@ -662,7 +621,7 @@ input[type="radio"] {
 @media (max-width: 768px) {
     .layout-wrapper {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: 48px minmax(0, 1fr) 60px;
+        grid-template-rows: 48px minmax(0, 1fr) 44px;
     }
     .outline-toggle {
         display: flex;
@@ -681,7 +640,7 @@ input[type="radio"] {
         display: none;
         position: absolute;
         top: 48px;
-        bottom: 60px;
+        bottom: 44px;
         left: 0;
         width: min(320px, 90%);
         height: auto;

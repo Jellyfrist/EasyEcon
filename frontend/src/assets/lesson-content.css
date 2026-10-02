@@ -1,0 +1,25 @@
+/* Shared by the student reader, teacher content editor and preview. */
+.lesson-html { color: var(--text-main); font-size: 0.95rem; line-height: 1.8; overflow-wrap: anywhere; }
+.lesson-html :is(h1, h2, h3) { color: var(--text-main); font-weight: 500; line-height: 1.4; margin: 28px 0 12px; }
+.lesson-html h1 { font-size: 1.6rem; }
+.lesson-html h2 { font-size: 1.25rem; }
+.lesson-html h3 { font-size: 1.05rem; }
+.lesson-rendered > p:last-child:has(> br:only-child) { display: none; }
+.lesson-html p { margin: 0 0 16px; }
+.lesson-html :is(ul, ol) { padding-left: 24px; margin-bottom: 16px; }
+.lesson-html a { color: var(--primary-pink); }
+.lesson-html img { max-width: 100%; height: auto; margin: 20px 0; }
+.lesson-html iframe { max-width: 100%; }
+.lesson-html table { display: block; max-width: 100%; overflow-x: auto; }
+.lesson-html blockquote { border-left: 2px solid var(--primary-pink); padding-left: 16px; margin: 24px 0; }
+.lesson-html hr { border: 0; border-top: 1px solid var(--card-border); margin: 28px 0; }
+.lesson-html .lesson-callout { padding: 24px; margin: 24px 0; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--gray-light); }
+.lesson-html .lesson-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.lesson-html .lesson-content-card { min-width: 0; padding: 24px; border: 1px solid var(--card-border); border-top: 3px solid var(--primary-pink); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); background: var(--white); }
+.lesson-html .lesson-highlight { padding: 16px 20px; border-left: 2px solid var(--primary-pink); margin: 24px 0; background: #fff0f5; }
+.lesson-html :is(.lesson-callout, .lesson-content-card, .lesson-highlight) > :first-child { margin-top: 0; }
+.lesson-html :is(.lesson-callout, .lesson-content-card, .lesson-highlight) > :last-child { margin-bottom: 0; }
+@media (max-width: 600px) {
+  .lesson-html .lesson-columns { grid-template-columns: minmax(0, 1fr); }
+  .lesson-html :is(.lesson-callout, .lesson-content-card) { padding: 20px; }
+}

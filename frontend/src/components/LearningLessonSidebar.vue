@@ -26,10 +26,11 @@
                     :class="{ active: !complete && page.id == pageId, completed: !complete && page.status === 'completed' }"
                     :aria-current="!complete && page.id == pageId ? 'page' : undefined"
                     @click="!complete && $emit('select', page.id)">
-                    <span class="material-symbols-outlined nav-icon">
-                        {{ complete ? 'check_circle' : (page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : 'play_circle')) }}
+                    <span class="material-symbols-outlined nav-icon" aria-hidden="true">
+                        {{ complete ? 'check_circle' : (page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : (reader ? 'radio_button_unchecked' : 'play_circle'))) }}
                     </span>
-                    <span class="nav-item-text">{{ index + 1 }}. {{ page.title }}</span>
+                    <span v-if="reader" class="material-symbols-outlined lesson-document-icon" aria-hidden="true">description</span>
+                    <span class="nav-item-text">{{ reader ? page.title : `${index + 1}. ${page.title}` }}</span>
                 </button>
             </div>
         </div>
@@ -418,25 +419,26 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
     border-radius: 0;
     box-shadow: none;
 }
-.reader-sidebar .sidebar-header { padding: 16px 20px 0; }
-.reader-sidebar .nav-btn { color: var(--primary-pink); gap: 8px; min-height: 44px; }
+.reader-sidebar .sidebar-header { order: 1; padding: 0 12px; }
+.reader-sidebar .nav-btn { color: var(--primary-pink); gap: 8px; min-height: 28px; }
 .reader-sidebar .back-icon-circle { width: 20px; height: 20px; border: 0; color: inherit; }
 .reader-sidebar .nav-text { font-size: 0.8rem; font-weight: 500; }
 .reader-sidebar .nav-btn:hover .back-icon-circle { background: transparent; color: inherit; }
 .reader-sidebar .nav-btn:hover .nav-text { color: var(--primary-pink); }
-.reader-sidebar .module-info { padding: 16px 20px 20px; border-bottom: 1px solid var(--card-border); }
+.reader-sidebar .module-info { order: 0; padding: 16px 12px 0; border: 0; }
+.reader-sidebar .info-label, .reader-sidebar .nav-label, .reader-sidebar .progress-bar-wrap { display: none; }
 .reader-sidebar .info-label, .reader-sidebar .nav-label { color: var(--text-muted); font-size: 0.65rem; }
-.reader-sidebar .info-title { color: var(--text-main); font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
+.reader-sidebar .info-title { color: var(--text-main); font-size: 1.5rem; line-height: 1.25; font-weight: 400; overflow-wrap: anywhere; }
 .reader-sidebar .progress-bar-wrap { height: 4px; background: #f3f4f6; }
 .reader-sidebar .progress-bar-fill { background: var(--primary-pink); }
-.reader-sidebar .progress-pct { color: var(--text-muted); font-weight: 500; font-size: 0.65rem; }
-.reader-sidebar .lesson-nav { padding: 16px 0; }
+.reader-sidebar .progress-pct { text-align: left; margin: 4px 0; color: var(--text-muted); font-weight: 500; font-size: 0.65rem; }
+.reader-sidebar .lesson-nav { order: 2; padding: 8px 0; }
 .reader-sidebar .nav-label { margin: 0 20px 12px; }
 .reader-sidebar .nav-list { gap: 0; }
 .reader-sidebar .nav-item {
     width: 100%;
-    min-height: 44px;
-    padding: 10px 20px;
+    min-height: 34px;
+    padding: 6px 12px;
     gap: 8px;
     color: var(--text-main);
     border: 0;
@@ -447,7 +449,9 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 .reader-sidebar .nav-item.active { color: white; background: var(--primary-pink); border: 0; box-shadow: none; }
 .reader-sidebar .nav-item.completed .nav-icon { color: var(--forest-green); }
 .reader-sidebar .nav-item.active .nav-icon { color: white; }
-.reader-sidebar .nav-icon { font-size: 18px; }
+.reader-sidebar .nav-icon { font-size: 14px; }
+.reader-sidebar .lesson-document-icon { font-size: 16px; color: var(--primary-pink); }
+.reader-sidebar .nav-item.active .lesson-document-icon { color: white; }
 .reader-sidebar .nav-item-text { font-size: 0.8rem; font-weight: 400; line-height: 1.5; }
 .reader-sidebar .nav-item:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
 </style>
