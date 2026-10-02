@@ -21,6 +21,7 @@
               <span class="status-dot" :class="{ 'is-published': isPublished }">
                 {{ isPublished ? 'Published' : 'Draft' }} · Last saved {{ lastSavedText || 'never' }}
               </span>
+              <span v-if="sessionOpened" class="status-dot">Session opened for students</span>
             </p>
           </div>
         </div>
@@ -34,16 +35,14 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Preview
           </button>
-          <button class="btn-header-ghost" @click="togglePublish">
-            <svg v-if="!isPublished" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            {{ isPublished ? 'Unpublish' : 'Publish' }}
+          <button class="btn-header-ghost" :disabled="isSaving || isLoadingTemplate" @click="addEmptyQuestion">
+            + Add Question
           </button>
-          <button class="btn-header-save" :disabled="isSaving" @click="save">
+          <button class="btn-header-save" :disabled="isSaving || isLoadingTemplate" @click="save">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            {{ isSaving ? 'Saving…' : 'Save' }}
+            {{ isSaving ? 'Saving…' : (openSession ? 'Save & Open Session' : 'Save') }}
           </button>
-          <div v-if="error" class="toast toast-error">
+          <div v-if="error" class="toast toast-error" role="alert">
             ERROR: {{ error }}
           </div>
         </div>
@@ -183,6 +182,28 @@
 
           <label class="toggle-item">
             <div class="toggle-info">
+              <span class="toggle-title">Publish Exam</span>
+              <span class="toggle-desc">Apply publication status when saving</span>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" v-model="isPublished" class="toggle-input" :disabled="isSaving" />
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+
+          <label class="toggle-item">
+            <div class="toggle-info">
+              <span class="toggle-title">Open Session When Saving</span>
+              <span class="toggle-desc">Publish and open this exam for students in one save</span>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" v-model="openSession" class="toggle-input" :disabled="isSaving" />
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+
+          <label class="toggle-item">
+            <div class="toggle-info">
               <span class="toggle-title">Randomise Questions</span>
               <span class="toggle-desc">Shuffle question order for each student</span>
             </div>
@@ -229,6 +250,15 @@
 
       </section>
 
+      <section v-if="openSession" class="settings-card">
+        <div class="section-header">
+          <h2>Session Settings</h2>
+          <p class="text-muted">Uses the exam title and duration by default. Leave dates blank to open immediately.</p>
+        </div>
+        <ExamSessionFields :form="sessionForm" :default-title="title"
+          :default-time-limit="durationMinutes" :disabled="isSaving" />
+      </section>
+
 
       <!-- ================= QUESTIONS ================= -->
       <section class="questions-card">
@@ -267,7 +297,7 @@
           <p v-if="lessonOptionsError" class="text-muted">{{ lessonOptionsError }}</p>
         </div>
 
-        <button class="btn-add-question" @click="addEmptyQuestion">
+        <button class="btn-add-question" :disabled="isSaving || isLoadingTemplate" @click="addEmptyQuestion">
           <span class="btn-add-icon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
           </span>
@@ -350,40 +380,47 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/store/examStore'
 import QuestionEditor from '@/components/QuestionEditor.vue'
 import { questionHtml, sanitizeQuestionHtml } from '@/utils/questionHtml'
 import learningService from '@/services/learningService'
+import ExamSessionFields from '@/components/ExamSessionFields.vue'
+import { buildSessionPayload } from '@/utils/examSession'
 
 const router = useRouter()
 const route = useRoute()
 const examStore = useExamStore()
 
 const courseId = Number(route.params.courseId)
-const templateId = route.params.templateId
+const templateId = ref(route.params.templateId
   ? Number(route.params.templateId)
-  : null
+  : null)
 
 const title = ref('')
 const description = ref('')
 const examType = ref('midterm')
-const academicYear = ref('')
+const academicYear = ref(String(new Date().getFullYear()))
 const term = ref('1')
 const durationMinutes = ref(60)
 const passingScore = ref(50)
 
 const randomiseQuestions = ref(false)
 const randomiseOptions = ref(false)
-const showCorrectAfter = ref(false)
-const allowReview = ref(false)
+const showCorrectAfter = ref(true)
+const allowReview = ref(true)
 const isPublished = ref(false)
+const isLoadingTemplate = ref(false)
+const openSession = ref(false)
+const sessionOpened = ref(false)
+const sessionForm = ref({
+  title: '', instructions: null, available_from: null,
+  available_until: null, time_limit_minutes: null, max_attempts: 1,
+})
 
-function togglePublish() {
-  isPublished.value = !isPublished.value
-}
-
+watch(openSession, value => { if (value) isPublished.value = true })
+watch(isPublished, value => { if (!value) openSession.value = false })
 
 const localQuestions = ref([])
 function previewQuestionHtml(q) {
@@ -431,8 +468,10 @@ function newQuestion() {
   }
 }
 
-function addEmptyQuestion() {
+async function addEmptyQuestion(focus = true) {
   localQuestions.value.push(newQuestion())
+  await nextTick()
+  if (focus) document.querySelector('.questions-list .question-card:last-of-type .rte-editor')?.focus()
 }
 
 function removeLocalQuestion(lid) {
@@ -502,11 +541,17 @@ function questionsMissingExplanation() {
 }
 
 async function save() {
+  if (isSaving.value || isLoadingTemplate.value) return
 
   isSaving.value = true
   error.value = null
 
   try {
+    if (!title.value.trim()) throw new Error('Enter an exam title before saving.')
+    if (!localQuestions.value.length) throw new Error('Add at least one question before saving.')
+    if (localQuestions.value.some(q => !q.text?.trim())) {
+      throw new Error('Enter the text of every question before saving.')
+    }
     if (localQuestions.value.some(q => q._pendingUploads)) {
       throw new Error('Wait for question images to finish uploading before saving.')
     }
@@ -523,8 +568,13 @@ async function save() {
 
     let res
 
-    if (templateId) {
-      res = await examStore.updateTemplate(templateId, payload)
+    if (openSession.value && sessionForm.value.available_from && sessionForm.value.available_until &&
+        new Date(sessionForm.value.available_until) <= new Date(sessionForm.value.available_from)) {
+      throw new Error('Available Until must be after Available From.')
+    }
+
+    if (templateId.value) {
+      res = await examStore.updateTemplate(templateId.value, payload)
     } else {
       res = await examStore.createTemplate(payload)
     }
@@ -534,6 +584,18 @@ async function save() {
     }
 
     lastSaved.value = Date.now()
+    templateId.value = res.id
+
+    if (!route.params.templateId) {
+      await router.replace({ name: 'ExamEditor', params: { courseId, templateId: res.id } })
+    }
+
+    if (openSession.value) {
+      const opened = await examStore.launchSession(buildSessionPayload(res.id, sessionForm.value, title.value))
+      if (!opened) throw new Error(`Exam saved. ${examStore.error || 'Could not open the session; save again to retry.'}`)
+      sessionOpened.value = true
+      openSession.value = false
+    }
 
   } catch (err) {
     error.value = err.message
@@ -544,9 +606,15 @@ async function save() {
 
 async function loadTemplate() {
 
-  if (!templateId) return
+  if (!templateId.value) return
 
-  await examStore.fetchTemplate(templateId)
+  isLoadingTemplate.value = true
+  await examStore.fetchTemplate(templateId.value)
+  isLoadingTemplate.value = false
+  if (examStore.error) {
+    error.value = examStore.error
+    return
+  }
 
   const t = examStore.currentTemplate
   if (!t) return
@@ -565,8 +633,7 @@ async function loadTemplate() {
   randomiseOptions.value = t.randomise_options ?? false
   showCorrectAfter.value = t.show_correct_after ?? false
   allowReview.value = t.allow_review ?? false
-
-  const qd = t.question_data || []
+  isPublished.value = t.is_published ?? false
 
   localQuestions.value = (t.question_data || []).map(q => ({
     _lid: Date.now() + Math.random(),
@@ -590,13 +657,13 @@ const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
 
 async function deleteExam() {
-  if (!templateId) return
+  if (!templateId.value) return
 
   isDeleting.value = true
   error.value = null
 
   try {
-    const res = await examStore.deleteTemplate(templateId)
+    const res = await examStore.deleteTemplate(templateId.value)
     if (!res) throw new Error(examStore.error || 'Delete failed')
     router.push({ name: 'TeacherExamDashboard', params: { courseId } })
 
@@ -611,12 +678,12 @@ async function deleteExam() {
 onMounted(() => {
   loadLessonOptions()
 
-  if (templateId) {
+  if (templateId.value) {
     loadTemplate()
   }
 
-  if (!templateId && localQuestions.value.length === 0) {
-    addEmptyQuestion()
+  if (!templateId.value && localQuestions.value.length === 0) {
+    addEmptyQuestion(false)
   }
 
 })

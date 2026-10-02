@@ -137,7 +137,7 @@
           <input
             v-if="!isMultiSelect"
             type="radio"
-            :name="'mc_' + q.id"
+            :name="'mc_' + q._lid"
             :value="optText"
             :checked="q.correct_answer === optText"
             class="option-radio"

@@ -53,67 +53,7 @@
           <p>These settings apply to this session only and do not modify the original template.</p>
         </div>
 
-        <!-- Session title -->
-        <div class="form-group">
-          <label>Session Title <span class="required">*</span></label>
-          <input
-            v-model="form.title"
-            type="text"
-            class="input-field"
-            placeholder="e.g. Microeconomics Midterm — Sec.1 March 2025"
-          />
-          <span class="hint">Students will see this name when opening the exam.</span>
-        </div>
-
-        <!-- Instructions -->
-        <div class="form-group">
-          <label>Instructions</label>
-          <textarea
-            v-model="form.instructions"
-            rows="3"
-            class="input-field"
-            placeholder="e.g. Closed book. No calculators. You have 90 minutes."
-          ></textarea>
-        </div>
-
-        <!-- Availability window -->
-        <div class="form-row two-col">
-          <div class="form-group">
-            <label>Available From</label>
-            <input v-model="form.available_from" type="datetime-local" class="input-field" />
-            <span class="hint">Leave blank to open immediately.</span>
-          </div>
-          <div class="form-group">
-            <label>Available Until</label>
-            <input v-model="form.available_until" type="datetime-local" class="input-field" />
-            <span class="hint">Leave blank for no deadline.</span>
-          </div>
-        </div>
-
-        <!-- Time limit override + max attempts -->
-        <div class="form-row two-col">
-          <div class="form-group">
-            <label>Time Limit Override (minutes)</label>
-            <input
-              v-model.number="form.time_limit_minutes"
-              type="number"
-              min="1"
-              class="input-field"
-              :placeholder="template?.time_limit_minutes ? `Default: ${template.time_limit_minutes} min` : 'No limit'"
-            />
-            <span class="hint">Overrides the template's time limit for this session.</span>
-          </div>
-          <div class="form-group">
-            <label>Max Attempts per Student</label>
-            <input
-              v-model.number="form.max_attempts"
-              type="number"
-              min="1"
-              class="input-field"
-              placeholder="1"
-            />
-          </div>
-        </div>
+        <ExamSessionFields :form="form" :default-time-limit="template?.time_limit_minutes" :disabled="isLaunching" />
 
         <!-- Error -->
         <div v-if="error" class="error-banner">
@@ -143,6 +83,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
+import ExamSessionFields from '@/components/ExamSessionFields.vue'
+import { buildSessionPayload } from '@/utils/examSession'
 
 const route = useRoute()
 const router = useRouter()
@@ -198,26 +140,7 @@ async function launch() {
   isLaunching.value = true
   error.value = null
   try {
-    // Build payload — only include non-null optional fields
-    const payload = {
-      template_id: Number(templateId),
-      title: form.value.title,
-    }
-    
-    if (form.value.instructions) {
-        payload.instructions = form.value.instructions
-    }
-    if (form.value.available_from) {
-        payload.available_from     = new Date(form.value.available_from).toISOString()
-    }
-    if (form.value.available_until) {
-        payload.available_until    = new Date(form.value.available_until).toISOString()
-    }
-    if (form.value.time_limit_minutes) {
-        payload.time_limit_minutes = form.value.time_limit_minutes
-    }
-
-    payload.max_attempts = form.value.max_attempts ?? 1
+    const payload = buildSessionPayload(templateId, form.value)
 
     const res = await examService.launchSession(payload)
     const session = res.data ?? res
@@ -411,56 +334,6 @@ async function launch() {
 }
 
 /* form-group: override global to remove bottom margin, use gap from parent */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0;
-}
-
-.form-group label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0;
-}
-
-.required { color: var(--primary-pink); }
-
-.hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  opacity: 0.8;
-}
-
-/* Local input override (tighter than global) */
-.input-field {
-  padding: 0.6rem 0.875rem;
-  font-size: 0.875rem;
-  font-family: inherit;
-  border: 1.5px solid var(--card-border);
-  border-radius: var(--radius-md);
-  background: var(--gray-light);
-  color: var(--text-main);
-  outline: none;
-  transition: all 0.18s ease;
-  width: 100%;
-}
-
-.input-field:focus {
-  border-color: var(--primary-pink);
-  background: var(--white);
-  box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
-}
-
-textarea.input-field { resize: vertical; line-height: 1.5; }
-
-/* 2-col row */
-.form-row { display: flex; gap: 1rem; }
-.two-col .form-group { flex: 1; min-width: 0; }
-
 /* Error banner */
 .error-banner {
   display: flex;
@@ -547,7 +420,6 @@ textarea.input-field { resize: vertical; line-height: 1.5; }
 /* Responsive */
 @media (max-width: 600px) {
   .page { padding: 1rem; }
-  .form-row { flex-direction: column; }
   .template-summary { flex-wrap: wrap; }
   .summary-item { min-width: 45%; border-right: none; border-bottom: 1px solid var(--card-border); }
 }

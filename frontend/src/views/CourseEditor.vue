@@ -44,7 +44,7 @@
                             type="text"
                             placeholder="e.g. Microeconomics 101"
                             maxlength="50"
-                            :disabled="store.loading"
+                            :disabled="store.loading || isSaving"
                         />
                         <span class="ce-char-count">{{ title.length }} / 50</span>
                     </div>
@@ -56,30 +56,43 @@
                             class="ce-input ce-textarea"
                             placeholder="Short description of the course..."
                             rows="4"
-                            :disabled="store.loading"
+                            :disabled="store.loading || isSaving"
                         />
                     </div>
 
-                    <div v-if="store.error" class="ce-error">
+                    <div class="ce-field">
+                        <label class="ce-label">Modules</label>
+                        <div v-for="(module, index) in modules" :key="module._key" class="ce-field">
+                            <label class="ce-label" :for="`course-module-${module._key}`">Module {{ index + 1 }}</label>
+                            <input :id="`course-module-${module._key}`" v-model="module.title"
+                                class="ce-input" maxlength="100" :disabled="isSaving || store.loading"
+                                placeholder="Module name, e.g. Introduction to Economics" />
+                        </div>
+                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="addModule">
+                            + Add Module
+                        </button>
+                    </div>
+
+                    <div v-if="store.error || saveError" class="ce-error" role="alert">
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                             <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.5"/>
                             <path d="M7.5 4.5V8M7.5 10.5V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
-                        {{ store.error }}
+                        {{ saveError || store.error }}
                     </div>
 
                     <div class="ce-form-actions">
                         <button
                             class="ce-btn ce-btn-primary"
-                            :disabled="store.loading || !title.trim()"
+                            :disabled="isSaving || store.loading || !title.trim()"
                             @click="handleSubmit"
                         >
-                            <svg v-if="store.loading" class="ce-spin" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                            <svg v-if="isSaving || store.loading" class="ce-spin" width="15" height="15" viewBox="0 0 15 15" fill="none">
                                 <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"/>
                             </svg>
-                            {{ store.loading ? 'Saving...' : (isEditMode ? 'Update Course' : 'Create Course') }}
+                            {{ isSaving || store.loading ? 'Saving...' : (isEditMode ? 'Save Course' : 'Create Course') }}
                         </button>
-                        <button class="ce-btn ce-btn-ghost" :disabled="store.loading" @click="router.back()">
+                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="router.back()">
                             Cancel
                         </button>
                     </div>
@@ -101,7 +114,7 @@
                         </div>
                         <button
                             class="ce-btn ce-btn-danger"
-                            :disabled="store.loading"
+                            :disabled="isSaving || store.loading"
                             @click="handleDelete"
                         >
                             Delete Course
@@ -205,18 +218,28 @@
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
 import { useCourseStore } from '@/store/courseStore'
+import learningService from '@/services/learningService'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCourseStore()
 
 // detect create or edit mode from route param
-const courseId = computed(() => route.params.courseId)
+const savedCourseId = ref(null)
+const courseId = computed(() => route.params.courseId || savedCourseId.value)
 const isEditMode = computed(() => !!courseId.value)
 
 // local form fields
 const title = ref('')
 const description = ref('')
+const isSaving = ref(false)
+const saveError = ref('')
+let moduleKey = 0
+const modules = ref([{ _key: ++moduleKey, id: null, title: '' }])
+
+function addModule() {
+    modules.value.push({ _key: ++moduleKey, id: null, title: '' })
+}
 
 // load course data and fill form fields
 // store.fetchCourse -> GET /courses/:courseId (teacher view)
@@ -225,6 +248,15 @@ async function loadCourse() {
     if (store.currentCourse) {
         title.value = store.currentCourse.title
         description.value = store.currentCourse.description ?? ''
+        try {
+            const res = await learningService.listModules(courseId.value)
+            modules.value = (res.data || []).map(module => ({
+                ...module, _key: ++moduleKey, savedTitle: module.title
+            }))
+            if (!modules.value.length) addModule()
+        } catch (err) {
+            saveError.value = 'Could not load modules. Refresh before editing course content.'
+        }
     }
 }
 
@@ -235,7 +267,7 @@ onMounted(async () => {
 
 // watch courseId: when router.replace() changes the id after create,
 // the component is reused (not remounted), so we need to reload manually
-watch(courseId, async (newId) => {
+watch(() => route.params.courseId, async (newId) => {
     if (newId) await loadCourse()
 })
 
@@ -247,20 +279,53 @@ onUnmounted(() => {
 // create: store.createCourse -> POST /courses
 // update: store.updateCourse -> PATCH /courses/:courseId
 const handleSubmit = async () => {
-    if (!title.value.trim()) return
+    if (!title.value.trim() || isSaving.value) return
+    const emptyModule = modules.value.findIndex(module => module.id && !module.title.trim())
+    if (emptyModule !== -1) {
+        saveError.value = `Enter a title for Module ${emptyModule + 1}.`
+        return
+    }
+    isSaving.value = true
+    saveError.value = ''
 
     const payload = {
         title: title.value.trim(),
         description: description.value.trim() || null
     }
 
-    if (!isEditMode.value) {
-        const created = await store.createCourse(payload)
-        // redirect to edit page so action cards appear and teacher can add content
-        if (created) router.replace(`/teacher/courses/${created.id}/edit`)
-    } else {
-        // store also refreshes currentCourse so counts stay accurate
-        await store.updateCourse(Number(courseId.value), payload)
+    try {
+        if (!isEditMode.value) {
+            const created = await store.createCourse(payload)
+            if (!created) return
+            savedCourseId.value = created.id
+        } else {
+            const updated = await store.updateCourse(Number(courseId.value), payload)
+            if (!updated) return
+        }
+
+        for (const [index, module] of modules.value.entries()) {
+            const moduleTitle = module.title.trim()
+            if (!moduleTitle) {
+                if (module.id) throw new Error(`Enter a title for Module ${index + 1}.`)
+                continue
+            }
+            if (!module.id) {
+                const res = await learningService.createModule({
+                    course_id: Number(courseId.value), title: moduleTitle, order_index: index
+                })
+                module.id = res.data.id
+            } else if (moduleTitle !== module.savedTitle) {
+                await learningService.updateModule(module.id, { title: moduleTitle })
+            }
+            module.savedTitle = moduleTitle
+        }
+
+        if (!route.params.courseId) await router.replace(`/teacher/courses/${courseId.value}/edit`)
+        else await store.fetchCourse(courseId.value)
+    } catch (err) {
+        saveError.value = err?.response?.data?.detail || err.message || 'Could not save modules. Your edits are kept; try saving again.'
+    } finally {
+        isSaving.value = false
     }
 }
 
