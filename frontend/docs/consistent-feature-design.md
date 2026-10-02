@@ -2,6 +2,14 @@
 
 Branch: `refactor/remove-flashcards`.
 
+## Later course overview preference
+
+The course overview was subsequently restored to the user's original screenshot:
+pink gradient hero, separate total cards and full-width green Modules / orange
+Exams banners on the original page background. Flashcards remain removed, so
+there are two totals and two study tools. Other feature pages keep their shared
+layout/navigation. The course data loading and API remain unchanged.
+
 ## Shared presentation and navigation
 
 `FeaturePage.vue` owns the white surface, 1120px content width, gutters, card
