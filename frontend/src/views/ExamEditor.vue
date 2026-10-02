@@ -1387,4 +1387,26 @@ onMounted(() => {
 .btn-header-save { background: var(--primary-pink); color: var(--white); }
 .btn-header-save:hover { background: var(--primary-hover); }
 .btn-header-danger { color: #dc2626; border-color: #fca5a5; background: #fff; }
+
+/* Give the editable content the larger share; settings remain in reach. */
+.designer-page { max-width: 1240px; }
+.content-area {
+  max-width: none; display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 1.25rem; align-items: start;
+}
+.content-area > .settings-card:first-child { grid-column: 1; grid-row: 1; }
+.content-area > .settings-card:nth-child(2) { grid-column: 2; grid-row: 1 / span 3; }
+.questions-card { grid-column: 1; grid-row: 2; min-width: 0; }
+.content-area > .settings-card:nth-child(3) { grid-column: 1; grid-row: 3; }
+.content-area > .settings-card:nth-child(2) .toggle-grid { grid-template-columns: 1fr; }
+.settings-card { min-width: 0; }
+@media (max-width: 1100px) {
+  .content-area { display: flex; flex-direction: column; }
+  .content-area > * { width: 100%; }
+  .content-area > .settings-card:nth-child(2) .toggle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .content-area > .settings-card:nth-child(2) .toggle-grid { grid-template-columns: 1fr; }
+}
 </style>

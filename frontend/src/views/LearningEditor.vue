@@ -77,6 +77,7 @@
         <!-- center: editor -->
         <main class="le-editor-area">
 
+          <div class="le-lesson-meta">
           <!-- lesson title (only once, top of editor) -->
           <input
             v-model="lesson.title"
@@ -95,6 +96,8 @@
             class="le-section-name-input"
             placeholder="Section name (e.g. Why Prices Change)"
           />
+
+          </div>
 
           <!-- sticky formatting toolbar -->
           <div class="le-toolbar">
@@ -730,16 +733,20 @@ onMounted(() => {
 /* ── editor area ──────────────────────────────────────── */
 .le-editor-area {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   background: var(--white);
 }
 
+.le-lesson-meta { padding: 0 3rem; }
+.le-lesson-meta label { display: block; font-size: 0.82rem; color: var(--muted); margin: 1rem 0 0.5rem; }
+
 .le-lesson-title-input {
   font-size: 1.85rem; font-weight: 800;
   color: var(--ink); border: none; outline: none;
-  padding: 2rem 3rem 0.25rem;
+  padding: 2rem 0 0.25rem;
   font-family: inherit;
   background: transparent;
   width: 100%; box-sizing: border-box;
@@ -749,7 +756,7 @@ onMounted(() => {
 .le-section-name-input {
   font-size: 1rem; font-weight: 600;
   color: var(--pink); border: none; outline: none;
-  padding: 0.25rem 3rem 1.25rem;
+  padding: 0.25rem 0 1.25rem;
   font-family: inherit;
   background: transparent;
   width: 100%; box-sizing: border-box;
@@ -968,8 +975,9 @@ onMounted(() => {
 /* ── responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
   .le-outline { display: none; }
+  .le-lesson-meta { padding: 0 1.25rem; }
   .le-lesson-title-input,
-  .le-section-name-input { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .le-section-name-input { padding-left: 0; padding-right: 0; }
   .le-toolbar { padding-left: 1.25rem; padding-right: 1.25rem; }
   .le-rich-text { padding: 1.25rem 1.25rem 4rem; }
   .le-topbar-center .le-bc-link,
