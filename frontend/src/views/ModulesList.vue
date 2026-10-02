@@ -1,6 +1,7 @@
 <template>
     <FeaturePage class="ml-root">
     <template #navigation><CourseNavigation :course-id="courseId" current="modules" /></template>
+        <EditorHeader inline title="Modules" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]" />
 
         <div class="ml-container">
 
@@ -61,6 +62,7 @@
 
 <script setup>
 import CourseNavigation from '@/components/CourseNavigation.vue'
+import EditorHeader from '@/components/EditorHeader.vue'
 import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
