@@ -183,6 +183,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
+import learningService from '@/services/learningService';
+import courseService from '@/services/courseService';
 
 const navbar = ref(null)
 const navbarHeight = ref(64)
@@ -274,24 +276,66 @@ const fetchSearch = async (query, version) => {
     }
 }
 
-const goToResult = (item) => {
-    closeSearch()
+const validId = value => Number.isSafeInteger(Number(value)) && Number(value) > 0
 
-    if (authStore.isStudent) {
-        const routes = {
-            course:    `/courses/${item.id}`,
-            learning:  `/courses/${item.course_id}/modules`,
-            exam:      `/exam/${item.course_id}`,
-        }
-        router.push(routes[item.type] ?? '/dashboard')
+const resolveLessonRoute = async (item) => {
+    const { data: page } = authStore.isTeacher
+        ? await learningService.getPage(item.id)
+        : await learningService.studyPage(item.id)
+    if (!validId(page.module_id)) throw new Error('Lesson module not found')
 
-    } else if (authStore.isTeacher) {
-        const routes = {
-            course:    `/teacher/courses/${item.id}/edit`,
-            learning:  `/teacher/learning/${item.course_id}`,
-            exam:      `/teacher/exam/${item.course_id}`,
+    let courseId = item.course_id
+    if (!validId(courseId)) {
+        const { data: courses } = authStore.isTeacher
+            ? await courseService.listMyCourses()
+            : await courseService.browseCourses()
+        for (const course of courses) {
+            const { data: modules } = await learningService.listModules(course.id)
+            if (modules.some(module => String(module.id) === String(page.module_id))) {
+                courseId = course.id
+                break
+            }
         }
-        router.push(routes[item.type] ?? '/teacher')
+    }
+    if (!validId(courseId)) throw new Error('Lesson course not found')
+    return {
+        name: authStore.isTeacher ? 'LearningEditor' : 'LearningChapter',
+        params: { courseId, moduleId: page.module_id, pageId: item.id },
+    }
+}
+
+const goToResult = async (item) => {
+    if (isSearching.value) return
+    const version = searchVersion
+    isSearching.value = true
+    searchError.value = ''
+    try {
+        if (!validId(item.id)) throw new Error('Search result not found')
+        let target
+        if (item.type === 'learning') {
+            target = await resolveLessonRoute(item)
+        } else {
+            if (item.type === 'exam' && !validId(item.course_id)) throw new Error('Exam course not found')
+            const routes = authStore.isTeacher ? {
+                course: `/teacher/courses/${item.id}/edit`,
+                exam: `/teacher/exam/${item.course_id}`,
+            } : {
+                course: `/courses/${item.id}`,
+                exam: `/exam/${item.course_id}`,
+            }
+            target = routes[item.type]
+            if (!target) throw new Error('Unknown search result')
+        }
+        if (version !== searchVersion) return
+        closeSearch()
+        await router.push(target)
+    } catch (err) {
+        if (version === searchVersion) {
+            searchError.value = 'Unable to open this result. Please try again.'
+            console.error('Search navigation error:', err)
+        }
+    } finally {
+        if (version === searchVersion) isSearching.value = false
     }
 }
 
