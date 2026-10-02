@@ -41,6 +41,8 @@ onUnmounted(() => observer?.disconnect())
   padding: var(--feature-gutter) var(--feature-gutter) 48px;
 }
 .feature-workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
+.feature-workspace:has(> .navigation-collapsed) { grid-template-columns: 44px minmax(0, 1fr); }
+.feature-workspace:has(> .navigation-collapsed) > .feature-body { max-width: none; }
 .feature-page-fluid .feature-body { max-width: none; padding: 0; }
 .feature-body > :is(.page-card, .card, .form-card, .score-hero, .stats-bar, .session-list, .exam-list, .error-banner) { margin-bottom: 24px; }
 .feature-page .card-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
@@ -89,6 +91,6 @@ onUnmounted(() => observer?.disconnect())
 @media (max-width: 768px) {
   .feature-body { padding: 20px 16px 32px; }
   .feature-page-fluid .feature-body { padding: 0; }
-  .feature-workspace { grid-template-columns: minmax(0, 1fr); }
+  .feature-workspace, .feature-workspace:has(> .navigation-collapsed) { grid-template-columns: minmax(0, 1fr); }
 }
 </style>

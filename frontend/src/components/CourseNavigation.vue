@@ -1,7 +1,12 @@
 <template>
-  <aside class="feature-navigation" aria-label="Course navigation">
-    <h2>{{ course?.title || 'Course' }}</h2>
-    <nav>
+  <aside class="feature-navigation" :class="{ 'navigation-collapsed': collapsed }" aria-label="Course navigation">
+    <button type="button" class="navigation-toggle" :aria-expanded="!collapsed"
+      :aria-label="collapsed ? 'Open course navigation' : 'Close course navigation'"
+      :title="collapsed ? 'Open navigation' : 'Close navigation'" @click="collapsed = !collapsed">
+      <span class="material-symbols-outlined" aria-hidden="true">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</span>
+    </button>
+    <h2 v-show="!collapsed">{{ course?.title || 'Course' }}</h2>
+    <nav v-show="!collapsed">
       <router-link :to="{ name: 'Courses', params: { courseId } }" :class="{ current: current === 'overview' }" :aria-current="current === 'overview' ? 'page' : undefined">
         <span class="material-symbols-outlined" aria-hidden="true">home</span> Course Overview
       </router-link>
@@ -16,9 +21,10 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCourseStore } from '@/store/courseStore'
 const props = defineProps({ courseId: { type: [String, Number], required: true }, current: String })
+const collapsed = ref(false)
 const store = useCourseStore()
 const course = computed(() => String(store.currentCourse?.id) === String(props.courseId) ? store.currentCourse : null)
 watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
@@ -28,6 +34,10 @@ watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
 
 <style scoped>
 .feature-navigation { position: sticky; top: var(--feature-sticky-top, 160px); align-self: start; padding: 24px 0; border-right: 1px solid var(--card-border); min-height: calc(100dvh - var(--feature-sticky-top, 160px)); background: var(--surface); }
+.navigation-toggle { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0 0 8px auto; border: 0; background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.navigation-toggle:hover { background: var(--gray-light); color: var(--primary-pink); }
+.navigation-toggle:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
+.navigation-collapsed { padding-top: 8px; }
 h2 { font-size: 1.05rem; line-height: 1.5; font-weight: 600; padding: 0 20px 20px; overflow-wrap: anywhere; }
 nav { display: flex; flex-direction: column; }
 a { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 20px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; }
