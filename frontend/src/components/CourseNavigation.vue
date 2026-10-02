@@ -34,10 +34,10 @@ watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
 
 <style scoped>
 .feature-navigation { position: sticky; top: var(--feature-sticky-top, 160px); align-self: start; padding: 24px 0; border-right: 1px solid var(--card-border); min-height: calc(100dvh - var(--feature-sticky-top, 160px)); background: var(--surface); }
-.navigation-toggle { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0 0 8px auto; border: 0; background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.navigation-toggle { position: absolute; top: 16px; right: -44px; z-index: 1; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0; border: 1px solid var(--card-border); border-radius: 0 8px 8px 0; background: var(--surface); color: var(--text-muted); cursor: pointer; }
 .navigation-toggle:hover { background: var(--gray-light); color: var(--primary-pink); }
 .navigation-toggle:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
-.navigation-collapsed { padding-top: 8px; }
+.navigation-collapsed .navigation-toggle { right: 0; border-radius: 8px; }
 h2 { font-size: 1.05rem; line-height: 1.5; font-weight: 600; padding: 0 20px 20px; overflow-wrap: anywhere; }
 nav { display: flex; flex-direction: column; }
 a { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 20px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; }
@@ -47,8 +47,10 @@ a:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; 
 .material-symbols-outlined { font-size: 18px; }
 .navigation-count { margin-left: auto; }
 @media (max-width: 768px) {
-  .feature-navigation { position: static; min-height: 0; border-right: 0; border-bottom: 1px solid var(--card-border); padding: 16px 0 0; }
-  h2 { padding-bottom: 12px; font-size: 0.95rem; }
+  .feature-navigation { position: relative; top: 0; min-height: 0; border-right: 0; border-bottom: 1px solid var(--card-border); padding: 16px 0 0; }
+  .navigation-toggle { top: 8px; right: 0; border-radius: 8px; }
+  .navigation-collapsed { min-height: 52px; }
+  h2 { padding-right: 64px; padding-bottom: 12px; font-size: 0.95rem; }
   nav { flex-direction: row; flex-wrap: wrap; }
   a { flex: 1 1 auto; padding: 10px 16px; }
 }
