@@ -2,25 +2,12 @@
 
   <!-- This has MOCK DATA for you to test -->
 
-  <div class="page">
+  <FeaturePage class="page">
+    <template #header>
+        <EditorHeader :title="session?.title || 'Exam Results'" :back-to="session?.course_id ? { name: 'TeacherExamDashboard', params: { courseId: session.course_id } } : { name: 'Teacher' }" :breadcrumbs="[{ label: 'My Courses', to: { name: 'Teacher' } }, { label: 'Exams', to: session?.course_id ? { name: 'TeacherExamDashboard', params: { courseId: session.course_id } } : { name: 'Teacher' } }, { label: 'Results', to: route.fullPath }]"><span :class="['session-badge', session?.is_open ? 'open' : 'closed']">{{ session?.is_open ? 'Open' : 'Closed' }}</span></EditorHeader>
+    </template>
 
     <!-- Page Card: gradient header -->
-    <div class="page-card">
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">Session #{{ sessionId }}</p>
-            <h1 class="page-title">{{ session?.title ?? 'Exam Results' }}</h1>
-          </div>
-        </div>
-        <span :class="['session-badge', session?.is_open ? 'open' : 'closed']">
-          {{ session?.is_open ? 'Open' : 'Closed' }}
-        </span>
-      </div>
-    </div>
 
     <div v-if="isLoading" class="loading-state">Loading results...</div>
 
@@ -241,10 +228,12 @@
       </div>
     </Teleport>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import examService from '@/services/examService'
@@ -409,96 +398,12 @@ function topicPct(stat) {
 </script>
 
 <style scoped>
-.page {
-  min-height: 100vh;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
 
 /* Page card + gradient header */
 .page-card {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(237, 64, 129, 0.22);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  padding: 1.5rem 1.75rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text { display: flex; flex-direction: column; gap: 4px; }
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: var(--white);
-  cursor: pointer;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-  transition: all 0.18s ease;
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
 }
 
 /* Session open/closed badge (on header right) */
@@ -512,7 +417,7 @@ function topicPct(stat) {
 }
 
 .session-badge.open { background: var(--light-green); color: var(--forest-green); }
-.session-badge.closed { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
+.session-badge.closed { background: var(--gray-light); color: var(--text-muted); }
 
 /* Stats bar */
 .stats-bar {
@@ -975,7 +880,7 @@ function topicPct(stat) {
 
 /* Responsive */
 @media (max-width: 900px) {
-  .page { padding: 1.25rem 1rem; }
+
   .stats-bar { grid-template-columns: repeat(3, 1fr); }
   .detail-panel { width: 100%; }
   .chart-bars { gap: 4px; }

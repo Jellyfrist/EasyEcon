@@ -298,7 +298,7 @@ const routes = [
   {
     path: '/teacher/learning/:courseId',
     name: 'TeacherLearningDashboard',
-    component: () => import('@/views/TeacherLearningDashboard.vue'),
+    component: () => import('@/views/LearningModule.vue'),
     meta: {
       showNavbar: true,
       showFooter: true,

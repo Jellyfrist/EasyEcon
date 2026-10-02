@@ -1,19 +1,19 @@
 <template>
-    <div class="cd-root">
-    
-        <main class="cd-container">
-    
-            <EditorHeader title="Manage Course Structure"
-                :back-to="{ name: 'TeacherLearningDashboard', params: { courseId } }"
+    <FeaturePage class="cd-root">
+    <template #header>
+        <EditorHeader title="Modules"
+                :back-to="{ name: 'CoursesEditor', params: { courseId } }"
                 :breadcrumbs="[
-                    { label: 'Dashboard', to: { name: 'Teacher' } },
-                    { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId } } },
-                    { label: 'Learning Overview', to: { name: 'TeacherLearningDashboard', params: { courseId } } },
+                    { label: 'My Courses', to: { name: 'Teacher' } },
+                    { label: 'Manage Course', to: { name: 'CoursesEditor', params: { courseId } } },
                     { label: 'Manage Modules', to: route.fullPath },
                 ]" />
+    </template>
+
+        <main class="cd-container">
 
             <div class="cd-body">
-    
+
                 <div class="action-card">
                     <div class="card-header">
                         <div class="icon-box icon-rose">
@@ -24,7 +24,7 @@
                             <p class="card-desc">Create a module folder first to organise your lesson content inside.</p>
                         </div>
                     </div>
-    
+
                     <div class="create-form">
                         <input v-model="newModuleTitle" type="text" placeholder="Module name, e.g. Chapter 1: Introduction to Economics" class="input-module" @keyup.enter="createModule">
                         <button @click="createModule" :disabled="isCreating" class="btn-create">
@@ -34,7 +34,7 @@
                           </button>
                     </div>
                 </div>
-    
+
                 <div class="action-card">
                     <div class="card-header">
                         <div class="icon-box icon-emerald">
@@ -45,12 +45,12 @@
                             <p class="card-desc">Click a module to write content (Sections) or delete items inside it.</p>
                         </div>
                     </div>
-    
+
                     <div v-if="isLoading" class="state-box">
                         <div class="cd-spinner"></div>
                         <p>Loading modules...</p>
                     </div>
-    
+
                     <div v-else-if="modules.length === 0" class="empty-box">
                         <div class="empty-icon-wrapper">
                             <span class="material-symbols-outlined empty-icon">folder_off</span>
@@ -58,10 +58,10 @@
                         <h3>No modules in this course yet.</h3>
                         <p>Please create a module using the form above.</p>
                     </div>
-    
+
                     <div v-else class="module-list">
                         <div v-for="(mod, index) in modules" :key="mod.id" class="module-card" :class="{'is-expanded': mod.isExpanded}">
-    
+
                             <div class="module-item">
                                 <div class="module-info">
                                     <div class="module-number">{{ index + 1 }}</div>
@@ -77,32 +77,29 @@
                                         </div>
                                     </div>
                                 </div>
-    
+
                                 <div class="module-actions">
+                                    <button @click="createNewLesson(mod.id)" class="btn-add-lesson btn-primary">
+                                          <span class="material-symbols-outlined icon-small">add</span> New Lesson
+                                      </button>
                                     <button @click="toggleModuleLessons(mod)" class="btn-action" :class="mod.isExpanded ? 'btn-edit' : 'btn-add'">
                                           <span class="material-symbols-outlined icon-small">
                                               {{ mod.isExpanded ? 'expand_less' : 'list' }}
                                           </span>
                                           {{ mod.isExpanded ? 'Hide Lessons' : 'Manage Lessons' }}
                                       </button>
-    
+
                                     <button v-if="mod.learning_pages && mod.learning_pages.length > 0" @click="deleteContent(mod)" class="btn-icon btn-clear" title="Delete content only (module name stays)">
                                           <span class="material-symbols-outlined">layers_clear</span>
                                       </button>
-    
+
                                     <button @click="deleteModule(mod.id)" class="btn-icon btn-delete" title="Delete this module">
                                           <span class="material-symbols-outlined">delete</span>
                                       </button>
                                 </div>
                             </div>
-    
+
                             <div v-show="mod.isExpanded" class="lesson-dropdown">
-                                <div class="add-lesson-bar">
-                                    <button @click="createNewLesson(mod.id)" class="btn-add-lesson">
-                                          <span class="material-symbols-outlined icon-small">add</span> New Lesson
-                                      </button>
-                                </div>
-    
                                 <div v-if="mod.learning_pages && mod.learning_pages.length > 0" class="lesson-items-container">
                                     <div v-for="(page, pIndex) in mod.learning_pages" :key="page.id" class="lesson-sub-item">
                                         <div class="lesson-sub-info">
@@ -119,21 +116,22 @@
                                           </button>
                                     </div>
                                 </div>
-    
+
                                 <div v-else class="empty-lessons-msg">
                                     <span class="material-symbols-outlined">info</span> No lessons added yet.
                                 </div>
                             </div>
-    
+
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-    </div>
+    </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -247,17 +245,8 @@ const deleteContent = async (mod) => {
 <style scoped>
 /* ================= Base Styles ================= */
 
-.cd-root {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
-    font-family: 'DM Sans', 'Sarabun', 'Inter', sans-serif;
-    padding: 2rem;
-    box-sizing: border-box;
-}
-
 .cd-container {
-    max-width: 1100px;
+
     margin: 0 auto;
 }
 
@@ -281,27 +270,6 @@ const deleteContent = async (mod) => {
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
-}
-
-.back-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    background: transparent;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 0;
-    flex-shrink: 0;
-}
-
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.6);
 }
 
 .cd-breadcrumb {
@@ -381,13 +349,6 @@ const deleteContent = async (mod) => {
 
 .icon-box .material-symbols-outlined {
     font-size: 24px;
-}
-
-.header-text h2 {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0 0 0.3rem 0;
 }
 
 .card-desc {
@@ -834,9 +795,7 @@ const deleteContent = async (mod) => {
 }
 
 @media (max-width: 640px) {
-    .cd-root {
-        padding: 1rem;
-    }
+
     .cd-hero {
         padding: 1.5rem;
     }

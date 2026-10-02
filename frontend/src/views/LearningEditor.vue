@@ -1,11 +1,11 @@
 <template>
-  <div class="le-root" :style="{ '--topbar-h': editorHeaderHeight + 'px', '--navbar-h': navbarOffset + 'px' }">
-
-    <EditorHeader :title="isEditMode ? 'Edit Lesson' : 'New Lesson'"
+  <FeaturePage class="le-root" :style="{ '--topbar-h': editorHeaderHeight + 'px', '--navbar-h': navbarOffset + 'px' }" fluid>
+    <template #header>
+        <EditorHeader :title="isEditMode ? 'Edit Lesson' : 'New Lesson'"
       :back-to="{ name: 'LearningModule', params: { courseId: courseIdParam } }"
       :breadcrumbs="[
-        { label: 'Dashboard', to: { name: 'Teacher' } },
-        { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId: courseIdParam } } },
+        { label: 'My Courses', to: { name: 'Teacher' } },
+        { label: 'Manage Course', to: { name: 'CoursesEditor', params: { courseId: courseIdParam } } },
         { label: 'Modules', to: { name: 'LearningModule', params: { courseId: courseIdParam } } },
         { label: isEditMode ? 'Edit Lesson' : 'New Lesson', to: route.fullPath },
       ]" @resize="editorHeaderHeight = $event">
@@ -37,6 +37,7 @@
           {{ isSaving ? 'Saving…' : (isEditMode ? 'Save' : 'Create Lesson') }}
         </button>
     </EditorHeader>
+    </template>
 
     <!-- loading -->
     <div v-if="isLoading" class="le-loading">
@@ -250,10 +251,11 @@
       </div>
 
     </template>
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -533,23 +535,6 @@ onMounted(() => {
 
 <style scoped>
 /* ── tokens ───────────────────────────────────────────── */
-.le-root {
-  --pink: #ed4081;
-  --pink-h: #d13570;
-  --pink-bg: #fce7ef;
-  --pink-light: #ffc7db;
-  --ink: #0f172a;
-  --ink2: #334155;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --bg: #f8f9fb;
-  --white: #ffffff;
-  --topbar-h: 56px;
-  --outline-w: 220px;
-  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-}
 
 /* ── topbar ───────────────────────────────────────────── */
 .le-topbar {

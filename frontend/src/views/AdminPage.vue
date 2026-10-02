@@ -1,14 +1,13 @@
 <template>
-    <div class="admin-wrapper">
-    
+    <FeaturePage class="admin-wrapper">
+        <template #header>
+            <EditorHeader title="Admin Panel" :breadcrumbs="[{ label: 'Admin', to: { name: 'Admin' } }]" />
+        </template>
+
         <div class="admin-content">
-    
+
             <!-- page header -->
-            <div class="page-header">
-                <h1>Admin <span class="text-pink">Panel</span></h1>
-                <p>Manage users, roles, and teacher accounts</p>
-            </div>
-    
+
             <!-- success banner -->
             <transition name="fade">
                 <div v-if="store.successMessage" class="alert alert--success">
@@ -18,7 +17,7 @@
                             </button>
                 </div>
             </transition>
-    
+
             <!-- error banner -->
             <transition name="fade">
                 <div v-if="store.error" class="alert alert--error">
@@ -28,7 +27,7 @@
                             </button>
                 </div>
             </transition>
-    
+
             <!-- invite teacher section -->
             <div class="section-card">
                 <div class="section-title-row">
@@ -38,7 +37,7 @@
                         <p>Enter full name and email, username and password are auto-generated and sent by email.</p>
                     </div>
                 </div>
-    
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Full Name</label>
@@ -49,13 +48,13 @@
                         <input v-model="invite.email" type="email" placeholder="e.g. john.doe@university.edu" :disabled="store.loading" />
                     </div>
                 </div>
-    
-                <button class="btn-action" :disabled="store.loading || !invite.full_name || !invite.email" @click="handleInvite">
+
+                <button class="btn-action btn-primary" :disabled="store.loading || !invite.full_name || !invite.email" @click="handleInvite">
                             <span class="material-symbols-outlined">send</span>
                             {{ store.loading ? 'Sending…' : 'Send Invite' }}
                         </button>
             </div>
-    
+
             <!-- users section -->
             <div class="section-card">
                 <div class="section-title-row">
@@ -65,25 +64,25 @@
                         <p>Filter, change roles, or deactivate user accounts.</p>
                     </div>
                 </div>
-    
+
                 <!-- role filter tabs -->
                 <div class="filter-tabs">
                     <div v-for="f in filters" :key="f.label" class="filter-tab" :class="{ active: activeFilter === f.value }" @click="applyFilter(f.value)">
                         {{ f.label }}
                     </div>
                 </div>
-    
+
                 <!-- skeleton loading -->
                 <div v-if="store.loading && !store.users.length" class="skeleton-list">
                     <div v-for="i in 4" :key="i" class="skeleton-row" />
                 </div>
-    
+
                 <!-- empty state -->
                 <div v-else-if="!store.users.length" class="empty-state">
                     <span class="material-symbols-outlined">person_search</span>
                     <p>No accounts found.</p>
                 </div>
-    
+
                 <!-- user rows -->
                 <ul v-else class="user-list">
                     <li v-for="user in store.users" :key="user.id" class="user-row" :class="{ 'user-row--inactive': !user.is_active }">
@@ -97,48 +96,47 @@
                                 <span class="user-email">{{ user.email }}</span>
                             </div>
                         </div>
-    
+
                         <!-- role badge -->
                         <span class="role-badge" :class="`role-badge--${user.role}`">
                                     {{ user.role }}
                                 </span>
-    
+
                         <!-- email sent indicator for teachers -->
                         <span v-if="user.role === 'teacher'" class="email-status" :class="user.email_sent ? 'email-status--sent' : 'email-status--pending'">
                                     <span class="material-symbols-outlined" style="font-size: 14px">
                                         {{ user.email_sent ? 'mark_email_read' : 'schedule_send' }}
                                     </span> {{ user.email_sent ? 'Sent' : 'Pending' }}
                         </span>
-    
+
                         <!-- active user actions -->
                         <div v-if="user.is_active" class="user-actions">
                             <button v-if="user.role === 'teacher'" class="btn-ghost" :disabled="store.loading" @click="handleResend(user)">
                                         Resend Email
                                     </button>
-    
+
                             <select class="role-select" :value="user.role" :disabled="store.loading" @change="handleRoleChange(user, $event.target.value)">
                                         <option value="student">student</option>
                                         <option value="teacher">teacher</option>
                                         <option value="admin">admin</option>
                                     </select>
-    
+
                             <button class="btn-danger" :disabled="store.loading" @click="confirmDeactivate(user)">
                                         <span class="material-symbols-outlined">block</span>
                                         Deactivate
                                     </button>
                         </div>
-    
+
                         <span v-else class="inactive-label">
                                     <span class="material-symbols-outlined" style="font-size: 15px">block</span> Inactive
                         </span>
                     </li>
                 </ul>
             </div>
-    
+
         </div>
-    
-        <Footer />
-    
+
+
         <!-- confirm deactivate modal -->
         <transition name="fade">
             <div v-if="confirm.show" class="modal-overlay" @click.self="confirm.show = false">
@@ -155,11 +153,13 @@
                 </div>
             </div>
         </transition>
-    
-    </div>
+
+    </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue'
+import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useAdminStore } from '@/store/adminStore'
 
@@ -223,40 +223,11 @@ async function handleResend(user) {
 </script>
 
 <style scoped>
-.admin-wrapper {
-    min-height: 100vh;
-    background: var(--background-light);
-    display: flex;
-    flex-direction: column;
-}
-
-.admin-content {
-    flex: 1;
-    max-width: 900px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 48px 24px 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-}
 
 /* page header */
 
-.page-header h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 6px;
-}
-
 .text-pink {
     color: var(--primary-hover);
-}
-
-.page-header p {
-    font-size: 14px;
-    color: #6b7280;
 }
 
 /* alert banners */

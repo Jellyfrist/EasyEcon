@@ -1,20 +1,11 @@
 <template>
-  <div class="page">
+  <FeaturePage class="page">
+    <template #header>
+        <EditorHeader :title="'Open Exam Session'" :back-to="(route.params.courseId || template?.course_id) ? { name: 'TeacherExamDashboard', params: { courseId: route.params.courseId || template?.course_id } } : { name: 'Teacher' }" :breadcrumbs="[{ label: 'My Courses', to: { name: 'Teacher' } }, { label: 'Exams', to: (route.params.courseId || template?.course_id) ? { name: 'TeacherExamDashboard', params: { courseId: route.params.courseId || template?.course_id } } : { name: 'Teacher' } }, { label: 'Open Session', to: route.fullPath }]"></EditorHeader>
+    </template>
 
     <!-- Page Card: gradient header + summary bar -->
     <div class="page-card">
-
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">{{ template?.title ?? `Template #${templateId}` }}</p>
-            <h1 class="page-title">Launch Exam Session</h1>
-          </div>
-        </div>
-      </div>
 
       <!-- Loading template -->
       <div v-if="isLoadingTemplate" class="loading-state">
@@ -63,7 +54,7 @@
 
         <!-- Actions -->
         <div class="form-actions">
-          <button class="btn-ghost" @click="$router.back()">Cancel</button>
+          <button class="btn-ghost" @click="router.push((route.params.courseId || template?.course_id) ? { name: 'TeacherExamDashboard', params: { courseId: route.params.courseId || template?.course_id } } : { name: 'Teacher' })">Cancel</button>
           <button
             class="btn-primary"
             :disabled="!form.title || isLaunching"
@@ -76,10 +67,12 @@
 
     </div>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
@@ -159,100 +152,12 @@ async function launch() {
 
 <style scoped>
 /* Page wrapper */
-.page {
-  min-height: 100vh;
-  padding: 2rem;
-  max-width: 860px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
 
 /* Page card + gradient header */
 .page-card {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(237, 64, 129, 0.22);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  padding: 1.5rem 1.75rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: var(--white);
-  cursor: pointer;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-  transition: all 0.18s ease;
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
 }
 
 /* Template summary bar  (inside page-card, white bg) */
@@ -419,7 +324,7 @@ async function launch() {
 
 /* Responsive */
 @media (max-width: 600px) {
-  .page { padding: 1rem; }
+
   .template-summary { flex-wrap: wrap; }
   .summary-item { min-width: 45%; border-right: none; border-bottom: 1px solid var(--card-border); }
 }

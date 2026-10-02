@@ -1,12 +1,12 @@
 <template>
 
-  <div class="designer-page">
-    
-    <EditorHeader :title="templateId ? 'Edit Exam' : 'New Exam'"
+  <FeaturePage class="designer-page">
+    <template #header>
+        <EditorHeader :title="templateId ? 'Edit Exam' : 'New Exam'"
       :back-to="{ name: 'TeacherExamDashboard', params: { courseId } }"
       :breadcrumbs="[
-        { label: 'Dashboard', to: { name: 'Teacher' } },
-        { label: 'Edit Course', to: { name: 'CoursesEditor', params: { courseId } } },
+        { label: 'My Courses', to: { name: 'Teacher' } },
+        { label: 'Manage Course', to: { name: 'CoursesEditor', params: { courseId } } },
         { label: 'Exams', to: { name: 'TeacherExamDashboard', params: { courseId } } },
         { label: templateId ? 'Edit Exam' : 'New Exam', to: route.fullPath },
       ]">
@@ -32,6 +32,7 @@
             ERROR: {{ error }}
           </div>
     </EditorHeader>
+    </template>
 
     <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="modal">
@@ -57,7 +58,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- ================= CONTENT AREA ================= -->
     <div class="content-area">
@@ -154,7 +154,6 @@
 
       </section>
 
-
       <!-- ================= OPTIONS ================= -->
       <section class="settings-card">
 
@@ -243,7 +242,6 @@
           :default-time-limit="durationMinutes" :disabled="isSaving" />
       </section>
 
-
       <!-- ================= QUESTIONS ================= -->
       <section class="questions-card">
 
@@ -291,7 +289,6 @@
       </section>
 
     </div>
-
 
     <!-- ================= PREVIEW ================= -->
     <div v-if="showPreview" class="modal-overlay">
@@ -360,10 +357,11 @@
 
     </div>
 
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -463,7 +461,6 @@ function removeLocalQuestion(lid) {
   localQuestions.value = localQuestions.value.filter(q => q._lid !== lid)
 }
 
-
 const showPreview = ref(false)
 const isSaving = ref(false)
 const error = ref(null)
@@ -473,7 +470,6 @@ const lastSavedText = computed(() => {
   if (!lastSaved.value) return null
   return new Date(lastSaved.value).toLocaleTimeString()
 })
-
 
 function buildPayload() {
 
@@ -486,7 +482,7 @@ function buildPayload() {
     exam_type: examType.value,
     academic_year: academicYear.value || null,
     term: term.value || null,
-    
+
     question_data: localQuestions.value.map((q, i) => ({
       id: `q${i+1}`,
       type: q.type,
@@ -676,128 +672,12 @@ onMounted(() => {
 
 <style scoped>
 /* Page & layout */
-.designer-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
-}
 
 /* Page card + gradient header */
 .page-card {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(237, 64, 129, 0.22);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  padding: 1.5rem 1.75rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: var(--white);
-  cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.breadcrumb svg { flex-shrink: 0; opacity: 0.7; }
-
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-
-.page-subtitle {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.78);
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.page-subtitle .status-dot {
-  color: rgba(255,255,255,0.78);
-  font-size: 0.78rem;
-}
-
-.page-subtitle .status-dot::before {
-  background: rgba(255,255,255,0.5);
-}
-
-.page-subtitle .status-dot.is-published::before {
-  background: var(--light-green);
-  animation: none;
 }
 
 /* Header action buttons (right side) */
@@ -880,7 +760,7 @@ onMounted(() => {
 
 /* Content area */
 .content-area {
-  max-width: 860px;
+
   margin: 0 auto;
   width: 100%;
   padding-bottom: 4rem;
@@ -1370,13 +1250,13 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .designer-page { padding: 1rem; }
+
   .form-grid,
   .toggle-grid,
   .question-row-group,
   .settings-row-3,
   .settings-row-2 { grid-template-columns: 1fr; }
-  .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+
   .header-actions { width: 100%; justify-content: flex-start; }
 }
 .preview-question-text { white-space: pre-wrap; font-weight: 400; }
@@ -1389,9 +1269,9 @@ onMounted(() => {
 .btn-header-danger { color: #dc2626; border-color: #fca5a5; background: #fff; }
 
 /* Give the editable content the larger share; settings remain in reach. */
-.designer-page { max-width: 1240px; }
+
 .content-area {
-  max-width: none; display: grid;
+   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 1.25rem; align-items: start;
 }

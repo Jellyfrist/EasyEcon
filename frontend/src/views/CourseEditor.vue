@@ -1,11 +1,11 @@
 <template>
-    <div class="ce-page">
-
-        <EditorHeader :title="isEditMode ? 'Edit Course' : 'Create New Course'"
+    <FeaturePage class="ce-page">
+    <template #header>
+        <EditorHeader :title="isEditMode ? 'Manage Course' : 'New Course'"
             :back-to="{ name: 'Teacher' }"
             :breadcrumbs="[
-                { label: 'Dashboard', to: { name: 'Teacher' } },
-                { label: isEditMode ? 'Edit Course' : 'New Course', to: route.fullPath },
+                { label: 'My Courses', to: { name: 'Teacher' } },
+                { label: isEditMode ? 'Manage Course' : 'New Course', to: route.fullPath },
             ]">
                     <div class="ce-form-actions">
                         <button
@@ -18,12 +18,13 @@
                             </svg>
                             {{ isSaving || store.loading ? 'Saving...' : (isEditMode ? 'Save Course' : 'Create Course') }}
                         </button>
-                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="router.back()">
+                        <button class="ce-btn ce-btn-ghost" :disabled="isSaving || store.loading" @click="router.push({ name: 'Teacher' })">
                             Cancel
                         </button>
                     </div>
 
         </EditorHeader>
+    </template>
 
         <!-- main 2-column layout: form left, action cards right -->
         <div class="ce-layout">
@@ -175,10 +176,11 @@
             </div>
         </div>
 
-    </div>
+    </FeaturePage>
 </template>
 
 <script setup>
+import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
@@ -305,12 +307,6 @@ const handleDelete = async () => {
 
 <style scoped>
 /* ---- page shell ---- */
-.ce-page {
-    min-height: 100vh;
-    background: #f8f9fb;
-    padding: 2rem 2.5rem 4rem;
-    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-}
 
 /* ---- page header ---- */
 .ce-page-header {
@@ -749,9 +745,6 @@ const handleDelete = async () => {
 
 /* ---- responsive ---- */
 @media (max-width: 900px) {
-    .ce-page {
-        padding: 1.5rem 1.25rem 3rem;
-    }
 
     .ce-layout {
         grid-template-columns: 1fr;

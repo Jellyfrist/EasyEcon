@@ -1,46 +1,26 @@
 <template>
-  <div class="dashboard">
+  <FeaturePage class="dashboard">
+    <template #header>
+        <EditorHeader :title="'Exams'" :back-to="{ name: 'CoursesEditor', params: { courseId } }" :breadcrumbs="[{ label: 'My Courses', to: { name: 'Teacher' } }, { label: 'Manage Course', to: { name: 'CoursesEditor', params: { courseId: courseId } } }, { label: 'Exams', to: route.fullPath }]"><button class="btn-create" @click.stop="openCreateExam">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Create New Exam
+        </button></EditorHeader>
+    </template>
 
     <div class="page-card">
 
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="$router.back()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-              Course #{{ courseId }}
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-              Exams
-            </p>
-            <h1 class="page-title">My Exam Template</h1>
-            <p class="page-subtitle">Manage all exam templates for this course</p>
-          </div>
-        </div>
-        <button class="btn-create" @click.stop="openCreateExam">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          Create New Exam
-        </button>
-      </div>
-
       <!-- Filter bar -->
-      <div class="filter-bar">
-        <div class="filter-bar-top">
-          <span class="filter-bar-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filter
-          </span>
-          <div class="search-box">
+      <FeatureToolbar>
+                <template #search>
+<div class="search-box">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input v-model="searchQuery" type="text" placeholder="Search exams…" />
             <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
-        </div>
-        <div class="filter-bar-bottom">
+                </template>
+<div class="filter-bar-bottom">
           <div class="filter-group">
             <span class="filter-label">Type</span>
             <div class="filter-pills">
@@ -63,7 +43,7 @@
             </div>
           </div>
         </div>
-      </div>
+            </FeatureToolbar>
 
     </div>
 
@@ -159,10 +139,13 @@
         </div>
       </div>
     </Teleport>
-  </div>
+  </FeaturePage>
 </template>
 
 <script setup>
+import FeatureToolbar from '@/components/FeatureToolbar.vue'
+import EditorHeader from '@/components/EditorHeader.vue'
+import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
@@ -277,15 +260,6 @@ async function deleteExam() {
 
 <style scoped>
 /* ── Dashboard wrapper ── */
-.dashboard {
-  min-height: 100vh;
-  padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
 
 /* ── Page Card (header + filter combined) ── */
 .page-card {
@@ -295,100 +269,6 @@ async function deleteExam() {
 }
 
 /* ── Header ── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  padding: 1.5rem 1.75rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: white;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.breadcrumb svg {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-
-.page-subtitle {
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: rgba(255,255,255,0.78);
-  margin: 0;
-}
 
 /* Create button (lives in header, white ghost style) */
 .btn-create {
@@ -422,26 +302,9 @@ async function deleteExam() {
   border-top: 1px solid rgba(237, 64, 129, 0.15);
 }
 
-.filter-bar-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: var(--primary-pink);
-  padding: 0.6rem 1rem;
-}
 
-.filter-bar-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+
+
 
 .search-box {
   display: flex;
@@ -859,11 +722,11 @@ async function deleteExam() {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .dashboard { padding: 1.25rem 1rem; }
+
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
   .exam-card { flex-direction: column; align-items: flex-start; }
   .exam-card-right { width: 100%; justify-content: space-between; }
-  .filter-bar-top { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+
   .search-box { min-width: unset; }
   .filter-bar-bottom { flex-direction: column; align-items: stretch; gap: 0.5rem; }
   .filter-divider { width: 100%; height: 1.5px; }
