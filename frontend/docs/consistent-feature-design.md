@@ -10,6 +10,16 @@ Exams banners on the original page background. Flashcards remain removed, so
 there are two totals and two study tools. Other feature pages keep their shared
 layout/navigation. The course data loading and API remain unchanged.
 
+## Direct exam start
+
+Start Exam and Retake now both open TakeExam in one click. `ExamSet.vue` is
+removed. The existing ExamSession route name and `/exam/session/:sessionId`
+URL redirect to TakeExam with the query preserved. Exam and result Back links
+return to the exam list (Dashboard fallback for old result links without course
+context). Submission carries the course query to the result page. The existing
+exam information/instructions remain on the answering surface; timer and payload
+logic are unchanged. One additional student page is removed.
+
 ## Shared presentation and navigation
 
 `FeaturePage.vue` owns the white surface, 1120px content width, gutters, card

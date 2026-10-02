@@ -1,7 +1,7 @@
 <template>
     <FeaturePage class="exam-page">
     <template #header>
-        <EditorHeader v-if="session" class="top-bar" :title="session?.title || 'Exam'" :back-to="{ name: 'ExamSession', params: { sessionId } }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exam', to: { name: 'ExamSession', params: { sessionId } } }, { label: 'Take Exam', to: route.fullPath }]"><template #status><div class="progress-track-container">
+        <EditorHeader v-if="session" class="top-bar" :title="session?.title || 'Exam'" :back-to="examListRoute" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: examListRoute }, { label: 'Take Exam', to: route.fullPath }]"><template #status><div class="progress-track-container">
             <div class="progress-track">
               <div class="progress-fill" :style="{ width: progressPct + '%' }"></div>
             </div>
@@ -130,6 +130,10 @@ const sessionId = route.params.sessionId
 
 // --- State ---
 const session = ref(null)
+const examListRoute = computed(() => {
+    const courseId = route.query.courseId || session.value?.course_id
+    return courseId ? { name: 'ExamDashboard', params: { courseId } } : { name: 'Dashboard' }
+})
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const error = ref(null)
@@ -208,7 +212,7 @@ async function submit() {
         const res = await examService.submitAttempt(payload)
         const attempt = res.data ?? res
         clearInterval(timerInterval)
-        router.replace({ name: 'ExamResult', params: { attemptId: attempt.id } })
+        router.replace({ name: 'ExamResult', params: { attemptId: attempt.id }, query: { courseId: route.query.courseId || session.value.course_id } })
     } catch (err) {
         console.error('Failed to submit', err)
         error.value = err ?.response ?.data ?.detail ?? 'Submission failed. Please try again.'
@@ -228,12 +232,6 @@ function typeLabel(type) {
     return TYPE_LABELS[type] ?? type
 }
 
-function goExamSet() {
-    router.push({
-        name: 'ExamSession',
-        params: { sessionId: sessionId }
-    });
-}
 </script>
 
 <style scoped>

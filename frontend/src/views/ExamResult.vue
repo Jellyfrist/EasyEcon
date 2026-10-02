@@ -1,7 +1,7 @@
 <template>
   <FeaturePage class="page">
     <template #header>
-        <EditorHeader title="Exam Result" :back-to="attempt?.session_id ? { name: 'ExamSession', params: { sessionId: attempt.session_id } } : { name: 'Dashboard' }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: attempt?.session_id ? { name: 'ExamSession', params: { sessionId: attempt.session_id } } : { name: 'Dashboard' } }, { label: 'Result', to: route.fullPath }]">
+        <EditorHeader title="Exam Result" :back-to="examListRoute" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: examListRoute }, { label: 'Result', to: route.fullPath }]">
             <template #status><p v-if="attempt" class="header-status">Attempt #{{ attempt.id }}</p></template>
         </EditorHeader>
     </template>
@@ -73,8 +73,8 @@
       <div v-if="reviewError" class="error-banner" role="alert">{{ reviewError }}</div>
 
       <div class="actions-row">
-        <button class="btn-ghost" @click="router.push({ name: 'ExamSession', params: { sessionId: attempt.session_id } })">
-          Back to Exam session
+        <button class="btn-ghost" @click="router.push(examListRoute)">
+          Back to Exams
         </button>
       </div>
 
@@ -100,6 +100,10 @@ const route = useRoute()
 const router = useRouter()
 // All legacy result/analysis/history routes share this view.
 const attempt = ref(null)
+const examListRoute = computed(() => {
+  const courseId = route.query.courseId || attempt.value?.course_id
+  return courseId ? { name: 'ExamDashboard', params: { courseId } } : { name: 'Dashboard' }
+})
 const attempts = ref([])
 const wrongTopics = ref([])
 const isLoading = ref(false)

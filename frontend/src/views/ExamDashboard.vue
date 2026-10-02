@@ -214,7 +214,7 @@ function formatDate(dt) {
 
 function openExam(session) {
     router.push({
-        name: getMyAttempt(session.id) ? 'TakeExam' : 'ExamSession',
+        name: 'TakeExam',
         params: { sessionId: session.id },
         query: { courseId: courseId.value },
     })
@@ -222,7 +222,7 @@ function openExam(session) {
 
 function viewResult(session) {
     const attempt = getMyAttempt(session.id)
-    if (attempt) router.push({ name: 'ExamResult', params: { attemptId: attempt.id } })
+    if (attempt) router.push({ name: 'ExamResult', params: { attemptId: attempt.id }, query: { courseId: courseId.value } })
 }
 </script>
 

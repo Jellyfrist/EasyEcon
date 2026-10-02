@@ -144,12 +144,11 @@ const routes = [
     }
   },
 
-  // student - session: see exam template for session. (Get raedy for the exam)
-  // API: GET /exam/sessions/:sessionId
+  // Legacy detail URL now opens the exam directly.
   {
     path: '/exam/session/:sessionId',
     name: 'ExamSession',
-    component: () => import('@/views/ExamSet.vue'),
+    redirect: to => ({ name: 'TakeExam', params: { sessionId: to.params.sessionId }, query: to.query }),
     meta: {
       showNavbar: true,
       showFooter: true,
