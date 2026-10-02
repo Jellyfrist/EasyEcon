@@ -115,6 +115,7 @@
             </div>
 
             <div class="nav-right">
+                <ThemeToggle />
                 <div v-if="authStore.isAuthenticated" class="user-menu">
                     <div class="user-info" @click.stop="toggleDropdown('user')">
                         <span class="material-symbols-outlined dropdown-arrow pink">expand_more</span>
@@ -173,6 +174,7 @@
 </template>
 
 <script setup>
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
@@ -307,8 +309,8 @@ onUnmounted(() => {
 
 <style scoped>
 .navbar {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--surface);
+    border-bottom: 1px solid var(--theme-border-e5e7eb);
     padding: 0;
     position: sticky;
     top: 0;
@@ -347,7 +349,7 @@ onUnmounted(() => {
 }
 
 .logo-box:hover {
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
 }
 
 .logo-icon {
@@ -368,7 +370,7 @@ onUnmounted(() => {
     align-items: baseline;
     font-weight: 900;
     font-size: 25px;
-    color: black;
+    color: var(--theme-fg-000000);
 }
 
 .pink {
@@ -390,15 +392,15 @@ onUnmounted(() => {
     border: none;
     font-size: 14px;
     font-weight: 500;
-    color: #4b5563;
+    color: var(--theme-fg-4b5563);
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.2s;
 }
 
 .nav-link:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--theme-bg-f3f4f6);
+    color: var(--theme-fg-1f2937);
 }
 
 .nav-link .material-symbols-outlined {
@@ -411,7 +413,7 @@ onUnmounted(() => {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     padding: 8px;
@@ -447,7 +449,7 @@ onUnmounted(() => {
     border: none;
     border-radius: 8px;
     font-size: 14px;
-    color: #374151;
+    color: var(--theme-fg-374151);
     text-decoration: none;
     cursor: pointer;
     transition: background 0.2s;
@@ -455,25 +457,25 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-    background: #f3f4f6;
+    background: var(--theme-bg-f3f4f6);
 }
 
 .dropdown-item .material-symbols-outlined {
     font-size: 20px;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
 }
 
 .dropdown-item.logout {
-    color: #ef4444;
+    color: var(--theme-fg-ef4444);
 }
 
 .dropdown-item.logout:hover {
-    background: #fef2f2;
+    background: var(--theme-bg-fef2f2);
 }
 
 .dropdown-divider {
     height: 1px;
-    background: #e5e7eb;
+    background: var(--theme-bg-e5e7eb);
     margin: 8px 0;
 }
 
@@ -544,7 +546,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #f3f4f6;
+    background: var(--theme-bg-f3f4f6);
     padding: 10px 16px;
     border-radius: 24px;
     transition: all 0.2s;
@@ -556,7 +558,7 @@ onUnmounted(() => {
     top: calc(100% + 8px);
     left: 0;
     right: 0;        /* กว้างเท่า .nav-center เป๊ะ */
-    background: white;
+    background: var(--surface);
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--card-border);
@@ -568,13 +570,13 @@ onUnmounted(() => {
 }
 
 .search-box:focus-within {
-    background: white;
+    background: var(--surface);
     box-shadow: 0 0 0 2px var(--primary-pink);
 }
 
 .search-icon {
     font-size: 20px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 .search-box input {
@@ -583,11 +585,11 @@ onUnmounted(() => {
     background: none;
     outline: none;
     font-size: 14px;
-    color: #1f2937;
+    color: var(--theme-fg-1f2937);
 }
 
 .search-box input::placeholder {
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 /* Right Section */
@@ -610,13 +612,13 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     transition: all 0.2s;
 }
 
 .icon-btn:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--theme-bg-f3f4f6);
+    color: var(--theme-fg-1f2937);
 }
 
 /* Login Button */

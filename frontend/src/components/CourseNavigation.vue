@@ -27,7 +27,7 @@ watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
 </script>
 
 <style scoped>
-.feature-navigation { position: sticky; top: var(--feature-sticky-top, 160px); align-self: start; padding: 24px 0; border-right: 1px solid var(--card-border); min-height: calc(100dvh - var(--feature-sticky-top, 160px)); background: var(--white); }
+.feature-navigation { position: sticky; top: var(--feature-sticky-top, 160px); align-self: start; padding: 24px 0; border-right: 1px solid var(--card-border); min-height: calc(100dvh - var(--feature-sticky-top, 160px)); background: var(--surface); }
 h2 { font-size: 1.05rem; line-height: 1.5; font-weight: 600; padding: 0 20px 20px; overflow-wrap: anywhere; }
 nav { display: flex; flex-direction: column; }
 a { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 20px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; }

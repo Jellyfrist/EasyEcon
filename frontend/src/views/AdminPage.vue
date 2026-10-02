@@ -243,15 +243,15 @@ async function handleResend(user) {
 }
 
 .alert--success {
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
+    background: var(--theme-bg-ecfdf5);
+    color: var(--theme-fg-065f46);
+    border: 1px solid var(--theme-border-a7f3d0);
 }
 
 .alert--error {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
+    background: var(--theme-bg-fff1f2);
+    color: var(--theme-fg-be123c);
+    border: 1px solid var(--theme-border-fecdd3);
 }
 
 .alert-close {
@@ -272,8 +272,8 @@ async function handleResend(user) {
 /* section card — same look as social-btn/form containers in Login.vue */
 
 .section-card {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border: 1px solid var(--theme-border-e5e7eb);
     border-radius: 16px;
     padding: 28px;
     display: flex;
@@ -296,13 +296,13 @@ async function handleResend(user) {
 .section-title-row h2 {
     font-size: 18px;
     font-weight: 700;
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin-bottom: 4px;
 }
 
 .section-title-row p {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
 }
 
 /* invite form row */
@@ -323,15 +323,15 @@ async function handleResend(user) {
 .form-group label {
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: var(--theme-fg-374151);
 }
 
 input {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--theme-border-e5e7eb);
     border-radius: 12px;
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
     font-size: 15px;
     font-family: inherit;
     box-sizing: border-box;
@@ -341,7 +341,7 @@ input {
 input:focus {
     outline: none;
     border-color: var(--forest-green);
-    background: white;
+    background: var(--surface);
     box-shadow: 0 0 0 4px rgba(10, 112, 60, 0.1);
 }
 
@@ -399,19 +399,19 @@ input:disabled {
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    border: 1px solid #e5e7eb;
-    background: white;
+    border: 1px solid var(--theme-border-e5e7eb);
+    background: var(--surface);
     border-radius: 10px;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     font-family: inherit;
-    color: #374151;
+    color: var(--theme-fg-374151);
     transition: background 0.2s;
 }
 
 .btn-ghost:hover:not(:disabled) {
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
 }
 
 .btn-ghost:disabled {
@@ -426,19 +426,19 @@ input:disabled {
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    border: 1px solid #fecdd3;
-    background: white;
+    border: 1px solid var(--theme-border-fecdd3);
+    background: var(--surface);
     border-radius: 10px;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     font-family: inherit;
-    color: #be123c;
+    color: var(--theme-fg-be123c);
     transition: all 0.2s;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background: #fff1f2;
+    background: var(--theme-bg-fff1f2);
 }
 
 .btn-danger:disabled {
@@ -450,7 +450,7 @@ input:disabled {
 
 .filter-tabs {
     display: flex;
-    background: #f1f3f7;
+    background: var(--theme-bg-f1f3f7);
     padding: 4px;
     border-radius: 12px;
     gap: 4px;
@@ -464,12 +464,12 @@ input:disabled {
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     transition: all 0.2s;
 }
 
 .filter-tab.active {
-    background: white;
+    background: var(--surface);
     color: var(--primary-hover);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -484,7 +484,7 @@ input:disabled {
 
 .skeleton-row {
     height: 62px;
-    background: linear-gradient(90deg, #f1f3f7 25%, #f9fafb 50%, #f1f3f7 75%);
+    background: linear-gradient(90deg, var(--theme-bg-f1f3f7) 25%, var(--theme-bg-f9fafb) 50%, var(--theme-bg-f1f3f7) 75%);
     background-size: 200% 100%;
     border-radius: 12px;
     animation: shimmer 1.4s infinite;
@@ -504,7 +504,7 @@ input:disabled {
 .empty-state {
     text-align: center;
     padding: 40px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 .empty-state .material-symbols-outlined {
@@ -530,7 +530,7 @@ input:disabled {
     align-items: center;
     gap: 14px;
     padding: 14px 4px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--theme-border-f3f4f6);
     transition: background 0.15s;
     border-radius: 8px;
 }
@@ -540,7 +540,7 @@ input:disabled {
 }
 
 .user-row:hover {
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
 }
 
 .user-row--inactive {
@@ -553,7 +553,7 @@ input:disabled {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: #fff6fd;
+    background: var(--theme-bg-fff6fd);
     color: var(--primary-hover);
     display: flex;
     align-items: center;
@@ -564,13 +564,13 @@ input:disabled {
 }
 
 .user-avatar[data-role="teacher"] {
-    background: #f2ffed;
+    background: var(--theme-bg-f2ffed);
     color: var(--accent-green);
 }
 
 .user-avatar[data-role="admin"] {
-    background: #e7faff;
-    color: #00145d;
+    background: var(--theme-bg-e7faff);
+    color: var(--theme-fg-00145d);
 }
 
 .user-identity {
@@ -590,7 +590,7 @@ input:disabled {
 .user-name {
     font-size: 14px;
     font-weight: 600;
-    color: #111827;
+    color: var(--theme-fg-111827);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -598,7 +598,7 @@ input:disabled {
 
 .user-email {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -615,18 +615,18 @@ input:disabled {
 }
 
 .role-badge--student {
-    background: #fff6fd;
+    background: var(--theme-bg-fff6fd);
     color: var(--primary-hover);
 }
 
 .role-badge--teacher {
-    background: #f2ffed;
+    background: var(--theme-bg-f2ffed);
     color: var(--accent-green);
 }
 
 .role-badge--admin {
-    background: #e7faff;
-    color: #00145d;
+    background: var(--theme-bg-e7faff);
+    color: var(--theme-fg-00145d);
 }
 
 /* email status */
@@ -643,12 +643,12 @@ input:disabled {
 }
 
 .email-status--sent {
-    background: #e7faff;
+    background: var(--theme-bg-e7faff);
     color: var(--accent-green);
 }
 
 .email-status--pending {
-    background: #fefce8;
+    background: var(--theme-bg-fefce8);
     color: var(--warning-yellow);
 }
 
@@ -663,13 +663,13 @@ input:disabled {
 
 .role-select {
     padding: 8px 10px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--theme-border-e5e7eb);
     border-radius: 10px;
     font-family: inherit;
     font-size: 13px;
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
     cursor: pointer;
-    color: #374151;
+    color: var(--theme-fg-374151);
     transition: all 0.2s;
 }
 
@@ -686,7 +686,7 @@ input:disabled {
 
 .inactive-label {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -705,7 +705,7 @@ input:disabled {
 }
 
 .modal-card {
-    background: white;
+    background: var(--surface);
     border-radius: 16px;
     padding: 32px;
     max-width: 400px;
@@ -716,13 +716,13 @@ input:disabled {
 .modal-card h3 {
     font-size: 18px;
     font-weight: 700;
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin-bottom: 10px;
 }
 
 .modal-card p {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     line-height: 1.6;
     margin-bottom: 24px;
 }

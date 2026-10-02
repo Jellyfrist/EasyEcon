@@ -70,19 +70,19 @@ const goToLogin = () => {
 </script>
 
 <style scoped>
-.verify-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc; font-family: 'Sarabun', sans-serif; }
-.card { background: white; padding: 3rem; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 450px; width: 90%; border: 1px solid #f1f5f9; }
+.verify-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--theme-bg-f8fafc); font-family: 'Sarabun', sans-serif; }
+.card { background: var(--surface); padding: 3rem; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 450px; width: 90%; border: 1px solid var(--theme-border-f1f5f9); }
 .state-box { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-.spinner { width: 50px; height: 50px; border: 4px solid #f1f5f9; border-top-color: #e11d48; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+.spinner { width: 50px; height: 50px; border: 4px solid var(--theme-border-f1f5f9); border-top-color: #e11d48; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .icon { font-size: 72px; margin-bottom: 0.5rem; }
-.success .icon { color: #10b981; }
-.error .icon { color: #ef4444; }
-h2 { color: #0f172a; font-size: 1.5rem; font-weight: 800; margin: 0; }
-.text-gray-500 { color: #64748b; margin: 0; line-height: 1.5; }
+.success .icon { color: var(--theme-fg-10b981); }
+.error .icon { color: var(--theme-fg-ef4444); }
+h2 { color: var(--theme-fg-0f172a); font-size: 1.5rem; font-weight: 800; margin: 0; }
+.text-gray-500 { color: var(--theme-fg-64748b); margin: 0; line-height: 1.5; }
 .btn-primary { background: #e11d48; color: white; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: all 0.2s; }
 .btn-primary:hover { background: #be123c; }
-.btn-outline { background: white; color: #64748b; border: 2px solid #e2e8f0; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: all 0.2s; }
-.btn-outline:hover { background: #f8fafc; color: #0f172a; }
+.btn-outline { background: var(--surface); color: var(--theme-fg-64748b); border: 2px solid var(--theme-border-e2e8f0); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: all 0.2s; }
+.btn-outline:hover { background: var(--theme-bg-f8fafc); color: var(--theme-fg-0f172a); }
 .mt-4 { margin-top: 1rem; }
 </style>

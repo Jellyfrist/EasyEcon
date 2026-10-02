@@ -110,7 +110,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 
 .study-sidebar .module-info {
     padding: 1rem 1.5rem 1.5rem 1.5rem;
-    border-bottom: 1px solid #fce4ec;
+    border-bottom: 1px solid var(--theme-border-fce4ec);
 }
 
 .study-sidebar .info-label {
@@ -131,7 +131,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 
 .study-sidebar .progress-bar-wrap {
     height: 6px;
-    background: #fce4ec;
+    background: var(--theme-bg-fce4ec);
     border-radius: 6px;
     overflow: hidden;
     margin-bottom: 8px;
@@ -139,7 +139,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 
 .study-sidebar .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ffc6da, #ffffff);
+    background: linear-gradient(90deg, var(--theme-bg-ffc6da), var(--surface));
     border-radius: 6px;
     transition: width 0.4s ease;
 }
@@ -196,23 +196,23 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 
 .study-sidebar .nav-item.active {
     background: rgba(255, 255, 255, 0.2);
-    /* color: #1f2937; */
+    /* color: var(--theme-fg-1f2937); */
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 12px rgba(223, 74, 125, 0.08);
 }
 
 .study-sidebar .nav-item.completed .nav-icon {
-    color: #00ffaa;
+    color: var(--theme-fg-00ffaa);
 }
 
 .study-sidebar .nav-item.active .nav-icon {
-    color: #ff006a;
+    color: var(--theme-fg-ff006a);
 }
 
 .study-sidebar .nav-icon {
     font-size: 20px;
     flex-shrink: 0;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 .study-sidebar .nav-item-text {
@@ -228,7 +228,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 }
 
 .study-sidebar::-webkit-scrollbar-thumb {
-    background-color: #f1c3d3;
+    background-color: var(--theme-bg-f1c3d3);
     border-radius: 4px;
 }
 
@@ -333,7 +333,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 
 .complete-sidebar .progress-bar-fill {
     height: 100%;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 6px;
 }
 
@@ -414,7 +414,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
     min-width: 0;
     height: 100%;
     overflow-y: auto;
-    background: white;
+    background: var(--surface);
     border-right: 1px solid var(--card-border);
     border-radius: 0;
     box-shadow: none;
@@ -429,7 +429,7 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
 .reader-sidebar .info-label, .reader-sidebar .nav-label, .reader-sidebar .progress-bar-wrap { display: none; }
 .reader-sidebar .info-label, .reader-sidebar .nav-label { color: var(--text-muted); font-size: 0.65rem; }
 .reader-sidebar .info-title { color: var(--text-main); font-size: 1.5rem; line-height: 1.25; font-weight: 400; overflow-wrap: anywhere; }
-.reader-sidebar .progress-bar-wrap { height: 4px; background: #f3f4f6; }
+.reader-sidebar .progress-bar-wrap { height: 4px; background: var(--theme-bg-f3f4f6); }
 .reader-sidebar .progress-bar-fill { background: var(--primary-pink); }
 .reader-sidebar .progress-pct { text-align: left; margin: 4px 0; color: var(--text-muted); font-weight: 500; font-size: 0.65rem; }
 .reader-sidebar .lesson-nav { order: 2; padding: 8px 0; }
@@ -445,9 +445,9 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
     border-radius: 0;
     box-shadow: none;
 }
-.reader-sidebar .nav-item:hover:not(.active) { background: #fff0f5; transform: none; }
+.reader-sidebar .nav-item:hover:not(.active) { background: var(--theme-bg-fff0f5); transform: none; }
 .reader-sidebar .nav-item.active { color: white; background: var(--primary-pink); border: 0; box-shadow: none; }
-.reader-sidebar .nav-item.completed .nav-icon { color: var(--forest-green); }
+.reader-sidebar .nav-item.completed .nav-icon { color: var(--text-green); }
 .reader-sidebar .nav-item.active .nav-icon { color: white; }
 .reader-sidebar .nav-icon { font-size: 14px; }
 .reader-sidebar .lesson-document-icon { font-size: 16px; color: var(--primary-pink); }

@@ -234,7 +234,7 @@ const reviewLessons = () => {
     width: min(100%, 800px);
     margin: auto;
     padding: 32px;
-    background: var(--white);
+    background: var(--surface);
     text-align: center;
 }
 
@@ -258,7 +258,7 @@ const reviewLessons = () => {
     justify-content: center;
     width: 140px;
     height: 140px;
-    background: #fce4ec;
+    background: var(--theme-bg-fce4ec);
     border-radius: 50%;
 }
 
@@ -272,7 +272,7 @@ const reviewLessons = () => {
 }
 
 .result-title {
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin-bottom: 0.75rem;
     font-size: 2.2rem;
     font-weight: 900;
@@ -280,7 +280,7 @@ const reviewLessons = () => {
 }
 
 .result-desc {
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-size: 1.05rem;
     margin-bottom: 3rem;
     line-height: 1.6;
@@ -309,7 +309,7 @@ const reviewLessons = () => {
 .circle-inner {
     width: 160px;
     height: 160px;
-    background: white;
+    background: var(--surface);
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -319,7 +319,7 @@ const reviewLessons = () => {
 }
 
 .score-text {
-    color: #df4a7d !important;
+    color: var(--theme-fg-df4a7d) !important;
     font-size: 3.5rem !important;
     margin: 0 !important;
     font-weight: 900 !important;
@@ -328,7 +328,7 @@ const reviewLessons = () => {
 }
 
 .score-label {
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     font-size: 0.8rem;
     margin-top: 8px;
     font-weight: 800;
@@ -348,10 +348,10 @@ const reviewLessons = () => {
 .stat-box {
     flex: 1;
     max-width: 250px;
-    background: #faf9f7;
+    background: var(--theme-bg-faf9f7);
     padding: 1.5rem;
     border-radius: 16px;
-    border: 1px solid #f3f4f6;
+    border: 1px solid var(--theme-border-f3f4f6);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -359,7 +359,7 @@ const reviewLessons = () => {
 }
 
 .stat-title {
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-size: 0.85rem;
     font-weight: 800;
     display: flex;
@@ -371,7 +371,7 @@ const reviewLessons = () => {
 
 .stat-value {
     font-size: 1.6rem;
-    color: #111827;
+    color: var(--theme-fg-111827);
     font-weight: 900;
 }
 
@@ -408,10 +408,10 @@ const reviewLessons = () => {
 
 .btn-outline {
     width: 100%;
-    background: white;
-    color: #6b7280;
+    background: var(--surface);
+    color: var(--theme-fg-6b7280);
     padding: 16px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--theme-border-e5e7eb);
     border-radius: 99px;
     font-size: 1.1rem;
     font-weight: 800;
@@ -420,9 +420,9 @@ const reviewLessons = () => {
 }
 
 .btn-outline:hover {
-    background: #f9fafb;
-    color: #111827;
-    border-color: #d1d5db;
+    background: var(--theme-bg-f9fafb);
+    color: var(--theme-fg-111827);
+    border-color: var(--theme-border-d1d5db);
 }
 
 /* Loading */
@@ -431,14 +431,14 @@ const reviewLessons = () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-weight: 700;
 }
 
 .spinner {
     width: 44px;
     height: 44px;
-    border: 4px solid #fce4ec;
+    border: 4px solid var(--theme-border-fce4ec);
     border-top-color: #df4a7d;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -470,7 +470,7 @@ const reviewLessons = () => {
     width: min(100%, 800px);
     margin: auto;
     padding: 32px;
-    background: var(--white);
+    background: var(--surface);
     text-align: center;
 }
     .circle-chart {

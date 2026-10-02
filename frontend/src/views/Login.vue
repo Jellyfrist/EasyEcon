@@ -175,14 +175,14 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     width: 100vw;
     margin: 0;
     padding: 0;
-    background: white;
+    background: var(--surface);
 }
 
 /* --- Form Section --- */
 
 .form-section {
     flex: 1;
-    background: white;
+    background: var(--surface);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -200,7 +200,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 .auth-nav {
     display: flex;
-    background: #f1f3f7;
+    background: var(--theme-bg-f1f3f7);
     padding: 4px;
     border-radius: 12px;
     margin-bottom: clamp(12px, 2vh, 30px);
@@ -215,23 +215,23 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     font-size: 14px;
     cursor: pointer;
     text-decoration: none;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
 }
 
 .nav-item.active {
-    background: white;
-    color: var(--forest-green);
+    background: var(--surface);
+    color: var(--text-green);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .form-header h2 {
-    color: #111827;
+    color: var(--theme-fg-111827);
     font-size: clamp(18px, 2.5vh, 24px);
     margin-bottom: 4px;
 }
 
 .form-header p {
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-size: 14px;
     margin-bottom: clamp(12px, 2vh, 25px);
 }
@@ -251,8 +251,8 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     justify-content: center;
     gap: 12px;
     padding: clamp(8px, 1.2vh, 12px);
-    border: 1px solid #e5e7eb;
-    background: white;
+    border: 1px solid var(--theme-border-e5e7eb);
+    background: var(--surface);
     border-radius: 12px;
     font-weight: 600;
     font-size: 15px;
@@ -261,7 +261,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 }
 
 .social-btn:hover {
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
 }
 
 /* Divider */
@@ -270,7 +270,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     display: flex;
     align-items: center;
     margin: clamp(10px, 1.5vh, 25px) 0;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -281,7 +281,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     content: "";
     flex: 1;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--theme-bg-e5e7eb);
 }
 
 .divider span {
@@ -299,7 +299,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
     margin-bottom: 5px;
     font-weight: 600;
     font-size: 14px;
-    color: #374151;
+    color: var(--theme-fg-374151);
 }
 
 .label-row {
@@ -310,7 +310,7 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 
 .forgot-link {
     font-size: 12px;
-    color: var(--forest-green);
+    color: var(--text-green);
     text-decoration: none;
 }
 
@@ -321,9 +321,9 @@ const loginWithGithub = () => authService.loginWithSocial('github');
 input {
     width: 100%;
     padding: clamp(8px, 1.2vh, 12px) 16px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--theme-border-e5e7eb);
     border-radius: 12px;
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
     font-size: 15px;
     box-sizing: border-box;
 }
@@ -331,7 +331,7 @@ input {
 input:focus {
     outline: none;
     border-color: var(--forest-green);
-    background: white;
+    background: var(--surface);
     box-shadow: 0 0 0 4px rgba(10, 112, 60, 0.1);
 }
 
@@ -346,7 +346,7 @@ input:focus {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     cursor: pointer;
 }
 
@@ -380,7 +380,7 @@ input:focus {
 }
 
 .footer-text a {
-    color: var(--forest-green);
+    color: var(--text-green);
     text-decoration: none;
     font-weight: 600;
 }

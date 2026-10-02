@@ -194,14 +194,14 @@ const goToLesson = moduleId => {
     align-items: center;
     gap: 1rem;
     padding: 5rem 0;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-weight: 500;
 }
 
 .ml-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #fce4ec;
+    border: 4px solid var(--theme-border-fce4ec);
     border-top-color: #df4a7d;
     border-radius: 50%;
     animation: ml-spin 0.8s linear infinite;
@@ -214,11 +214,11 @@ const goToLesson = moduleId => {
 }
 
 .error-state {
-    background: #fef2f2;
+    background: var(--theme-bg-fef2f2);
     border-radius: 16px;
-    color: #ef4444;
+    color: var(--theme-fg-ef4444);
     padding: 3rem;
-    border: 1px dashed #fecaca;
+    border: 1px dashed var(--theme-border-fecaca);
 }
 
 /* Empty State */
@@ -227,7 +227,7 @@ const goToLesson = moduleId => {
     text-align: center;
     padding: 5rem 2rem;
     background: rgba(255, 255, 255, 0.7);
-    border: 2px dashed #cbd5e1;
+    border: 2px dashed var(--theme-border-cbd5e1);
     border-radius: 20px;
     backdrop-filter: blur(8px);
 }
@@ -236,8 +236,8 @@ const goToLesson = moduleId => {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: #ffffff;
-    color: #94a3b8;
+    background: var(--surface);
+    color: var(--theme-fg-94a3b8);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -252,13 +252,13 @@ const goToLesson = moduleId => {
 .ml-empty h3 {
     font-size: 1.2rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--theme-fg-1e293b);
     margin: 0 0 0.5rem;
 }
 
 .ml-empty p {
     font-size: 0.95rem;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     line-height: 1.6;
     margin: 0;
 }
@@ -274,8 +274,8 @@ const goToLesson = moduleId => {
 }
 
 .ml-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border: 1px solid var(--theme-border-e5e7eb);
     border-radius: 20px;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -287,7 +287,7 @@ const goToLesson = moduleId => {
 .ml-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-    border-color: #d1d5db;
+    border-color: var(--theme-border-d1d5db);
 }
 
 .ml-card-body {
@@ -316,8 +316,8 @@ const goToLesson = moduleId => {
 .ml-lesson-pill {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #6b7280;
-    background: #f3f4f6;
+    color: var(--theme-fg-6b7280);
+    background: var(--theme-bg-f3f4f6);
     padding: 4px 12px;
     border-radius: 99px;
 }
@@ -332,21 +332,21 @@ const goToLesson = moduleId => {
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     margin-bottom: 0.5rem;
 }
 
 .ml-card-title {
     font-size: 1.2rem;
     font-weight: 800;
-    color: #1f2937;
+    color: var(--theme-fg-1f2937);
     margin: 0;
     line-height: 1.4;
 }
 
 .ml-card-footer {
     margin-top: 1.5rem;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--theme-border-f3f4f6);
     padding-top: 1.25rem;
 }
 

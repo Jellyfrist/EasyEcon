@@ -124,7 +124,7 @@ defineProps({
 
 .input-field:focus {
   border-color: var(--primary-pink);
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
 }
 

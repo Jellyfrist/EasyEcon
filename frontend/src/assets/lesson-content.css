@@ -15,8 +15,8 @@
 .lesson-html hr { border: 0; border-top: 1px solid var(--card-border); margin: 28px 0; }
 .lesson-html .lesson-callout { padding: 24px; margin: 24px 0; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--gray-light); }
 .lesson-html .lesson-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
-.lesson-html .lesson-content-card { min-width: 0; padding: 24px; border: 1px solid var(--card-border); border-top: 3px solid var(--primary-pink); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); background: var(--white); }
-.lesson-html .lesson-highlight { padding: 16px 20px; border-left: 2px solid var(--primary-pink); margin: 24px 0; background: #fff0f5; }
+.lesson-html .lesson-content-card { min-width: 0; padding: 24px; border: 1px solid var(--card-border); border-top: 3px solid var(--primary-pink); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); background: var(--surface); }
+.lesson-html .lesson-highlight { padding: 16px 20px; border-left: 2px solid var(--primary-pink); margin: 24px 0; background: var(--theme-bg-fff0f5); }
 .lesson-html :is(.lesson-callout, .lesson-content-card, .lesson-highlight) > :first-child { margin-top: 0; }
 .lesson-html :is(.lesson-callout, .lesson-content-card, .lesson-highlight) > :last-child { margin-bottom: 0; }
 @media (max-width: 600px) {

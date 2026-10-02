@@ -28,7 +28,7 @@ onUnmounted(() => observer?.disconnect())
 
 <style>
 .feature-page {
-  background: var(--white);
+  background: var(--surface);
   color: var(--text-main);
   min-height: calc(100dvh - 64px);
   font-family: inherit;
@@ -49,7 +49,7 @@ onUnmounted(() => observer?.disconnect())
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  background: var(--white);
+  background: var(--surface);
 }
 .feature-page .page-card:has(> .filter-bar), .feature-page .page-card:has(> .template-summary) {
   overflow: visible;
@@ -81,7 +81,7 @@ onUnmounted(() => observer?.disconnect())
   transform: none;
 }
 .feature-page .topbar-actions :is(.ce-btn-ghost, .btn-header-ghost, .le-add-section-btn) {
-  background: var(--white);
+  background: var(--surface);
   color: var(--text-main);
   border: 1px solid var(--card-border);
 }

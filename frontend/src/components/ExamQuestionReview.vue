@@ -103,7 +103,7 @@ function formatAnswer(value) {
 /* ── Card ── */
 
 .card {
-    background: var(--white);
+    background: var(--surface);
     border: 1.5px solid var(--card-border);
     border-radius: var(--radius-lg);
     padding: 1.375rem 1.5rem;
@@ -162,8 +162,8 @@ function formatAnswer(value) {
 }
 
 .weakness-item {
-    background: #fff7ed;
-    border: 1px solid #fed7aa;
+    background: var(--theme-bg-fff7ed);
+    border: 1px solid var(--theme-border-fed7aa);
     border-radius: var(--radius-md);
     padding: 0.875rem 1rem;
     display: flex;
@@ -188,18 +188,18 @@ function formatAnswer(value) {
 }
 
 .q-type-badge.multiple_choice {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--theme-bg-eff6ff);
+    color: var(--theme-fg-2563eb);
 }
 
 .q-type-badge.true_false {
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 .q-type-badge.short_answer {
     background: var(--light-yellow);
-    color: #b45309;
+    color: var(--theme-fg-b45309);
 }
 
 .weakness-q-text {
@@ -224,7 +224,7 @@ function formatAnswer(value) {
 .answer-val {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 /* ── Explanation ── */
@@ -264,7 +264,7 @@ function formatAnswer(value) {
     gap: 0.5rem;
 }
 
-.answer-val.your { color: #b91c1c; }
+.answer-val.your { color: var(--theme-fg-b91c1c); }
 
 .explanation-hidden {
   font-size: 0.75rem;
@@ -295,7 +295,7 @@ function formatAnswer(value) {
 }
 
 .review-link:hover {
-    background: #ffb3cc;
+    background: var(--theme-bg-ffb3cc);
 }
 
 .page-ref-text {
@@ -306,8 +306,8 @@ function formatAnswer(value) {
 /* ── Perfect Card ── */
 
 .perfect-card {
-    background: #f0fdf4;
-    border: 1.5px solid #bbf7d0;
+    background: var(--theme-bg-f0fdf4);
+    border: 1.5px solid var(--theme-border-bbf7d0);
     border-radius: var(--radius-lg);
     padding: 2.25rem;
     text-align: center;
@@ -323,7 +323,7 @@ function formatAnswer(value) {
     height: 56px;
     border-radius: 50%;
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -332,7 +332,7 @@ function formatAnswer(value) {
 .perfect-text {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 

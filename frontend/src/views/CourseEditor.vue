@@ -319,7 +319,7 @@ const handleDelete = async () => {
     gap: 0.5rem;
     margin-bottom: 1rem;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
 }
 
 .ce-back-btn {
@@ -328,7 +328,7 @@ const handleDelete = async () => {
     gap: 0.3rem;
     background: none;
     border: none;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
@@ -337,7 +337,7 @@ const handleDelete = async () => {
 }
 
 .ce-back-btn:hover {
-    color: #1e293b;
+    color: var(--theme-fg-1e293b);
 }
 
 .ce-breadcrumb-sep {
@@ -345,21 +345,21 @@ const handleDelete = async () => {
 }
 
 .ce-breadcrumb-current {
-    color: #475569;
+    color: var(--theme-fg-475569);
     font-weight: 500;
 }
 
 .ce-page-title {
     font-size: 1.65rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--theme-fg-0f172a);
     letter-spacing: -0.02em;
     margin: 0 0 0.35rem;
 }
 
 .ce-page-sub {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     margin: 0;
 }
 
@@ -380,8 +380,8 @@ const handleDelete = async () => {
 
 /* ---- shared card base ---- */
 .ce-card {
-    background: #ffffff;
-    border: 1px solid #e8edf3;
+    background: var(--surface);
+    border: 1px solid var(--theme-border-e8edf3);
     border-radius: 14px;
     padding: 1.75rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
@@ -393,18 +393,18 @@ const handleDelete = async () => {
     gap: 0.6rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--theme-border-f1f5f9);
 }
 
 .ce-card-icon {
     display: flex;
     align-items: center;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
 }
 
 /* ---- form fields ---- */
@@ -417,13 +417,13 @@ const handleDelete = async () => {
     display: block;
     font-size: 0.825rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--theme-fg-374151);
     margin-bottom: 0.45rem;
     letter-spacing: 0.01em;
 }
 
 .ce-required {
-    color: #f43f5e;
+    color: var(--theme-fg-f43f5e);
     margin-left: 2px;
 }
 
@@ -431,9 +431,9 @@ const handleDelete = async () => {
     width: 100%;
     padding: 0.65rem 0.9rem;
     font-size: 0.9rem;
-    color: #1e293b;
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
+    color: var(--theme-fg-1e293b);
+    background: var(--theme-bg-f8fafc);
+    border: 1.5px solid var(--theme-border-e2e8f0);
     border-radius: 9px;
     outline: none;
     transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
@@ -442,8 +442,8 @@ const handleDelete = async () => {
 }
 
 .ce-input:focus {
-    border-color: #6366f1;
-    background: #ffffff;
+    border-color: var(--theme-border-6366f1);
+    background: var(--surface);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
@@ -463,7 +463,7 @@ const handleDelete = async () => {
     right: 0;
     top: 0;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
 }
 
 /* ---- error ---- */
@@ -471,9 +471,9 @@ const handleDelete = async () => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: #fff1f2;
-    border: 1px solid #fecdd3;
-    color: #e11d48;
+    background: var(--theme-bg-fff1f2);
+    border: 1px solid var(--theme-border-fecdd3);
+    color: var(--theme-fg-e11d48);
     font-size: 0.85rem;
     padding: 0.75rem 1rem;
     border-radius: 9px;
@@ -520,20 +520,20 @@ const handleDelete = async () => {
 
 .ce-btn-ghost {
     background: transparent;
-    color: #64748b;
-    border: 1.5px solid #e2e8f0;
+    color: var(--theme-fg-64748b);
+    border: 1.5px solid var(--theme-border-e2e8f0);
 }
 
 .ce-btn-ghost:hover:not(:disabled) {
-    background: #f8fafc;
-    color: #1e293b;
-    border-color: #cbd5e1;
+    background: var(--theme-bg-f8fafc);
+    color: var(--theme-fg-1e293b);
+    border-color: var(--theme-border-cbd5e1);
 }
 
 .ce-btn-danger {
-    background: #fff1f2;
-    color: #e11d48;
-    border: 1.5px solid #fecdd3;
+    background: var(--theme-bg-fff1f2);
+    color: var(--theme-fg-e11d48);
+    border: 1.5px solid var(--theme-border-fecdd3);
     padding: 0.55rem 1.1rem;
     font-size: 0.825rem;
 }
@@ -555,8 +555,8 @@ const handleDelete = async () => {
 
 /* ---- danger zone ---- */
 .ce-danger-zone {
-    background: #ffffff;
-    border: 1.5px solid #fecdd3;
+    background: var(--surface);
+    border: 1.5px solid var(--theme-border-fecdd3);
     border-radius: 14px;
     padding: 1.25rem 1.75rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
@@ -568,7 +568,7 @@ const handleDelete = async () => {
     gap: 0.45rem;
     font-size: 0.78rem;
     font-weight: 700;
-    color: #e11d48;
+    color: var(--theme-fg-e11d48);
     text-transform: uppercase;
     letter-spacing: 0.07em;
     margin-bottom: 1rem;
@@ -590,12 +590,12 @@ const handleDelete = async () => {
 .ce-danger-info strong {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--theme-fg-1e293b);
 }
 
 .ce-danger-info span {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     line-height: 1.4;
 }
 
@@ -611,7 +611,7 @@ const handleDelete = async () => {
 .ce-action-label {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     text-transform: uppercase;
     letter-spacing: 0.07em;
     margin: 0 0 0.1rem;
@@ -619,8 +619,8 @@ const handleDelete = async () => {
 
 /* ---- action cards ---- */
 .ce-action-card {
-    background: #ffffff;
-    border: 1.5px solid #e8edf3;
+    background: var(--surface);
+    border: 1.5px solid var(--theme-border-e8edf3);
     border-radius: 14px;
     padding: 1.25rem;
     cursor: pointer;
@@ -629,7 +629,7 @@ const handleDelete = async () => {
 }
 
 .ce-action-card:hover {
-    border-color: #c7d2fe;
+    border-color: var(--theme-border-c7d2fe);
     box-shadow: 0 4px 16px rgba(99,102,241,0.1);
     transform: translateY(-2px);
 }
@@ -641,7 +641,7 @@ const handleDelete = async () => {
 
 .ce-action-card-disabled:hover {
     transform: none;
-    border-color: #e8edf3;
+    border-color: var(--theme-border-e8edf3);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
@@ -662,13 +662,13 @@ const handleDelete = async () => {
 }
 
 .ce-icon-amber {
-    background: #fffbeb;
-    color: #f59e0b;
+    background: var(--theme-bg-fffbeb);
+    color: var(--theme-fg-f59e0b);
 }
 
 .ce-icon-green {
-    background: #f0fdf4;
-    color: #22c55e;
+    background: var(--theme-bg-f0fdf4);
+    color: var(--theme-fg-22c55e);
 }
 
 .ce-action-arrow {
@@ -677,15 +677,15 @@ const handleDelete = async () => {
 }
 
 .ce-action-card:hover .ce-action-arrow {
-    color: #6366f1;
+    color: var(--theme-fg-6366f1);
     transform: translateX(2px);
 }
 
 .ce-coming-soon {
     font-size: 0.7rem;
     font-weight: 600;
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--theme-bg-fef3c7);
+    color: var(--theme-fg-d97706);
     padding: 2px 8px;
     border-radius: 999px;
     letter-spacing: 0.03em;
@@ -694,13 +694,13 @@ const handleDelete = async () => {
 .ce-action-title {
     font-size: 0.925rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--theme-fg-0f172a);
     margin: 0 0 0.3rem;
 }
 
 .ce-action-desc {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     margin: 0 0 0.85rem;
     line-height: 1.5;
 }
@@ -710,14 +710,14 @@ const handleDelete = async () => {
     align-items: center;
     justify-content: space-between;
     padding-top: 0.75rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--theme-border-f1f5f9);
 }
 
 .ce-count-pill {
     font-size: 0.775rem;
     font-weight: 600;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--theme-bg-f1f5f9);
+    color: var(--theme-fg-475569);
     padding: 3px 10px;
     border-radius: 999px;
 }
@@ -725,7 +725,7 @@ const handleDelete = async () => {
 .ce-action-new {
     font-size: 0.775rem;
     font-weight: 600;
-    color: #6366f1;
+    color: var(--theme-fg-6366f1);
     background: none;
     border: none;
     cursor: pointer;
@@ -735,7 +735,7 @@ const handleDelete = async () => {
 }
 
 .ce-action-new:hover:not(:disabled) {
-    color: #4338ca;
+    color: var(--theme-fg-4338ca);
 }
 
 .ce-action-new:disabled {

@@ -160,7 +160,7 @@ onUnmounted(() => {
 .cd-root {
     width: 100%;
     min-height: 100vh;
-    background: linear-gradient( 90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    background: linear-gradient( 90deg, var(--theme-bg-fffcec), var(--theme-bg-e8dfbf), var(--theme-bg-ffc7db), var(--theme-bg-fff8d0));
     font-family: 'DM Sans', 'Outfit', 'Segoe UI', sans-serif;
     padding: 2rem;
     box-sizing: border-box;
@@ -185,7 +185,7 @@ onUnmounted(() => {
 .cd-spinner {
     width: 36px;
     height: 36px;
-    border: 3px solid #fce4ec;
+    border: 3px solid var(--theme-border-fce4ec);
     border-top-color: #e91e63;
     border-radius: 50%;
     animation: cd-spin 0.8s linear infinite;
@@ -198,7 +198,7 @@ onUnmounted(() => {
 }
 
 .cd-state-text {
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-weight: 500;
 }
 
@@ -206,8 +206,8 @@ onUnmounted(() => {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: #fef2f2;
-    color: #ef4444;
+    background: var(--theme-bg-fef2f2);
+    color: var(--theme-fg-ef4444);
     font-size: 1.5rem;
     font-weight: 800;
     display: flex;
@@ -216,7 +216,7 @@ onUnmounted(() => {
 }
 
 .cd-error-msg {
-    color: #ef4444;
+    color: var(--theme-fg-ef4444);
     font-weight: 500;
 }
 
@@ -321,7 +321,7 @@ onUnmounted(() => {
 }
 
 .cd-stat-card {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
@@ -333,14 +333,14 @@ onUnmounted(() => {
 .cd-stat-num {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #1f2937;
+    color: var(--theme-fg-1f2937);
     line-height: 1;
     margin-bottom: 0.4rem;
 }
 
 .cd-stat-lbl {
     font-size: 0.85rem;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     font-weight: 600;
 }
 
@@ -355,7 +355,7 @@ onUnmounted(() => {
 .cd-section-title {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #1f2937;
+    color: var(--theme-fg-1f2937);
     margin: 0;
 }
 
@@ -509,7 +509,7 @@ onUnmounted(() => {
     left: 0;
     height: 9px;
     border-radius: 5px;
-    background: #fff;
+    background: var(--surface);
 }
 
 .cd-art-lines span:nth-child(1) {
@@ -531,7 +531,7 @@ onUnmounted(() => {
     display: block;
     position: absolute;
     border-radius: 50%;
-    border: 3px solid #fff;
+    border: 3px solid var(--theme-border-ffffff);
 }
 
 .cd-art-circles span:nth-child(1) {

@@ -3,6 +3,7 @@
 
     <!-- Conditionally display the Navbar -->
     <Navbar v-if="showNavbar" />
+    <ThemeToggle v-else class="auth-theme-toggle" />
 
     <!-- Conditionally display the DashboardHero -->
     <DashboardHero v-if="showDashboardHero" />
@@ -21,6 +22,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import Navbar from '@/components/Navbar.vue';
+import ThemeToggle from '@/components/ThemeToggle.vue';
 import Footer from '@/components/Footer.vue';
 import DashboardHero from '@/components/DashboardHero.vue';
 
@@ -45,6 +47,9 @@ const showDashboardHero = computed(() => {
 
 <style>
 @import './style.css';
+@import './assets/theme.css';
+
+.auth-theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 200; }
 
 * {
   font-family: 'Kanit', 'Lexend', sans-serif;

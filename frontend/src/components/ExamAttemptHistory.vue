@@ -125,11 +125,11 @@ function viewResult(attempt) {
 }
 .best-card.pass {
   background: var(--light-green);
-  border-color: #86efac;
+  border-color: var(--theme-border-86efac);
 }
 .best-card.fail {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--theme-bg-fef2f2);
+  border-color: var(--theme-border-fca5a5);
 }
 
 .best-left  { display: flex; flex-direction: column; gap: 4px; }
@@ -176,8 +176,8 @@ function viewResult(attempt) {
   align-items: center;
   gap: 5px;
 }
-.result-chip.pass { background: var(--light-green);  color: var(--forest-green); }
-.result-chip.fail { background: #fecaca; color: #dc2626; }
+.result-chip.pass { background: var(--light-green);  color: var(--text-green); }
+.result-chip.fail { background: var(--theme-bg-fecaca); color: var(--theme-fg-dc2626); }
 
 .result-chip-sm {
   font-size: 0.69rem;
@@ -185,12 +185,12 @@ function viewResult(attempt) {
   padding: 2px 9px;
   border-radius: 999px;
 }
-.result-chip-sm.pass { background: var(--light-green);  color: var(--forest-green); }
-.result-chip-sm.fail { background: #fecaca; color: #dc2626; }
+.result-chip-sm.pass { background: var(--light-green);  color: var(--text-green); }
+.result-chip-sm.fail { background: var(--theme-bg-fecaca); color: var(--theme-fg-dc2626); }
 
 /* All-Attempts card */
 .card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.375rem 1.5rem;
@@ -302,14 +302,14 @@ function viewResult(attempt) {
 .btn-ghost-sm:hover {
   background: var(--gray-light);
   border-color: var(--forest-green);
-  color: var(--forest-green);
+  color: var(--text-green);
 }
 
 /* Empty / loading / error states */
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius-lg);
   border: 1.5px dashed var(--card-border);
 }
@@ -329,12 +329,12 @@ function viewResult(attempt) {
 }
 
 .error-banner {
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
+  background: var(--theme-bg-fef2f2);
+  border: 1px solid var(--theme-border-fca5a5);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   font-size: 0.84rem;
-  color: #dc2626;
+  color: var(--theme-fg-dc2626);
   display: flex;
   align-items: center;
   gap: 0.5rem;

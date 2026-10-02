@@ -297,18 +297,18 @@ async function savePassword() {
     height: 60px;
     border-radius: var(--radius-lg);
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
     font-weight: 800;
     flex-shrink: 0;
-    border: 2px solid #fff;
+    border: 2px solid var(--theme-border-ffffff);
     box-shadow: var(--shadow-sm);
 }
 
-.user-avatar[data-role="teacher"] { background: var(--light-yellow); color: #c2410c; }
+.user-avatar[data-role="teacher"] { background: var(--light-yellow); color: var(--theme-fg-c2410c); }
 .user-avatar[data-role="student"] { background: var(--light-pink);   color: var(--primary-pink); }
 
 /* ── Role badge ── */
@@ -323,8 +323,8 @@ async function savePassword() {
 }
 
 .role-badge--student { background: var(--light-pink);   color: var(--primary-pink); }
-.role-badge--teacher { background: var(--light-yellow); color: #c2410c; }
-.role-badge--admin   { background: var(--light-green);  color: var(--forest-green); }
+.role-badge--teacher { background: var(--light-yellow); color: var(--theme-fg-c2410c); }
+.role-badge--admin   { background: var(--light-green);  color: var(--text-green); }
 
 /* ── Body ── */
 .settings-body {
@@ -349,8 +349,8 @@ async function savePassword() {
     font-weight: 500;
 }
 
-.alert--success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-.alert--error   { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.alert--success { background: var(--theme-bg-ecfdf5); color: var(--theme-fg-065f46); border: 1px solid var(--theme-border-a7f3d0); }
+.alert--error   { background: var(--theme-bg-fff1f2); color: var(--theme-fg-be123c); border: 1px solid var(--theme-border-fecdd3); }
 
 .alert-close {
     margin-left: auto;
@@ -384,7 +384,7 @@ async function savePassword() {
     height: 36px;
     border-radius: var(--radius-md);
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -429,7 +429,7 @@ async function savePassword() {
 }
 
 .field-hint  { display: block; font-size: 11px; color: #d1d5db; margin-top: 4px; }
-.field-error { display: block; font-size: 12px; color: #be123c;  margin-top: 4px; }
+.field-error { display: block; font-size: 12px; color: var(--theme-fg-be123c);  margin-top: 4px; }
 
 .input-with-btn { display: flex; gap: 8px; }
 .input-with-btn .input-field { flex: 1; }
@@ -474,10 +474,10 @@ async function savePassword() {
     align-items: flex-start;
     gap: 10px;
     background: var(--light-yellow);
-    border: 1px solid #fde68a;
+    border: 1px solid var(--theme-border-fde68a);
     border-radius: var(--radius-md);
     padding: 14px 16px;
-    color: #92400e;
+    color: var(--theme-fg-92400e);
     font-size: 13px;
     line-height: 1.6;
 }

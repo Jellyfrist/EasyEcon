@@ -50,7 +50,7 @@ const currentFeature = computed(() => {
 <style scoped>
 .page-wrapper {
     min-height: 38vh;
-    background: linear-gradient( 90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    background: linear-gradient( 90deg, var(--theme-bg-fffcec), var(--theme-bg-e8dfbf), var(--theme-bg-ffc7db), var(--theme-bg-fff8d0));
 }
 
 /* ---- Hero section (Top) ---- */
@@ -100,7 +100,7 @@ const currentFeature = computed(() => {
 .hero-section p {
     font-size: 18px;
     line-height: 1.7;
-    color: #5c647c;
+    color: var(--theme-fg-5c647c);
     max-width: 600px;
 }
 
@@ -140,7 +140,7 @@ const currentFeature = computed(() => {
     height: 3px;
     margin: 25px 0 0 0;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--surface);
 }
 
 .highlight-icon {

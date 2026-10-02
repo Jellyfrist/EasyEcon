@@ -521,20 +521,20 @@ export default {
 
 <style scoped>
 .required-mark {
-  color: #dc2626;
+  color: var(--theme-fg-dc2626);
   font-weight: 700;
 }
 
 .input-invalid {
-  border-color: #fca5a5;
-  background: #fff7f7;
+  border-color: var(--theme-border-fca5a5);
+  background: var(--theme-bg-fff7f7);
 }
 
 .field-error {
   margin-top: 0.25rem;
   font-size: 0.72rem;
   font-weight: 600;
-  color: #dc2626;
+  color: var(--theme-fg-dc2626);
 }
 
 /* ══ Question card header ══════════════════════════════════ */
@@ -570,7 +570,7 @@ export default {
 .type-select:focus {
   outline: none;
   border-color: var(--primary-pink);
-  background-color: var(--white);
+  background-color: var(--surface);
 }
 
 .multi-toggle {
@@ -636,7 +636,7 @@ export default {
 }
 
 .rte-editor:focus {
-  background: var(--white);
+  background: var(--surface);
   border-color: var(--primary-pink) !important;
   box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
 }
@@ -651,13 +651,13 @@ export default {
 /* Math chip inside editor */
 :deep(.math-inline) {
   display: inline-block;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: var(--theme-bg-eff6ff);
+  border: 1px solid var(--theme-border-bfdbfe);
   border-radius: var(--radius-md);
   padding: 1px 6px;
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
-  color: #1d4ed8;
+  color: var(--theme-fg-1d4ed8);
   margin: 0 2px;
   cursor: default;
 }
@@ -674,7 +674,7 @@ export default {
 
 .math-preview code {
   font-family: 'Courier New', monospace;
-  color: #1d4ed8;
+  color: var(--theme-fg-1d4ed8);
 }
 
 /* ══ Options block ════════════════════════════════════════ */
@@ -720,13 +720,13 @@ export default {
 .tf-option:hover {
   border-color: var(--forest-green);
   background: var(--light-green);
-  color: var(--forest-green);
+  color: var(--text-green);
 }
 
 .tf-option.is-correct {
   border-color: var(--forest-green);
   background: var(--light-green);
-  color: var(--forest-green);
+  color: var(--text-green);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -742,7 +742,7 @@ export default {
   transition: background 0.15s ease;
 }
 
-.option-row:hover                     { background: var(--white); }
+.option-row:hover                     { background: var(--surface); }
 .option-row.is-correct                { background: var(--light-green); }
 .option-row.is-correct .option-letter {
   background: var(--forest-green);
@@ -762,7 +762,7 @@ export default {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-md);
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   font-size: 0.75rem;
   font-weight: 700;
@@ -778,7 +778,7 @@ export default {
   flex: 1;
   padding: 0.45rem 0.75rem;
   font-size: 0.875rem;
-  background: var(--white);
+  background: var(--surface);
   min-width: 0;
 }
 
@@ -798,8 +798,8 @@ export default {
 }
 
 .btn-remove:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--theme-bg-fee2e2);
+  color: var(--theme-fg-ef4444);
 }
 .question-images { display: grid; gap: 12px; margin-top: 12px; }
 .question-image { display: flex; align-items: flex-start; gap: 12px; }

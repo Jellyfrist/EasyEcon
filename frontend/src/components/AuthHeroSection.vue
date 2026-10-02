@@ -137,7 +137,7 @@ defineProps({
 }
 
 .highlight-icon {
-    background: linear-gradient( 90deg, #fffcee, #e9ddab, rgb(255, 185, 65), #fffef8);
+    background: linear-gradient( 90deg, var(--theme-bg-fffcee), var(--theme-bg-e9ddab), rgb(255, 185, 65), var(--theme-bg-fffef8));
     background-size: 150% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

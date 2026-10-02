@@ -344,7 +344,7 @@ function viewResult(session) {
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
-    background: var(--white);
+    background: var(--surface);
     padding: 0.625rem 1rem;
 }
 
@@ -450,8 +450,8 @@ function viewResult(session) {
 }
 
 .pill-closed.active {
-    background: var(--text-muted);
-    border-color: var(--text-muted);
+    background: var(--muted-fill);
+    border-color: var(--muted-fill);
     color: #fff;
 }
 
@@ -467,7 +467,7 @@ function viewResult(session) {
 }
 
 .pill-open.active .status-dot {
-    background: #fff;
+    background: var(--surface);
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
@@ -480,7 +480,7 @@ function viewResult(session) {
 }
 
 .session-card {
-    background: var(--white);
+    background: var(--surface);
     border: 1.5px solid var(--card-border);
     border-radius: var(--radius-lg);
     padding: 1.25rem 1.5rem;
@@ -524,23 +524,23 @@ function viewResult(session) {
 }
 
 .type-badge.midterm {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--theme-bg-eff6ff);
+    color: var(--theme-fg-2563eb);
 }
 
 .type-badge.final {
     background: var(--light-yellow);
-    color: #92400e;
+    color: var(--theme-fg-92400e);
 }
 
 .type-badge.summer {
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 .type-badge.quiz {
-    background: #faf5ff;
-    color: #7c3aed;
+    background: var(--theme-bg-faf5ff);
+    color: var(--theme-fg-7c3aed);
 }
 
 .session-info {
@@ -598,7 +598,7 @@ function viewResult(session) {
 
 .status-badge.open {
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 .status-badge.closed {
@@ -617,12 +617,12 @@ function viewResult(session) {
 
 .score-chip.pass {
     background: var(--light-green);
-    color: var(--forest-green);
+    color: var(--text-green);
 }
 
 .score-chip.fail {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: var(--theme-bg-fee2e2);
+    color: var(--theme-fg-b91c1c);
 }
 
 /* ── Buttons (override global .btn for local needs) ── */
@@ -680,7 +680,7 @@ function viewResult(session) {
 .empty-state {
     text-align: center;
     padding: 4rem 1.5rem;
-    background: var(--white);
+    background: var(--surface);
     border-radius: var(--radius-lg);
     border: 1.5px dashed var(--card-border);
 }
@@ -703,12 +703,12 @@ function viewResult(session) {
 }
 
 .error-banner {
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
+    background: var(--theme-bg-fee2e2);
+    border: 1px solid var(--theme-border-fca5a5);
     border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
     font-size: 0.84rem;
-    color: #b91c1c;
+    color: var(--theme-fg-b91c1c);
     font-weight: 500;
 }
 
@@ -741,7 +741,7 @@ function viewResult(session) {
         flex-wrap: wrap;
     }
 }
-.exam-start-dialog { margin: auto; width: min(440px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); background: var(--white); color: var(--text-main); }
+.exam-start-dialog { margin: auto; width: min(440px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); background: var(--surface); color: var(--text-main); }
 .exam-start-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
 .exam-start-dialog h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; }
 .exam-start-dialog p { font-size: 0.9rem; line-height: 1.7; color: var(--text-muted); }

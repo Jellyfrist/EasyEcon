@@ -359,7 +359,7 @@ async function deleteExam() {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  background: var(--white);
+  background: var(--surface);
   padding: 0.625rem 1rem;
 }
 
@@ -424,7 +424,7 @@ async function deleteExam() {
 .pill-summer.active { background: var(--forest-green);     color: #fff;         border-color: var(--forest-green); }
 .pill-quiz.active { background: #7c3aed;                 color: #fff;         border-color: #7c3aed; }
 .pill-open.active { background: var(--forest-green);     color: #fff;         border-color: var(--forest-green); }
-.pill-closed.active { background: var(--text-muted);       color: #fff;         border-color: var(--text-muted); }
+.pill-closed.active { background: var(--muted-fill);       color: #fff;         border-color: var(--muted-fill); }
 
 .status-dot {
   width: 6px;
@@ -436,7 +436,7 @@ async function deleteExam() {
 }
 
 .pill-open.active .status-dot {
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 0 0 2px rgba(255,255,255,0.35);
 }
 
@@ -448,7 +448,7 @@ async function deleteExam() {
 }
 
 .stat-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.125rem 1.375rem;
@@ -484,7 +484,7 @@ async function deleteExam() {
 }
 
 .exam-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
@@ -521,10 +521,10 @@ async function deleteExam() {
   flex-shrink: 0;
 }
 
-.exam-type-badge.midterm { background: #eff6ff;              color: #2563eb; }
-.exam-type-badge.final { background: var(--light-yellow);  color: #92400e; }
-.exam-type-badge.summer { background: var(--light-green);   color: var(--forest-green); }
-.exam-type-badge.quiz { background: #faf5ff;              color: #7c3aed; }
+.exam-type-badge.midterm { background: var(--theme-bg-eff6ff);              color: var(--theme-fg-2563eb); }
+.exam-type-badge.final { background: var(--light-yellow);  color: var(--theme-fg-92400e); }
+.exam-type-badge.summer { background: var(--light-green);   color: var(--text-green); }
+.exam-type-badge.quiz { background: var(--theme-bg-faf5ff);              color: var(--theme-fg-7c3aed); }
 
 .exam-info { min-width: 0; }
 
@@ -563,7 +563,7 @@ async function deleteExam() {
   border-radius: 999px;
 }
 
-.status-badge.published { background: var(--light-green); color: var(--forest-green); }
+.status-badge.published { background: var(--light-green); color: var(--text-green); }
 .status-badge.draft { background: var(--gray-light);  color: var(--text-muted); }
 
 .action-buttons { display: flex; gap: 6px; }
@@ -572,7 +572,7 @@ async function deleteExam() {
   width: 34px;
   height: 34px;
   border: 1.5px solid var(--card-border);
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -583,7 +583,7 @@ async function deleteExam() {
 }
 
 .icon-btn:hover { background: var(--gray-light); }
-.icon-btn.danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.icon-btn.danger:hover { background: var(--theme-bg-fef2f2); border-color: var(--theme-border-fca5a5); color: var(--theme-fg-dc2626); }
 
 /* ── Buttons ── */
 .btn-primary {
@@ -645,7 +645,7 @@ async function deleteExam() {
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
-  background: var(--white);
+  background: var(--surface);
   border-radius: var(--radius-lg);
   border: 1.5px dashed var(--card-border);
 }
@@ -670,7 +670,7 @@ async function deleteExam() {
 }
 
 .modal {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   width: 100%;

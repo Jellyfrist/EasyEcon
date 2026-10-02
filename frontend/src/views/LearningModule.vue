@@ -313,7 +313,7 @@ const deleteContent = async (mod) => {
 /* ================= Cards ================= */
 
 .action-card {
-    background-color: white;
+    background-color: var(--surface);
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
@@ -338,13 +338,13 @@ const deleteContent = async (mod) => {
 }
 
 .icon-rose {
-    background: #ffe4e6;
-    color: #e11d48;
+    background: var(--theme-bg-ffe4e6);
+    color: var(--theme-fg-e11d48);
 }
 
 .icon-emerald {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--theme-bg-d1fae5);
+    color: var(--theme-fg-059669);
 }
 
 .icon-box .material-symbols-outlined {
@@ -352,7 +352,7 @@ const deleteContent = async (mod) => {
 }
 
 .card-desc {
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     font-size: 0.95rem;
     margin: 0;
 }
@@ -370,17 +370,17 @@ const deleteContent = async (mod) => {
     flex: 1;
     padding: 1rem 1.25rem;
     border-radius: 12px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--theme-border-e2e8f0);
     font-size: 1rem;
-    color: #334155;
-    background-color: #f8fafc;
+    color: var(--theme-fg-334155);
+    background-color: var(--theme-bg-f8fafc);
     outline: none;
     transition: all 0.2s;
     font-family: inherit;
 }
 
 .input-module:focus {
-    background-color: white;
+    background-color: var(--surface);
     border-color: #df4a7d;
     box-shadow: 0 0 0 4px rgba(223, 74, 125, 0.1);
 }
@@ -423,14 +423,14 @@ const deleteContent = async (mod) => {
     flex-direction: column;
     align-items: center;
     padding: 4rem 0;
-    color: #64748b;
+    color: var(--theme-fg-64748b);
     font-weight: 600;
 }
 
 .cd-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #fce4ec;
+    border: 4px solid var(--theme-border-fce4ec);
     border-top-color: #df4a7d;
     border-radius: 50%;
     animation: cd-spin 0.8s linear infinite;
@@ -446,16 +446,16 @@ const deleteContent = async (mod) => {
 .empty-box {
     text-align: center;
     padding: 3rem 2rem;
-    background-color: #f8fafc;
+    background-color: var(--theme-bg-f8fafc);
     border-radius: 16px;
-    border: 2px dashed #cbd5e1;
+    border: 2px dashed var(--theme-border-cbd5e1);
     margin-left: 4rem;
 }
 
 .empty-icon-wrapper {
     width: 64px;
     height: 64px;
-    background: white;
+    background: var(--surface);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -466,18 +466,18 @@ const deleteContent = async (mod) => {
 
 .empty-icon {
     font-size: 2rem;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
 }
 
 .empty-box h3 {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #475569;
+    color: var(--theme-fg-475569);
     margin: 0 0 0.5rem 0;
 }
 
 .empty-box p {
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     font-size: 0.95rem;
     margin: 0;
 }
@@ -505,14 +505,14 @@ const deleteContent = async (mod) => {
 
 .module-card {
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    background-color: white;
+    border: 1px solid var(--theme-border-e2e8f0);
+    background-color: var(--surface);
     transition: all 0.2s;
     overflow: hidden;
 }
 
 .module-card:hover {
-    border-color: #cbd5e1;
+    border-color: var(--theme-border-cbd5e1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
@@ -537,8 +537,8 @@ const deleteContent = async (mod) => {
 .module-number {
     width: 44px;
     height: 44px;
-    background-color: #fce4ec;
-    color: #c83264;
+    background-color: var(--theme-bg-fce4ec);
+    color: var(--theme-fg-c83264);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -550,7 +550,7 @@ const deleteContent = async (mod) => {
 .module-name {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--theme-fg-1e293b);
     margin: 0 0 0.4rem 0;
 }
 
@@ -570,15 +570,15 @@ const deleteContent = async (mod) => {
 }
 
 .badge-success {
-    background-color: #ecfdf5;
-    color: #059669;
-    border: 1px solid #d1fae5;
+    background-color: var(--theme-bg-ecfdf5);
+    color: var(--theme-fg-059669);
+    border: 1px solid var(--theme-border-d1fae5);
 }
 
 .badge-warning {
-    background-color: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #ffedd5;
+    background-color: var(--theme-bg-fff7ed);
+    color: var(--theme-fg-ea580c);
+    border: 1px solid var(--theme-border-ffedd5);
 }
 
 .icon-micro {
@@ -615,14 +615,14 @@ const deleteContent = async (mod) => {
 }
 
 .btn-edit {
-    background-color: #f1f5f9;
-    color: #475569;
-    border-color: #e2e8f0;
+    background-color: var(--theme-bg-f1f5f9);
+    color: var(--theme-fg-475569);
+    border-color: var(--theme-border-e2e8f0);
 }
 
 .btn-edit:hover {
-    background-color: #e2e8f0;
-    color: #1e293b;
+    background-color: var(--theme-bg-e2e8f0);
+    color: var(--theme-fg-1e293b);
 }
 
 .btn-icon {
@@ -632,30 +632,30 @@ const deleteContent = async (mod) => {
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background-color: white;
-    border: 1px solid #e2e8f0;
+    background-color: var(--surface);
+    border: 1px solid var(--theme-border-e2e8f0);
     cursor: pointer;
     transition: all 0.2s;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
 }
 
 .btn-clear:hover {
-    background-color: #fff7ed;
-    border-color: #fed7aa;
-    color: #f97316;
+    background-color: var(--theme-bg-fff7ed);
+    border-color: var(--theme-border-fed7aa);
+    color: var(--theme-fg-f97316);
 }
 
 .btn-delete:hover {
-    background-color: #fef2f2;
-    border-color: #fecaca;
-    color: #ef4444;
+    background-color: var(--theme-bg-fef2f2);
+    border-color: var(--theme-border-fecaca);
+    color: var(--theme-fg-ef4444);
 }
 
 /* ================= Lesson Dropdown ================= */
 
 .lesson-dropdown {
-    background-color: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background-color: var(--theme-bg-f8fafc);
+    border-top: 1px solid var(--theme-border-e2e8f0);
     padding: 1.5rem;
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -679,9 +679,9 @@ const deleteContent = async (mod) => {
     display: flex;
     align-items: center;
     gap: 6px;
-    background-color: #ffe4e6;
-    color: #e11d48;
-    border: 1px solid #fecdd3;
+    background-color: var(--theme-bg-ffe4e6);
+    color: var(--theme-fg-e11d48);
+    border: 1px solid var(--theme-border-fecdd3);
     padding: 8px 16px;
     border-radius: 8px;
     font-weight: 700;
@@ -707,14 +707,14 @@ const deleteContent = async (mod) => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background-color: white;
-    border: 1px solid #e2e8f0;
+    background-color: var(--surface);
+    border: 1px solid var(--theme-border-e2e8f0);
     border-radius: 10px;
     transition: all 0.2s;
 }
 
 .lesson-sub-item:hover {
-    border-color: #cbd5e1;
+    border-color: var(--theme-border-cbd5e1);
     transform: translateX(4px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
@@ -728,8 +728,8 @@ const deleteContent = async (mod) => {
 .lesson-sub-number {
     width: 28px;
     height: 28px;
-    background-color: #f1f5f9;
-    color: #64748b;
+    background-color: var(--theme-bg-f1f5f9);
+    color: var(--theme-fg-64748b);
     font-weight: 700;
     font-size: 0.85rem;
     border-radius: 6px;
@@ -742,7 +742,7 @@ const deleteContent = async (mod) => {
     margin: 0 0 4px 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #334155;
+    color: var(--theme-fg-334155);
 }
 
 .btn-edit-lesson {
@@ -750,7 +750,7 @@ const deleteContent = async (mod) => {
     align-items: center;
     gap: 4px;
     background-color: transparent;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     border: 1px solid transparent;
     padding: 6px 12px;
     border-radius: 8px;
@@ -761,16 +761,16 @@ const deleteContent = async (mod) => {
 }
 
 .btn-edit-lesson:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
-    border-color: #e2e8f0;
+    background-color: var(--theme-bg-f1f5f9);
+    color: var(--theme-fg-0f172a);
+    border-color: var(--theme-border-e2e8f0);
 }
 
 .empty-lessons-msg {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #94a3b8;
+    color: var(--theme-fg-94a3b8);
     font-size: 0.9rem;
     font-weight: 500;
     font-style: italic;
@@ -827,7 +827,7 @@ const deleteContent = async (mod) => {
     .btn-edit-lesson {
         width: 100%;
         justify-content: center;
-        background-color: #f1f5f9;
+        background-color: var(--theme-bg-f1f5f9);
     }
 }
 </style>

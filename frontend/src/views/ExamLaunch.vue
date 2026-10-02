@@ -164,7 +164,7 @@ async function launch() {
 .template-summary {
   display: flex;
   gap: 0;
-  background: var(--white);
+  background: var(--surface);
   border-top: 1px solid rgba(237, 64, 129, 0.12);
 }
 
@@ -204,14 +204,14 @@ async function launch() {
   width: fit-content;
 }
 
-.exam-type-badge.midterm { background: #eff6ff; color: #2563eb; }
-.exam-type-badge.final { background: var(--light-yellow); color: #92400e; }
-.exam-type-badge.summer { background: var(--light-green); color: var(--forest-green); }
-.exam-type-badge.quiz { background: #faf5ff; color: #7c3aed; }
+.exam-type-badge.midterm { background: var(--theme-bg-eff6ff); color: var(--theme-fg-2563eb); }
+.exam-type-badge.final { background: var(--light-yellow); color: var(--theme-fg-92400e); }
+.exam-type-badge.summer { background: var(--light-green); color: var(--text-green); }
+.exam-type-badge.quiz { background: var(--theme-bg-faf5ff); color: var(--theme-fg-7c3aed); }
 
 /* Form card */
 .form-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -244,13 +244,13 @@ async function launch() {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
+  background: var(--theme-bg-fee2e2);
+  border: 1px solid var(--theme-border-fca5a5);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   font-size: 0.84rem;
   font-weight: 500;
-  color: #b91c1c;
+  color: var(--theme-fg-b91c1c);
 }
 
 /* Form actions */

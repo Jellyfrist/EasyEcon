@@ -187,7 +187,7 @@ const handleLogout = () => {
     position: relative;
     text-align: center;
     padding: 50px 20px 20px;
-    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    background: linear-gradient(90deg, var(--theme-bg-fffcec), var(--theme-bg-e8dfbf), var(--theme-bg-ffc7db), var(--theme-bg-fff8d0));
     width: 100%;
 }
 
@@ -197,7 +197,7 @@ const handleLogout = () => {
 }
 
 .hero-section h1 {
-    color: black;
+    color: var(--theme-fg-000000);
     font-size: 110px;
 }
 
@@ -359,7 +359,7 @@ const handleLogout = () => {
 .course-teacher-link {
     display: block;
     margin-top: 16px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
@@ -367,7 +367,7 @@ const handleLogout = () => {
 }
 
 .course-teacher-link:hover {
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
 }
 
 /* logged in: grid of tiles */
@@ -390,8 +390,8 @@ const handleLogout = () => {
 }
 
 .course-tile {
-    background: white;
-    border: 1.5px solid #f0f0f0;
+    background: var(--surface);
+    border: 1.5px solid var(--theme-border-f0f0f0);
     border-radius: 20px;
     padding: 32px 28px;
     cursor: pointer;
@@ -404,8 +404,8 @@ const handleLogout = () => {
 }
 
 .course-tile:hover {
-    background: #fff5f8;
-    border-color: #f43f7f;
+    background: var(--theme-bg-fff5f8);
+    border-color: var(--theme-border-f43f7f);
     transform: translateY(-4px);
     box-shadow: 0 16px 40px rgba(244, 63, 127, 0.12);
 }
@@ -415,7 +415,7 @@ const handleLogout = () => {
 .tile-bg-icon {
     position: absolute;
     font-size: 100px;
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
     opacity: 0.05;
     right: -10px;
     bottom: -10px;
@@ -435,20 +435,20 @@ const handleLogout = () => {
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
 }
 
 .tile-title {
     font-size: 20px;
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-fg-111827);
     line-height: 1.3;
     margin: 0;
 }
 
 .tile-arrow {
     font-size: 20px;
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
     margin-top: 12px;
     transition: transform 0.2s;
 }
@@ -461,7 +461,7 @@ const handleLogout = () => {
 
 .course-empty {
     text-align: center;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     padding: 60px 0;
 }
 
@@ -470,7 +470,7 @@ const handleLogout = () => {
     opacity: 0.4;
     display: block;
     margin-bottom: 12px;
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
 }
 
 .course-empty p {
@@ -482,9 +482,9 @@ const handleLogout = () => {
 
 .features-wrapper {
     position: relative;
-    background: #ffffff;
+    background: var(--surface);
     padding: 80px 0 60px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--theme-border-f0f0f0);
     width: 100%;
 }
 
@@ -509,7 +509,7 @@ const handleLogout = () => {
 .features-title {
     font-size: 48px;
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-fg-111827);
     line-height: 1.15;
     margin: 0;
 }
@@ -527,7 +527,7 @@ const handleLogout = () => {
 }
 
 .overlay-card {
-    background: white;
+    background: var(--surface);
     padding: 48px 52px;
     border-radius: 24px;
     text-align: center;
@@ -540,13 +540,13 @@ const handleLogout = () => {
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 12px;
-    color: #111827;
+    color: var(--theme-fg-111827);
 }
 
 .overlay-sub {
     font-size: 15px;
     margin-bottom: 32px;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     line-height: 1.6;
 }
 
@@ -607,13 +607,13 @@ const handleLogout = () => {
 }
 
 .visual-gray {
-    background: linear-gradient(145deg, #bec7da, #b2bfd1);
+    background: linear-gradient(145deg, var(--theme-bg-bec7da), var(--theme-bg-b2bfd1));
 }
 
 /* the white card inside the illustration */
 
 .visual-inner {
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(var(--surface-rgb), 0.97);
     border-radius: 18px;
     padding: 24px 26px;
     width: 100%;
@@ -630,8 +630,8 @@ const handleLogout = () => {
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #9ca3af;
-    background: #f3f4f6;
+    color: var(--theme-fg-9ca3af);
+    background: var(--theme-bg-f3f4f6);
     padding: 4px 10px;
     border-radius: 999px;
     margin-bottom: 14px;
@@ -642,7 +642,7 @@ const handleLogout = () => {
 .vi-module-title {
     font-size: 17px;
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin-bottom: 14px;
 }
 
@@ -655,13 +655,13 @@ const handleLogout = () => {
     justify-content: space-between;
     font-size: 11px;
     font-weight: 600;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     margin-bottom: 6px;
 }
 
 .vi-progress-track {
     height: 6px;
-    background: #f3f4f6;
+    background: var(--theme-bg-f3f4f6);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -684,7 +684,7 @@ const handleLogout = () => {
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     font-weight: 500;
 }
 
@@ -693,20 +693,20 @@ const handleLogout = () => {
 }
 
 .vi-lesson.done {
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
 }
 
 .vi-lesson.done .material-symbols-outlined {
-    color: #10b981;
+    color: var(--theme-fg-10b981);
 }
 
 .vi-lesson.active {
-    color: #111827;
+    color: var(--theme-fg-111827);
     font-weight: 700;
 }
 
 .vi-lesson.active .material-symbols-outlined {
-    color: #f43f7f;
+    color: var(--theme-fg-f43f7f);
 }
 
 /* past exam styles */
@@ -714,7 +714,7 @@ const handleLogout = () => {
 .vi-question {
     font-size: 15px;
     font-weight: 700;
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin-bottom: 16px;
     line-height: 1.45;
 }
@@ -731,11 +731,11 @@ const handleLogout = () => {
     gap: 8px;
     padding: 10px 14px;
     border-radius: 10px;
-    background: #f9fafb;
+    background: var(--theme-bg-f9fafb);
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
-    border: 1.5px solid #f3f4f6;
+    color: var(--theme-fg-374151);
+    border: 1.5px solid var(--theme-border-f3f4f6);
 }
 
 .vi-option .material-symbols-outlined {
@@ -744,13 +744,13 @@ const handleLogout = () => {
 }
 
 .vi-option.correct {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-    color: #065f46;
+    background: var(--theme-bg-f0fdf4);
+    border-color: var(--theme-border-bbf7d0);
+    color: var(--theme-fg-065f46);
 }
 
 .vi-option.correct .material-symbols-outlined {
-    color: #10b981;
+    color: var(--theme-fg-10b981);
 }
 
 /* ---- text side ---- */
@@ -776,7 +776,7 @@ const handleLogout = () => {
 .feature-text h3 {
     font-size: 36px;
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-fg-111827);
     margin: 0 0 16px 0;
     line-height: 1.15;
 }
@@ -784,7 +784,7 @@ const handleLogout = () => {
 .feature-text p {
     font-size: 17px;
     line-height: 1.75;
-    color: #6b7280;
+    color: var(--theme-fg-6b7280);
     margin: 0;
 }
 
@@ -793,7 +793,7 @@ const handleLogout = () => {
 .divider-text {
     margin-top: 20px;
     font-weight: 600;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 .course-divider {

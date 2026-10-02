@@ -294,7 +294,7 @@ const handleNext = async () => {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) 44px;
-    background: white;
+    background: var(--surface);
     font-family: 'DM Sans', 'Sarabun', sans-serif;
     overflow: hidden;
 }
@@ -314,7 +314,7 @@ const handleNext = async () => {
 }
 
 .content-block { margin-bottom: 32px; }
-.up-next { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 560px; margin: 32px auto 0; padding: 20px 24px; border: 0; border-radius: var(--radius-lg); background: var(--text-main); color: var(--white); text-align: left; font: inherit; cursor: pointer; }
+.up-next { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 560px; margin: 32px auto 0; padding: 20px 24px; border: 0; border-radius: var(--radius-lg); background: var(--contrast-surface); color: var(--white); text-align: left; font: inherit; cursor: pointer; }
 .up-next > span:first-child { padding: 12px; border-radius: 8px; background: var(--primary-pink); }
 .up-next > span:last-child { margin-left: auto; }
 .up-next small { display: block; color: var(--primary-yellow); font-size: 0.65rem; letter-spacing: 0.08em; }
@@ -327,8 +327,8 @@ const handleNext = async () => {
    ===================================================== */
 
 .quiz-card {
-    background: #ffffff;
-    border: 1.5px solid #fce4ec;
+    background: var(--surface);
+    border: 1.5px solid var(--theme-border-fce4ec);
     border-radius: 20px;
     padding: var(--feature-gutter);
     margin-top: 3rem;
@@ -341,14 +341,14 @@ const handleNext = async () => {
     gap: 1.25rem;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--theme-border-f3f4f6);
 }
 
 .quiz-icon-box {
     width: 56px;
     height: 56px;
-    background: #fce4ec;
-    color: #df4a7d;
+    background: var(--theme-bg-fce4ec);
+    color: var(--theme-fg-df4a7d);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -364,14 +364,14 @@ const handleNext = async () => {
     margin: 0 0 6px;
     font-size: 1.3rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-fg-111827);
 }
 
 .quiz-subtitle {
     margin: 0;
     font-size: 0.75rem;
     font-weight: 800;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     letter-spacing: 0.08em;
 }
 
@@ -384,7 +384,7 @@ const handleNext = async () => {
 .question-text {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--theme-fg-1f2937);
     margin-bottom: 1.25rem;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -401,36 +401,36 @@ const handleNext = async () => {
     align-items: center;
     gap: 14px;
     padding: 16px 20px;
-    border: 1.5px solid #e5e7eb;
+    border: 1.5px solid var(--theme-border-e5e7eb);
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: white;
+    background: var(--surface);
 }
 
 .option-label:hover:not(.disabled) {
-    border-color: #ffc7db;
-    background: #fffafb;
+    border-color: var(--theme-border-ffc7db);
+    background: var(--theme-bg-fffafb);
     transform: translateX(4px);
 }
 
 .option-label.selected {
     border-color: #df4a7d;
-    background: #fff0f5;
+    background: var(--theme-bg-fff0f5);
     box-shadow: 0 4px 12px rgba(223, 74, 125, 0.1);
 }
 
 .option-label.correct {
     border-color: #10b981;
-    background: #dcfce7;
-    color: #065f46;
+    background: var(--theme-bg-dcfce7);
+    color: var(--theme-fg-065f46);
     font-weight: 700;
 }
 
 .option-label.wrong {
-    border-color: #ef4444;
-    background: #fee2e2;
-    color: #991b1b;
+    border-color: var(--theme-border-ef4444);
+    background: var(--theme-bg-fee2e2);
+    color: var(--theme-fg-991b1b);
 }
 
 .option-label.disabled {
@@ -443,12 +443,12 @@ const handleNext = async () => {
 }
 
 .icon-check {
-    color: #10b981;
+    color: var(--theme-fg-10b981);
     font-size: 24px;
 }
 
 .icon-wrong {
-    color: #ef4444;
+    color: var(--theme-fg-ef4444);
     font-size: 24px;
 }
 
@@ -469,11 +469,11 @@ input[type="radio"] {
 .explanation-box {
     margin-top: 16px;
     padding: 16px 20px;
-    background: #dcfce7;
+    background: var(--theme-bg-dcfce7);
     border-left: 4px solid #10b981;
     border-radius: 0 12px 12px 0;
     font-size: 0.95rem;
-    color: #065f46;
+    color: var(--theme-fg-065f46);
     line-height: 1.6;
     white-space: pre-wrap;
     animation: slideDown 0.25s ease-out;
@@ -498,7 +498,7 @@ input[type="radio"] {
     align-items: center;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--theme-border-f3f4f6);
     gap: 1rem;
 }
 
@@ -509,15 +509,15 @@ input[type="radio"] {
 }
 
 .text-muted {
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
 }
 
 .text-green {
-    color: #10b981;
+    color: var(--theme-fg-10b981);
 }
 
 .text-amber {
-    color: #f59e0b;
+    color: var(--theme-fg-f59e0b);
 }
 
 .submit-btn {
@@ -543,7 +543,7 @@ input[type="radio"] {
 }
 
 .submit-btn:disabled {
-    background: #d1d5db;
+    background: var(--theme-bg-d1d5db);
     box-shadow: none;
     cursor: not-allowed;
     transform: none;
@@ -562,7 +562,7 @@ input[type="radio"] {
     gap: 12px;
     padding: 4px 12px;
     border-top: 1px solid var(--card-border);
-    background: white;
+    background: var(--surface);
     z-index: 2;
 }
 .invisible { visibility: hidden; }
@@ -579,8 +579,8 @@ input[type="radio"] {
     font-size: 0.75rem;
     cursor: pointer;
 }
-.prev-btn { background: white; color: var(--primary-pink); }
-.prev-btn:hover { background: #fff0f5; }
+.prev-btn { background: var(--surface); color: var(--primary-pink); }
+.prev-btn:hover { background: var(--theme-bg-fff0f5); }
 .next-btn { background: var(--primary-pink); color: white; }
 .next-btn:hover { background: #c83264; }
 .lesson-position { font-size: 0.8rem; color: var(--text-muted); }
@@ -598,14 +598,14 @@ input[type="radio"] {
     justify-content: center;
     height: 100%;
     gap: 1rem;
-    color: #9ca3af;
+    color: var(--theme-fg-9ca3af);
     font-weight: 600;
 }
 
 .spinner {
     width: 44px;
     height: 44px;
-    border: 4px solid #fce4ec;
+    border: 4px solid var(--theme-border-fce4ec);
     border-top-color: #df4a7d;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -630,7 +630,7 @@ input[type="radio"] {
         padding: 0 20px;
         border: 0;
         border-bottom: 1px solid var(--card-border);
-        background: white;
+        background: var(--surface);
         color: var(--primary-pink);
         font: inherit;
         cursor: pointer;

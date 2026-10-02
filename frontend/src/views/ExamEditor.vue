@@ -719,7 +719,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1.1rem;
-  background: var(--white);
+  background: var(--surface);
   border: none;
   border-radius: var(--radius-md);
   color: var(--primary-pink);
@@ -778,7 +778,7 @@ onMounted(() => {
 
 /* Settings card (Exam Settings section) */
 .settings-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -845,7 +845,7 @@ onMounted(() => {
 
 .field-input:focus {
   border-color: var(--primary-pink);
-  background: var(--white);
+  background: var(--surface);
   box-shadow: 0 0 0 3px rgba(237, 64, 129, 0.08);
 }
 
@@ -895,14 +895,14 @@ onMounted(() => {
 
 .settings-field-stat:focus-within {
   border-color: var(--primary-pink);
-  background: var(--white);
+  background: var(--surface);
 }
 
 .stat-icon {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md);
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -963,7 +963,7 @@ onMounted(() => {
 
 /*  Question list & cards */
 .questions-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -1001,7 +1001,7 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.q-stat-yellow { background: var(--light-yellow); color: #92400e; }
+.q-stat-yellow { background: var(--light-yellow); color: var(--theme-fg-92400e); }
 .q-stat-pink   { background: var(--light-pink);   color: var(--primary-pink); }
 
 .questions-list {
@@ -1022,7 +1022,7 @@ onMounted(() => {
 
 .question-card:hover {
   border-color: var(--primary-pink);
-  background: var(--white);
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1069,7 +1069,7 @@ onMounted(() => {
 
 .btn-add-question:hover {
   background: var(--light-green);
-  color: var(--forest-green);
+  color: var(--text-green);
   border-color: var(--forest-green);
 }
 
@@ -1077,7 +1077,7 @@ onMounted(() => {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -1107,15 +1107,15 @@ onMounted(() => {
 }
 
 .btn-remove:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--theme-bg-fee2e2);
+  color: var(--theme-fg-ef4444);
 }
 
 /* Answer options block */
 .options-block {
   margin: 1rem 0;
   padding: 1rem;
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   border-radius: var(--radius-md);
 }
@@ -1165,8 +1165,8 @@ onMounted(() => {
 /* Delete button */
 .btn-danger {
   background: transparent;
-  color: #dc2626;
-  border: 1.5px solid #fca5a5;
+  color: var(--theme-fg-dc2626);
+  border: 1.5px solid var(--theme-border-fca5a5);
   border-radius: var(--radius-md);
   padding: 0.55rem 1rem;
   font-size: 0.84rem;
@@ -1177,7 +1177,7 @@ onMounted(() => {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #fef2f2;
+  background: var(--theme-bg-fef2f2);
 }
 
 .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -1245,7 +1245,7 @@ onMounted(() => {
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
-  background: var(--white);
+  background: var(--surface);
 }
 
 /* Responsive */
@@ -1262,11 +1262,11 @@ onMounted(() => {
 .preview-question-text { white-space: pre-wrap; font-weight: 400; }
 .preview-question-text :deep(img) { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0; }
 .editor-save-status { font-size: 0.75rem; color: var(--text-muted); }
-.btn-header-ghost { color: var(--text-main); background: var(--white); border-color: var(--card-border); }
+.btn-header-ghost { color: var(--text-main); background: var(--surface); border-color: var(--card-border); }
 .btn-header-ghost:hover { background: var(--gray-light); border-color: var(--light-pink); }
 .btn-header-save { background: var(--primary-pink); color: var(--white); }
 .btn-header-save:hover { background: var(--primary-hover); }
-.btn-header-danger { color: #dc2626; border-color: #fca5a5; background: #fff; }
+.btn-header-danger { color: var(--theme-fg-dc2626); border-color: var(--theme-border-fca5a5); background: var(--surface); }
 
 /* Give the editable content the larger share; settings remain in reach. */
 

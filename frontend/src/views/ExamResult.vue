@@ -208,13 +208,13 @@ function formatTime(dt) {
 }
 
 .score-hero.pass {
-  background: #f0fdf4;
-  border-color: #86efac;
+  background: var(--theme-bg-f0fdf4);
+  border-color: var(--theme-border-86efac);
 }
 
 .score-hero.fail {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--theme-bg-fef2f2);
+  border-color: var(--theme-border-fca5a5);
 }
 
 .score-circle {
@@ -227,8 +227,8 @@ function formatTime(dt) {
 .circle-svg { width: 100%; height: 100%; }
 .circle-bg  { stroke: var(--card-border); }
 
-.score-hero.pass .circle-fill { stroke: var(--forest-green); }
-.score-hero.fail .circle-fill { stroke: #ef4444; }
+.score-hero.pass .circle-fill { stroke: var(--text-green); }
+.score-hero.fail .circle-fill { stroke: var(--theme-fg-ef4444); }
 .circle-fill { transition: stroke-dashoffset 1s ease; }
 
 .circle-inner {
@@ -270,8 +270,8 @@ function formatTime(dt) {
   width: fit-content;
 }
 
-.result-chip.pass { background: var(--light-green); color: var(--forest-green); }
-.result-chip.fail { background: #fecaca; color: #dc2626; }
+.result-chip.pass { background: var(--light-green); color: var(--text-green); }
+.result-chip.fail { background: var(--theme-bg-fecaca); color: var(--theme-fg-dc2626); }
 
 .hero-stats {
   display: flex;
@@ -300,7 +300,7 @@ function formatTime(dt) {
 
 /* ── Card ── */
 .card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.375rem 1.5rem;
@@ -364,8 +364,8 @@ function formatTime(dt) {
   flex-shrink: 0;
 }
 
-.topic-pct.good { color: var(--forest-green); }
-.topic-pct.bad  { color: #dc2626; }
+.topic-pct.good { color: var(--text-green); }
+.topic-pct.bad  { color: var(--theme-fg-dc2626); }
 
 /* ── Weakness ── */
 .weakness-list {
@@ -375,8 +375,8 @@ function formatTime(dt) {
 }
 
 .weakness-item {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: var(--theme-bg-fff7ed);
+  border: 1px solid var(--theme-border-fed7aa);
   border-radius: var(--radius-md);
   padding: 0.875rem 1rem;
   display: flex;
@@ -386,7 +386,7 @@ function formatTime(dt) {
 
 /* topics above the 60% threshold: wrong, but not flagged as weak */
 .weakness-item.minor {
-  background: var(--gray-light, #f8fafc);
+  background: var(--gray-light, var(--theme-bg-f8fafc));
   border-color: var(--card-border);
 }
 
@@ -400,7 +400,7 @@ function formatTime(dt) {
 .weakness-topic {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #c2410c;
+  color: var(--theme-fg-c2410c);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -479,7 +479,7 @@ function formatTime(dt) {
 }
 
 .btn-ghost {
-  background: var(--white);
+  background: var(--surface);
   color: var(--text-main);
   border: 1.5px solid var(--card-border);
   border-radius: 999px;
@@ -510,12 +510,12 @@ function formatTime(dt) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
+  background: var(--theme-bg-fee2e2);
+  border: 1px solid var(--theme-border-fca5a5);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   font-size: 0.84rem;
-  color: #b91c1c;
+  color: var(--theme-fg-b91c1c);
   font-weight: 500;
 }
 

@@ -41,17 +41,17 @@ onUnmounted(() => observer?.disconnect())
 /* Shared editor navigation; retain its existing visual identity. */
 .editor-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; padding: 16px var(--feature-gutter); background: var(--white);
-  border-bottom: 1px solid #e8edf3; position: sticky; z-index: 100;
+  gap: 1rem; padding: 16px var(--feature-gutter); background: var(--surface);
+  border-bottom: 1px solid var(--theme-border-e8edf3); position: sticky; z-index: 100;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .topbar-main { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
 .topbar-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 .topbar-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; font-size: 0.75rem; }
-.crumb-link { color: #94a3b8; text-decoration: none; font-weight: 500; transition: color 0.15s; }
-.crumb-link:hover, .crumb-current:hover { color: #ed4081; }
+.crumb-link { color: var(--theme-fg-94a3b8); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+.crumb-link:hover, .crumb-current:hover { color: var(--theme-fg-ed4081); }
 .crumb-sep { color: #cbd5e1; font-size: 0.7rem; }
-.crumb-current { color: #475569; font-weight: 600; text-decoration: none; }
+.crumb-current { color: var(--theme-fg-475569); font-weight: 600; text-decoration: none; }
 .topbar-title { font-size: 1.25rem; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
 .topbar-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .editor-back { display: flex; align-items: center; justify-content: center; color: var(--text-muted); width: 36px; height: 36px; flex-shrink: 0; text-decoration: none; }
