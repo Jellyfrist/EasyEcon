@@ -68,6 +68,7 @@ cover/
 # Ignore SQLite databases
 *.db
 *.sqlite3
+*.db.before-flashcard-removal-*.bak
 fastapi/app.db
 
 # Django stuff:
