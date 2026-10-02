@@ -21,7 +21,7 @@
         </div>
       </template>
         <button class="le-add-section-btn le-header-add-section" @click="addSection">
-          <span class="material-symbols-outlined">add</span> Add section
+          <span class="material-symbols-outlined" aria-hidden="true">add</span> Add section
         </button>
         <span class="le-publish-label">Published</span>
         <label class="le-toggle">
@@ -33,7 +33,7 @@
           :disabled="isSaving || !lesson.title.trim()"
           @click="saveLesson"
         >
-          <span class="material-symbols-outlined">{{ isSaving ? 'hourglass_empty' : (isEditMode ? 'save' : 'add_circle') }}</span>
+          <span class="material-symbols-outlined" aria-hidden="true">{{ isSaving ? 'hourglass_empty' : (isEditMode ? 'save' : 'add_circle') }}</span>
           {{ isSaving ? 'Saving…' : (isEditMode ? 'Save' : 'Create Lesson') }}
         </button>
     </EditorHeader>
