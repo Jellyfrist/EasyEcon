@@ -26,7 +26,7 @@
         </button>
         <span class="le-publish-label">Published</span>
         <label class="le-toggle">
-          <input type="checkbox" v-model="isPublished">
+          <input type="checkbox" v-model="isPublished" aria-label="Publish lesson">
           <span class="le-toggle-track"></span>
         </label>
         <button
@@ -83,25 +83,28 @@
         <main class="le-editor-area">
 
           <div class="le-lesson-meta">
-          <!-- lesson title (only once, top of editor) -->
-          <input
-            v-model="lesson.title"
-            class="le-lesson-title-input"
-            placeholder="Lesson title…"
-            maxlength="120"
-          />
-          <label for="lesson-topic-tag">Topic Tag (used to match exam questions)</label>
-          <input id="lesson-topic-tag" v-model.trim="lesson.topic_tag" class="le-section-name-input"
-            placeholder="e.g. Supply & Demand" maxlength="100" />
-
-          <!-- section name -->
-          <input
-            v-if="activeSection"
-            v-model="activeSection.title"
-            class="le-section-name-input"
-            placeholder="Section name (e.g. Why Prices Change)"
-          />
-
+            <div class="le-title-fields">
+              <div>
+                <label for="lesson-title">Lesson title</label>
+                <input id="lesson-title" v-model="lesson.title" class="le-lesson-title-input"
+                  placeholder="Lesson title…" maxlength="120" aria-describedby="lesson-title-help" />
+                <p id="lesson-title-help" class="le-field-help">Shown at the top of the student lesson.</p>
+              </div>
+              <div v-if="activeSection">
+                <label for="section-title">Section title <span class="le-optional">(optional)</span></label>
+                <input id="section-title" v-model="activeSection.title" class="le-section-name-input"
+                  placeholder="Section name (e.g. Why Prices Change)" aria-describedby="section-title-help" />
+                <p id="section-title-help" class="le-field-help">Names this part in the editor sidebar.</p>
+              </div>
+            </div>
+            <details class="le-extra-settings">
+              <summary>Exam matching settings</summary>
+              <label for="lesson-topic-tag">Topic Tag</label>
+              <p id="topic-tag-help">Used to match this lesson with exam questions. Leave empty if not needed.</p>
+              <input id="lesson-topic-tag" v-model.trim="lesson.topic_tag" class="le-section-name-input"
+                aria-describedby="topic-tag-help" placeholder="e.g. Supply & Demand" maxlength="100" />
+            </details>
+            <label class="le-content-label" for="lesson-content">Lesson content</label>
           </div>
 
           <!-- sticky formatting toolbar -->
@@ -149,6 +152,8 @@
           <!-- rich text area -->
           <div
             class="le-rich-text lesson-html"
+            id="lesson-content" role="textbox" aria-label="Lesson content" aria-multiline="true"
+            data-placeholder="Write your lesson here. Use the toolbar to format text or insert a layout."
             contenteditable="true"
             ref="contentArea"
             @input="updateContent"
@@ -628,7 +633,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ── tokens ───────────────────────────────────────────── */
+/* Editor aliases use the existing design-system tokens. */
+.le-root {
+  --pink: var(--primary-pink);
+  --pink-h: var(--primary-hover);
+  --pink-bg: #fff0f5;
+  --pink-light: var(--light-pink);
+  --ink: var(--text-main);
+  --ink2: var(--text-main);
+  --muted: var(--text-muted);
+  --border: var(--card-border);
+  --bg: var(--gray-light);
+  --outline-w: 224px;
+}
 
 /* ── topbar ───────────────────────────────────────────── */
 .le-topbar {
@@ -823,29 +840,21 @@ onMounted(() => {
   background: var(--white);
 }
 
-.le-lesson-meta { padding: 0 3rem; }
-.le-lesson-meta label { display: block; font-size: 0.82rem; color: var(--muted); margin: 1rem 0 0.5rem; }
-
-.le-lesson-title-input {
-  font-size: 1.85rem; font-weight: 800;
-  color: var(--ink); border: none; outline: none;
-  padding: 2rem 0 0.25rem;
-  font-family: inherit;
-  background: transparent;
-  width: 100%; box-sizing: border-box;
-}
-.le-lesson-title-input::placeholder { color: #c0c8d4; }
-
-.le-section-name-input {
-  font-size: 1rem; font-weight: 600;
-  color: var(--pink); border: none; outline: none;
-  padding: 0.25rem 0 1.25rem;
-  font-family: inherit;
-  background: transparent;
-  width: 100%; box-sizing: border-box;
-  border-bottom: 1px solid var(--border);
-}
-.le-section-name-input::placeholder { color: var(--pink-light); }
+.le-lesson-meta { width: 100%; max-width: 960px; margin: 0 auto; padding: 24px 32px 0; }
+.le-title-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.le-lesson-meta label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0 0 8px; }
+.le-field-help { margin-top: 6px; font-size: 0.75rem; color: var(--text-muted); }
+.le-optional { font-weight: 400; color: var(--text-muted); }
+.le-lesson-title-input, .le-section-name-input { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 8px; background: var(--white); color: var(--text-main); font: inherit; font-size: 0.95rem; }
+.le-lesson-title-input:focus, .le-section-name-input:focus { outline: 2px solid var(--primary-pink); outline-offset: 1px; }
+.le-lesson-title-input::placeholder, .le-section-name-input::placeholder { color: var(--text-muted); }
+.le-extra-settings { margin: 16px 0 24px; font-size: 0.8rem; color: var(--text-muted); }
+.le-extra-settings summary { cursor: pointer; padding: 6px 0; }
+.le-extra-settings[open] summary { margin-bottom: 12px; }
+.le-extra-settings p { margin-bottom: 8px; }
+.le-extra-settings .le-section-name-input { max-width: 440px; }
+.le-lesson-meta .le-content-label { margin-bottom: 12px; }
+.le-rich-text:empty::before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
 
 /* ── toolbar ──────────────────────────────────────────── */
 .le-toolbar {
@@ -853,7 +862,8 @@ onMounted(() => {
   top: 0;
   z-index: 50;
   display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
-  padding: 8px 3rem;
+  padding: 8px 32px;
+  width: 100%; max-width: 960px; margin: 0 auto;
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
@@ -901,7 +911,8 @@ onMounted(() => {
 .le-rich-text {
   flex: 1;
   outline: none;
-  padding: 1.75rem 3rem 4rem;
+  padding: 24px 32px 64px;
+  width: 100%; max-width: 960px; margin: 0 auto;
   min-height: 400px;
   font-size: 1rem; line-height: 1.8;
   color: var(--ink2);
@@ -1048,9 +1059,8 @@ onMounted(() => {
 @media (max-width: 768px) {
   .le-outline { display: none; }
   .le-header-add-section { display: inline-flex; }
-  .le-lesson-meta { padding: 0 1.25rem; }
-  .le-lesson-title-input,
-  .le-section-name-input { padding-left: 0; padding-right: 0; }
+  .le-lesson-meta { padding: 20px 20px 0; }
+  .le-title-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .le-toolbar { padding-left: 1.25rem; padding-right: 1.25rem; }
   .le-rich-text { padding: 1.25rem 1.25rem 4rem; }
   .le-topbar-center .le-bc-link,
