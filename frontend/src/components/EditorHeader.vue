@@ -17,7 +17,7 @@
       </div>
     </div>
     <div v-if="$slots.tools" class="topbar-tools"><slot name="tools" /></div>
-    <div class="topbar-actions"><slot /></div>
+    <div class="topbar-actions header-actions"><slot /></div>
   </header>
 </template>
 

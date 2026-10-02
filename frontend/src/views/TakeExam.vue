@@ -39,6 +39,13 @@
           </div>
     
           <form class="question-container" @submit.prevent="submit">
+            <div class="exam-info" aria-label="Exam information">
+              <span>{{ session.questions.length }} questions</span>
+              <span>{{ session.time_limit_minutes ? session.time_limit_minutes + ' minutes' : 'No time limit' }}</span>
+              <span v-if="session.passing_score_pct != null">Passing score: {{ session.passing_score_pct }}%</span>
+              <span v-if="session.max_attempts != null">Up to {{ session.max_attempts }} attempt{{ session.max_attempts === 1 ? '' : 's' }}</span>
+              <p v-if="session.instructions" class="exam-instructions">{{ session.instructions }}</p>
+            </div>
             <section v-for="(q, index) in session.questions" :key="q.id" class="question-block">
     
               <p class="q-points">Question {{ index + 1 }} of {{ session.questions.length }}</p>
@@ -839,6 +846,8 @@ function goExamSet() {
 .option input, .tf-btn input { width: 18px; height: 18px; accent-color: #df4a7d; flex-shrink: 0; }
 .option-text { font-size: 1rem; }
 .submission-summary { width: 100%; padding: 2rem 0; }
+.exam-info { width: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; color: #6b7280; background: #f3f4f6; border-radius: 12px; padding: 1rem; margin-top: 1.5rem; }
+.exam-instructions { flex-basis: 100%; margin: 0.25rem 0 0; white-space: pre-wrap; color: #111827; }
 .question-container :is(button, input, textarea):focus-visible { outline: 2px solid #df4a7d; outline-offset: 3px; }
 @media (max-width: 768px) {
     .top-bar { padding: 0.75rem 1rem; gap: 0.5rem; }
