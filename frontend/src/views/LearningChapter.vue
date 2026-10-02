@@ -1,5 +1,5 @@
 <template>
-    <div class="layout-wrapper" :style="{ '--navbar-offset': `${navbarOffset}px` }">
+    <div class="layout-wrapper" :class="{ 'reader-navigation-collapsed': collapsed }" :style="{ '--navbar-offset': `${navbarOffset}px` }">
         <button class="outline-toggle" :aria-expanded="showOutline" aria-controls="lesson-outline" @click="showOutline = !showOutline">
             <span class="material-symbols-outlined" aria-hidden="true">menu_book</span> Lessons
             <span class="material-symbols-outlined" aria-hidden="true">{{ showOutline ? 'close' : 'expand_more' }}</span>
@@ -113,6 +113,7 @@
 </template>
 
 <script setup>
+import { useCourseNavigation } from '@/composables/useCourseNavigation';
 import { useNavbarOffset } from '@/composables/useNavbarOffset';
 import LessonRichText from '@/components/LessonRichText.vue';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
@@ -125,6 +126,7 @@ const route = useRoute();
 const router = useRouter();
 const learningStore = useLearningStore();
 const navbarOffset = useNavbarOffset();
+const { collapsed } = useCourseNavigation();
 const showOutline = ref(false);
 
 const courseId = computed(() => route.params.courseId);
@@ -298,6 +300,7 @@ const handleNext = async () => {
     font-family: 'DM Sans', 'Sarabun', sans-serif;
     overflow: hidden;
 }
+.layout-wrapper.reader-navigation-collapsed { grid-template-columns: 72px minmax(0, 1fr); }
 .material-symbols-outlined { vertical-align: middle; }
 .outline-toggle { display: none; }
 .main-content {
@@ -619,7 +622,7 @@ input[type="radio"] {
 
 /* responsive */
 @media (max-width: 768px) {
-    .layout-wrapper {
+    .layout-wrapper, .layout-wrapper.reader-navigation-collapsed {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: 48px minmax(0, 1fr) 44px;
     }
@@ -648,6 +651,7 @@ input[type="radio"] {
         box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08);
     }
     .layout-wrapper > .sidebar.outline-open { display: flex; }
+    .layout-wrapper > .sidebar.sidebar-collapsed { width: 72px; }
     .main-content { grid-column: 1; grid-row: 2; }
     .bottom-nav { grid-row: 3; padding-inline: 12px; }
     .study-container { padding: 24px 20px 40px; }

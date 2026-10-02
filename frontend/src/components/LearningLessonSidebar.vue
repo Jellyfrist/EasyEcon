@@ -1,19 +1,20 @@
 <template>
-    <aside class="sidebar" :class="[complete ? 'complete-sidebar' : 'study-sidebar', { 'reader-sidebar': reader }]" aria-label="Lesson outline">
+    <aside class="sidebar" :class="[complete ? 'complete-sidebar' : 'study-sidebar', { 'reader-sidebar': reader, 'sidebar-collapsed': reader && collapsed }]" aria-label="Lesson outline">
+        <NavigationHeading v-if="reader" :title="dashboard.module.title" :collapsed="collapsed" @toggle="collapsed = !collapsed" />
         <div class="sidebar-header">
-            <button class="nav-btn" @click="$emit('back')">
+            <button class="nav-btn" type="button" :aria-label="reader ? 'All modules' : 'Back to Modules'" :title="reader && collapsed ? 'All modules' : undefined" @click="$emit('back')">
                 <div class="back-icon-circle">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </div>
-                <span class="nav-text">{{ reader ? 'All modules' : (complete ? 'Back to Modules' : 'Back to Module') }}</span>
+                <span v-show="!reader || !collapsed" class="nav-text">{{ reader ? 'All modules' : (complete ? 'Back to Modules' : 'Back to Module') }}</span>
             </button>
         </div>
-        <div class="module-info">
+        <div v-show="!reader || !collapsed" class="module-info">
             <p class="info-label">{{ complete ? 'MODULE COMPLETE' : 'CURRENT MODULE' }}</p>
-            <h3 class="info-title">{{ dashboard.module.title }}</h3>
+            <h3 v-if="!reader" class="info-title">{{ dashboard.module.title }}</h3>
             <div class="progress-bar-wrap">
                 <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
             </div>
@@ -24,13 +25,13 @@
             <div class="nav-list">
                 <button v-for="(page, index) in dashboard.pages" :key="page.id" class="nav-item"
                     :class="{ active: !complete && page.id == pageId, completed: !complete && page.status === 'completed' }"
+                    :aria-label="page.title" :title="reader && collapsed ? page.title : undefined"
                     :aria-current="!complete && page.id == pageId ? 'page' : undefined"
                     @click="!complete && $emit('select', page.id)">
                     <span class="material-symbols-outlined nav-icon" aria-hidden="true">
-                        {{ complete ? 'check_circle' : (page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : (reader ? 'radio_button_unchecked' : 'play_circle'))) }}
+                        {{ complete ? 'check_circle' : (page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : (reader ? 'description' : 'play_circle'))) }}
                     </span>
-                    <span v-if="reader" class="material-symbols-outlined lesson-document-icon" aria-hidden="true">description</span>
-                    <span class="nav-item-text">{{ reader ? page.title : `${index + 1}. ${page.title}` }}</span>
+                    <span v-show="!reader || !collapsed" class="nav-item-text">{{ reader ? page.title : `${index + 1}. ${page.title}` }}</span>
                 </button>
             </div>
         </div>
@@ -38,6 +39,8 @@
 </template>
 
 <script setup>
+import NavigationHeading from '@/components/NavigationHeading.vue';
+import { useCourseNavigation } from '@/composables/useCourseNavigation';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -47,6 +50,7 @@ const props = defineProps({
     reader: { type: Boolean, default: false },
 });
 defineEmits(['back', 'select']);
+const { collapsed } = useCourseNavigation();
 const progress = computed(() => props.complete ? 100 : props.dashboard.progress_percent);
 </script>
 
@@ -408,50 +412,30 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
    ===================================================== */
 
 
-/* Flat outline for the lesson reader; completion layout remains unchanged. */
-.reader-sidebar {
-    width: 260px;
-    min-width: 0;
-    height: 100%;
-    overflow-y: auto;
-    background: var(--surface);
-    border-right: 1px solid var(--card-border);
-    border-radius: 0;
-    box-shadow: none;
-}
-.reader-sidebar .sidebar-header { order: 1; padding: 0 12px; }
-.reader-sidebar .nav-btn { color: var(--primary-pink); gap: 8px; min-height: 28px; }
-.reader-sidebar .back-icon-circle { width: 20px; height: 20px; border: 0; color: inherit; }
-.reader-sidebar .nav-text { font-size: 0.8rem; font-weight: 500; }
+/* Match the course navigation; retain the completion layout. */
+.reader-sidebar { width: 260px; min-width: 0; height: 100%; padding: 24px 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--card-border); border-radius: 0; box-shadow: none; font-family: 'Kanit', sans-serif; }
+.reader-sidebar .sidebar-header { order: 1; padding: 0; }
+.reader-sidebar .nav-btn { transition: background-color 0.15s, color 0.15s; color: var(--text-muted); gap: 8px; min-height: 44px; padding: 10px 20px; }
+.reader-sidebar .back-icon-circle { width: 18px; height: 18px; border: 0; color: inherit; flex-shrink: 0; }
+.reader-sidebar .nav-text { font-size: 0.85rem; font-weight: 400; }
+.reader-sidebar .nav-btn:hover { background: var(--gray-light); color: var(--primary-pink); }
 .reader-sidebar .nav-btn:hover .back-icon-circle { background: transparent; color: inherit; }
-.reader-sidebar .nav-btn:hover .nav-text { color: var(--primary-pink); }
-.reader-sidebar .module-info { order: 0; padding: 16px 12px 0; border: 0; }
+.reader-sidebar .nav-btn:hover .nav-text { color: inherit; }
+.reader-sidebar .module-info { order: 0; padding: 0 20px 12px; border: 0; }
 .reader-sidebar .info-label, .reader-sidebar .nav-label, .reader-sidebar .progress-bar-wrap { display: none; }
-.reader-sidebar .info-label, .reader-sidebar .nav-label { color: var(--text-muted); font-size: 0.65rem; }
-.reader-sidebar .info-title { color: var(--text-main); font-size: 1.5rem; line-height: 1.25; font-weight: 400; overflow-wrap: anywhere; }
-.reader-sidebar .progress-bar-wrap { height: 4px; background: var(--theme-bg-f3f4f6); }
-.reader-sidebar .progress-bar-fill { background: var(--primary-pink); }
-.reader-sidebar .progress-pct { text-align: left; margin: 4px 0; color: var(--text-muted); font-weight: 500; font-size: 0.65rem; }
-.reader-sidebar .lesson-nav { order: 2; padding: 8px 0; }
-.reader-sidebar .nav-label { margin: 0 20px 12px; }
+.reader-sidebar .progress-pct { text-align: left; margin: 0; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; }
+.reader-sidebar .lesson-nav { order: 2; padding: 0; }
 .reader-sidebar .nav-list { gap: 0; }
-.reader-sidebar .nav-item {
-    width: 100%;
-    min-height: 34px;
-    padding: 6px 12px;
-    gap: 8px;
-    color: var(--text-main);
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-}
-.reader-sidebar .nav-item:hover:not(.active) { background: var(--theme-bg-fff0f5); transform: none; }
-.reader-sidebar .nav-item.active { color: white; background: var(--primary-pink); border: 0; box-shadow: none; }
+.reader-sidebar .nav-item { transition: background-color 0.15s, color 0.15s; width: 100%; min-height: 44px; padding: 10px 20px; gap: 8px; color: var(--text-muted); border: 0; border-radius: 0; box-shadow: none; }
+.reader-sidebar .nav-item:hover:not(.active) { background: var(--gray-light); color: var(--primary-pink); transform: none; }
+.reader-sidebar .nav-item.active { color: var(--white); background: var(--primary-pink); border: 0; box-shadow: none; }
 .reader-sidebar .nav-item.completed .nav-icon { color: var(--text-green); }
-.reader-sidebar .nav-item.active .nav-icon { color: white; }
-.reader-sidebar .nav-icon { font-size: 14px; }
-.reader-sidebar .lesson-document-icon { font-size: 16px; color: var(--primary-pink); }
-.reader-sidebar .nav-item.active .lesson-document-icon { color: white; }
-.reader-sidebar .nav-item-text { font-size: 0.8rem; font-weight: 400; line-height: 1.5; }
-.reader-sidebar .nav-item:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
+.reader-sidebar .nav-item.active .nav-icon { color: var(--white); }
+.reader-sidebar .nav-icon { font-size: 18px; color: inherit; }
+.reader-sidebar .nav-item-text { font-size: 0.85rem; font-weight: 400; line-height: 1.5; }
+.reader-sidebar :is(.nav-item, .nav-btn):focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
+.reader-sidebar.sidebar-collapsed { width: 72px; padding: 16px 8px; }
+.reader-sidebar.sidebar-collapsed .nav-list { align-items: center; gap: 8px; }
+.reader-sidebar.sidebar-collapsed :is(.nav-item, .nav-btn) { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 8px; }
+.reader-sidebar.sidebar-collapsed .sidebar-header { margin: 0 auto 8px; }
 </style>
