@@ -133,7 +133,7 @@ and the common dashboard entry click. Optional settings retain their controls.
 | Save a draft exam | 1 | 1 |
 | Add another question | 1 | 1, with an additional visible action at the top and focus in the new question |
 
-## Final verification / limits
+## Earlier verification / limits
 
 - 39 Vue files remain; all are reachable through the application import graph.
   No broken local imports. Every existing route name and path is unchanged.
@@ -154,3 +154,88 @@ and the common dashboard entry click. Optional settings retain their controls.
   Multi-resource saves use the separate existing API calls, not a transaction.
   If a later call fails, earlier successful resources stay saved and can be
   retried from the current form. No server change was needed.
+
+## Latest task: continuous surfaces and consistent editors
+
+The latest instructions retain the original design system and explicitly change
+the exam surface/header, editor headers/layout and student course presentation.
+The uncommitted general restyle from the preceding request was discarded. No
+global palette, font, radius or shadow reset is included.
+
+### Current Vue inventory (40 files)
+
+Paths are relative to `frontend/src`. Each file is reachable through the
+application import graph; no unresolved imports remain.
+
+- Shell: `App.vue`.
+- Components: `Navbar.vue`, `Footer.vue`, `DashboardHero.vue`,
+  `AuthHeroSection.vue`, `QuestionEditor.vue`, `LearningLessonSidebar.vue`,
+  `ExamSessionFields.vue`, `ExamQuestionReview.vue`, `ExamAttemptHistory.vue`,
+  `EditorHeader.vue`.
+- Views: `Login.vue`, `Signup.vue`, `LoginSuccess.vue`, `VerifyEmail.vue`,
+  `UserSetting.vue`, `Dashboard.vue`, `Teacher.vue`, `AdminPage.vue`,
+  `CourseDashboard.vue`, `CourseEditor.vue`, `ModulesList.vue`,
+  `LearningDashboard.vue`, `LearningChapter.vue`, `LearningMiniquizPoint.vue`,
+  `TeacherLearningDashboard.vue`, `LearningModule.vue`, `LearningEditor.vue`,
+  `FlashcardDashboard.vue`, `TeacherFlashcardDashboard.vue`,
+  `FlashcardEditor.vue`, `FlashcardStudy.vue`, `ExamDashboard.vue`, `ExamSet.vue`,
+  `TakeExam.vue`, `ExamResult.vue`, `TeacherExamDashboard.vue`, `ExamEditor.vue`,
+  `ExamLaunch.vue`, `SessionExamResults.vue`.
+
+Overlap resolved: lesson sidebars, exam session fields, result/analysis/history
+and editor headers. Student/teacher dashboards retain separate views because
+their actions, data and permissions differ. `ExamSet` remains the first-attempt
+information screen and an existing public route; Retake bypasses it.
+
+### Changes and file report
+
+| Section | Files / outcome |
+| --- | --- |
+| 1. Cleanup | Earlier removal: `components/PasswordInput.vue`, `LearningLayout.vue`, `Sidebar.vue`, `ExamQuestionEditor.vue`, `components/exam/MultipleChoice.vue`, `TrueFalse.vue`, `ShortAnswer.vue`; shared lesson sidebar in `LearningChapter.vue` and `LearningMiniquizPoint.vue`. No additional page deletion is needed for the shared editor header. |
+| 2.1 Exam | `views/TakeExam.vue`: one white form surface, question sections with dividers, one Submit action; compact opaque sticky header below the existing navbar. Native answer controls remain keyboard accessible. Timer and submission payload unchanged. |
+| 2.2 Retake | `views/ExamDashboard.vue`: Retake routes directly to `TakeExam`; first Start Exam keeps the existing information flow. Essential exam information/instructions appear in a compact panel within the answering surface using fields already returned by the API. |
+| 2.3 Results | Earlier merge into `views/ExamResult.vue`, `components/ExamQuestionReview.vue`, `components/ExamAttemptHistory.vue`. Remove `views/ExamAnalysis.vue`; move `views/ExamHistory.vue` to the history component. `router/index.js` keeps all original names/paths. |
+| 2.4 Course | `views/CourseDashboard.vue`: sidebar navigation, centered reading column, overview counts and study tools, following the supplied Postman Academy screenshot. Original loading/data script is retained exactly. |
+| 3.1 Creation | Earlier changes in `CourseEditor.vue`, `ExamEditor.vue`, `QuestionEditor.vue`, `ExamLaunch.vue`, `ExamSessionFields.vue`, `utils/examSession.js`: inline modules/questions, defaults, single explicit save. Add section is also visible in the lesson header on mobile where the outline is hidden. |
+| 3.2 / 3.5 Headers | New `components/EditorHeader.vue` and `composables/useNavbarOffset.js`. Shared header in `ExamEditor.vue`, `LearningEditor.vue`, `FlashcardEditor.vue`, `LearningModule.vue`, `CourseEditor.vue`; clickable breadcrumbs, title below, actions on the right, sticky below navbar. Style comes from the original FlashcardEditor header. |
+| 3.3 Exam layout | `ExamEditor.vue`: wider main column and 280px behaviour panel. Below 1100px, behaviour moves into a two-column section; below 600px its controls stack. |
+| 3.4 Lesson alignment | `LearningEditor.vue`: title, topic label/input and section name share one padded metadata container. Editor flex child has `min-width: 0`; its scrolling height accounts for navbar/header. |
+
+Additional documentation: this file. No backend, API service, store,
+authentication, permission, dependency, global style or server file changes.
+
+### Teacher action counts
+
+Counts exclude typing, scrolling and the common dashboard entry.
+
+| Task | Original | Final |
+| --- | --- | --- |
+| Create course and first module | 3 | 1: Create Course |
+| Save a course without modules | 1 | 1 |
+| Create, publish and open an exam | 5 | 2: Open Session When Saving, then Save & Open Session |
+| Save exam draft | 1 | 1 |
+| Add question | 1 | 1, visible in the sticky header |
+| Add lesson section | 1 on desktop | 1 on desktop and mobile |
+
+### Latest verification and limitations
+
+- Production build passes without errors or new warnings. Import audit passes
+  for all 40 Vue files; route names/paths, guards, API services, stores,
+  dependencies, App.vue and global styles match the original baseline.
+- Desktop 1440px and mobile 390px: mixed exam answers, unchanged payload,
+  retry after submission failure and exactly one timer-expiry submission pass.
+- Actual local rendering: no question cards, persistent exam header/timer,
+  direct Retake, course navigation, five sticky editor headers, all breadcrumb
+  targets, wide settings and aligned lesson fields pass.
+- Layout also passes at 1920 CSS px, the effective viewport of a 1440px display
+  at 75% zoom. This is layout emulation, not a manual OS/browser zoom check.
+- Results, legacy result URLs, history selection and partial API failures pass
+  at both widths. Teacher course/module/exam/session payload and retry tests
+  pass at both widths. Existing three-role local login checks pass.
+- Browser rendering reads the local data. Write checks intercept requests;
+  they do not create or change server records. Chrome resource limits during
+  repeated full-page navigation were resolved by closing test pages between
+  checks, without a production code change.
+- Explicit Save is retained instead of adding autosave. Multi-resource saves
+  continue to use the existing separate API calls and their retry behavior.
+  No requested feature requires a backend or API contract change.
