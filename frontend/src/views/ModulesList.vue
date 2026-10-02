@@ -1,9 +1,7 @@
 <template>
     <FeaturePage class="ml-root">
     <template #navigation><CourseNavigation :course-id="courseId" current="modules" /></template>
-    <template #header>
-        <EditorHeader :title="'Modules'" :back-to="{ name: 'Courses', params: { courseId } }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]"></EditorHeader>
-    </template>
+        <EditorHeader inline title="Modules" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]" />
 
         <div class="ml-container">
 
