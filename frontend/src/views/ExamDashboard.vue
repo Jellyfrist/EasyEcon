@@ -1,13 +1,14 @@
 <template>
     <FeaturePage class="dashboard">
     <template #navigation><CourseNavigation :course-id="courseId" current="exams" /></template>
-    <template #header>
-        <EditorHeader :title="'Exams'" :back-to="{ name: 'Courses', params: { courseId } }" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Exams', to: route.fullPath }]"></EditorHeader>
-    </template>
+        <EditorHeader inline class="exam-page-heading" title="Exams"
+            :breadcrumbs="[
+                { label: 'Courses', to: { name: 'Dashboard' } },
+                { label: 'Course', to: { name: 'Courses', params: { courseId } } },
+                { label: 'Exams', to: route.fullPath },
+            ]" />
 
         <div class="page-card">
-
-            <!-- Header: pink gradient top -->
 
             <!-- Filter bar: white bottom section -->
             <FeatureToolbar>
@@ -748,4 +749,5 @@ function viewResult(session) {
 .exam-start-actions button { min-height: 40px; border-radius: 8px; }
 .exam-start-actions .btn-primary { background: var(--primary-pink); }
 .exam-start-dialog button:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
+.dashboard :deep(.exam-page-heading) { margin-bottom: 16px; }
 </style>

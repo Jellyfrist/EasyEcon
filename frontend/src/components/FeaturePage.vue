@@ -17,7 +17,7 @@ const headerHeight = ref(0)
 const navbarOffset = useNavbarOffset()
 let observer
 onMounted(() => {
-  const header = page.value.querySelector('.editor-topbar')
+  const header = page.value.querySelector('.editor-topbar:not(.editor-topbar-inline)')
   if (!header) return
   observer = new ResizeObserver(() => { headerHeight.value = header.getBoundingClientRect().height })
   observer.observe(header)

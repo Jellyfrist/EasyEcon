@@ -10,6 +10,10 @@ Exams banners on the original page background. Flashcards remain removed, so
 there are two totals and two study tools. Other feature pages keep their shared
 layout/navigation. The course data loading and API remain unchanged.
 
+The student exam list now places its breadcrumb/title inline above the filters,
+with only the main Navbar forming a header bar. Its sidebar sticks directly
+below that Navbar; filtering and the start confirmation remain unchanged.
+
 ## Direct exam start
 
 Start Exam and Retake show a confirmation popup explaining that the timer
