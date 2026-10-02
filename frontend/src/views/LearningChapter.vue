@@ -1,40 +1,10 @@
 <template>
     <div class="layout-wrapper">
     
-        <aside class="sidebar" v-if="dashboardData">
-            <div class="sidebar-header">
-                <button class="nav-btn" @click="router.push(`/courses/${courseId}/modules/${moduleId}`)">
-              <div class="back-icon-circle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="19" y1="12" x2="5" y2="12"></line>
-                  <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-              </div>
-              <span class="nav-text">Back to Module</span>
-            </button>
-            </div>
-    
-            <div class="module-info">
-                <p class="info-label">CURRENT MODULE</p>
-                <h3 class="info-title">{{ dashboardData.module.title }}</h3>
-                <div class="progress-bar-wrap">
-                    <div class="progress-bar-fill" :style="{ width: dashboardData.progress_percent + '%' }"></div>
-                </div>
-                <p class="progress-pct">PROGRESS: {{ dashboardData.progress_percent }}%</p>
-            </div>
-    
-            <div class="lesson-nav">
-                <p class="nav-label">LESSONS</p>
-                <div class="nav-list">
-                    <button v-for="(page, index) in dashboardData.pages" :key="page.id" class="nav-item" :class="{ active: page.id == pageId, completed: page.status === 'completed' }" @click="goToLesson(page.id)">
-                <span class="material-symbols-outlined nav-icon">
-                  {{ page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : 'play_circle') }}
-                </span>
-                <span class="nav-item-text">{{ index + 1 }}. {{ page.title }}</span>
-              </button>
-                </div>
-            </div>
-        </aside>
+        <LearningLessonSidebar v-if="dashboardData"
+            :dashboard="dashboardData" :page-id="pageId"
+            @back="router.push(`/courses/${courseId}/modules/${moduleId}`)"
+            @select="goToLesson" />
     
         <main class="main-content" id="main-scroll">
     
@@ -137,6 +107,7 @@
 </template>
 
 <script setup>
+import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import learningService from '@/services/learningService';
@@ -317,194 +288,6 @@ const handleNext = async () => {
 
 /* =====================================================
    Sidebar
-   ===================================================== */
-
-.sidebar {
-    width: 300px;
-    background-color: #df4a7d;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(223, 74, 125, 0.1);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    overflow-y: auto;
-    height: 100%;
-}
-
-.sidebar-header {
-    padding: 2rem 1.5rem 1rem 1.5rem;
-}
-
-.nav-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: transparent;
-    border: none;
-    padding: 0;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    text-align: left;
-}
-
-.back-icon-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.nav-text {
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.nav-btn:hover .back-icon-circle {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.nav-btn:hover .nav-text {
-    color: #e6e6e6;
-}
-
-.module-info {
-    padding: 1rem 1.5rem 1.5rem 1.5rem;
-    border-bottom: 1px solid #fce4ec;
-}
-
-.info-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #e6e6e6;
-    letter-spacing: 0.05em;
-    margin: 0 0 6px;
-}
-
-.info-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #ffffff;
-    margin: 0 0 1rem;
-    line-height: 1.4;
-}
-
-.progress-bar-wrap {
-    height: 6px;
-    background: #fce4ec;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ffc6da, #ffffff);
-    border-radius: 6px;
-    transition: width 0.4s ease;
-}
-
-.progress-pct {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #e6e6e6;
-    text-align: right;
-    margin: 0;
-    letter-spacing: 0.05em;
-}
-
-.lesson-nav {
-    padding: 1.5rem 1rem;
-    flex: 1;
-}
-
-.nav-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #e6e6e6;
-    letter-spacing: 0.05em;
-    margin: 0 0.5rem 10px;
-}
-
-.nav-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-/* Sidebar Lesson Items */
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 1rem 1.25rem;
-    background: transparent;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.2s ease;
-    color: #ffffff;
-    font-family: inherit;
-}
-
-.nav-item:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(2px);
-}
-
-.nav-item.active {
-    background: rgba(255, 255, 255, 0.2);
-    /* color: #1f2937; */
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 12px rgba(223, 74, 125, 0.08);
-}
-
-.nav-item.completed .nav-icon {
-    color: #00ffaa;
-}
-
-.nav-item.active .nav-icon {
-    color: #ff006a;
-}
-
-.nav-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-    color: #9ca3af;
-}
-
-.nav-item-text {
-    font-size: 0.9rem;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-/* Custom Scrollbar for Sidebar */
-
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background-color: #f1c3d3;
-    border-radius: 4px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-/* =====================================================
-   Main Content
    ===================================================== */
 
 .main-content {
