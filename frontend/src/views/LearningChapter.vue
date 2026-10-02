@@ -1,16 +1,19 @@
 <template>
-    <div class="layout-wrapper">
+    <div class="layout-wrapper" :style="{ '--navbar-offset': `${navbarOffset}px` }">
+        <button class="outline-toggle" :aria-expanded="showOutline" aria-controls="lesson-outline" @click="showOutline = !showOutline">
+            <span class="material-symbols-outlined" aria-hidden="true">menu_book</span> Lessons
+            <span class="material-symbols-outlined" aria-hidden="true">{{ showOutline ? 'close' : 'expand_more' }}</span>
+        </button>
     
-        <LearningLessonSidebar v-if="dashboardData"
+        <LearningLessonSidebar v-if="dashboardData" id="lesson-outline" reader :class="{ 'outline-open': showOutline }"
             :dashboard="dashboardData" :page-id="pageId"
-            @back="router.push(`/courses/${courseId}/modules/${moduleId}`)"
+            @back="router.push({ name: 'ModulesList', params: { courseId } })"
             @select="goToLesson" />
     
         <main class="main-content" id="main-scroll">
     
             <div v-if="pageData" class="study-container">
     
-                <div class="content-card">
                     <article class="content-article">
                         <span class="topic-tag">TOPIC {{ currentIndex + 1 }}</span>
                         <h1 class="page-title">{{ pageData.title }}</h1>
@@ -78,35 +81,35 @@
     
                         </div>
                     </article>
-    
-                    <footer class="bottom-nav">
-                        <button class="prev-btn" :class="{ invisible: currentIndex === 0 }" @click="goPrevLesson">
-                  <span class="material-symbols-outlined">chevron_left</span> Previous
-                </button>
-    
-                        <div class="pagination-dots">
-                            <span v-for="(p, i) in dashboardData?.pages" :key="i" class="dot" :class="{ active: i === currentIndex }"></span>
-                        </div>
-    
-                        <button @click="handleNext" class="next-btn">
-                  {{ isLastPage ? 'Finish Module' : 'Next Lesson' }}
-                  <span class="material-symbols-outlined">chevron_right</span>
-                </button>
-                    </footer>
-                </div>
-    
+
             </div>
     
+            <div v-else-if="dashboardData && dashboardData.pages.length === 0" class="loading-state">
+                <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                <p>No published lessons in this module yet.</p>
+                <router-link :to="{ name: 'ModulesList', params: { courseId } }">Back to modules</router-link>
+            </div>
             <div v-else class="loading-state">
                 <div class="spinner"></div>
                 <p>Preparing lesson...</p>
             </div>
     
         </main>
+        <footer v-if="pageData" class="bottom-nav" aria-label="Lesson navigation">
+            <button class="prev-btn" :class="{ invisible: currentIndex === 0 }" @click="goPrevLesson">
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span> Previous
+            </button>
+            <span class="lesson-position">{{ currentIndex + 1 }} / {{ dashboardData?.pages.length || 0 }}</span>
+            <button @click="handleNext" class="next-btn">
+                {{ isLastPage ? 'Finish Module' : 'Next Lesson' }}
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+        </footer>
     </div>
 </template>
 
 <script setup>
+import { useNavbarOffset } from '@/composables/useNavbarOffset';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -116,6 +119,8 @@ import { useLearningStore } from '@/store/learningStore';
 const route = useRoute();
 const router = useRouter();
 const learningStore = useLearningStore();
+const navbarOffset = useNavbarOffset();
+const showOutline = ref(false);
 
 const courseId = computed(() => route.params.courseId);
 const moduleId = computed(() => route.params.moduleId);
@@ -210,25 +215,32 @@ const submitQuiz = async (questions) => {
     }
 };
 
-onMounted(async () => {
+const openModule = async () => {
+    pageData.value = null;
+    if (timer) clearInterval(timer);
     await loadSidebarData();
     if (pageId.value) {
-        loadLesson(pageId.value);
+        await loadLesson(pageId.value);
+    } else {
+        const firstPage = dashboardData.value?.pages.find(page => page.status !== 'locked');
+        if (firstPage) {
+            router.replace({ name: 'LearningChapter', params: {
+                courseId: courseId.value, moduleId: moduleId.value, pageId: firstPage.id,
+            } });
+        }
     }
-});
+};
+
+onMounted(openModule);
 
 onUnmounted(() => {
     if (timer) clearInterval(timer);
 });
 
-watch(pageId, async (newId) => {
-    if (newId) {
-        loadLesson(newId);
-        await loadSidebarData();
-    }
-});
+watch([moduleId, pageId], openModule);
 
 const goToLesson = (pId) => {
+    showOutline.value = false;
     if (pId == pageId.value) return;
     router.push({
         name: 'LearningChapter',
@@ -272,83 +284,53 @@ const handleNext = async () => {
    ===================================================== */
 
 .layout-wrapper {
-    display: flex;
-    height: 100vh;
-    background: linear-gradient(90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
+    position: fixed;
+    inset: var(--navbar-offset, 64px) 0 0;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 60px;
+    background: white;
     font-family: 'DM Sans', 'Sarabun', sans-serif;
     overflow: hidden;
-    padding: 2rem;
-    gap: 2rem;
-    box-sizing: border-box;
 }
-
-.material-symbols-outlined {
-    vertical-align: middle;
-}
-
-/* =====================================================
-   Sidebar
-   ===================================================== */
-
+.material-symbols-outlined { vertical-align: middle; }
+.outline-toggle { display: none; }
 .main-content {
-    flex: 1;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
     overflow-y: auto;
     scroll-behavior: smooth;
-    border-radius: 24px;
 }
-
-.main-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.main-content::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-}
-
 .study-container {
-    max-width: 860px;
+    width: min(100%, 800px);
     margin: 0 auto;
+    padding: 36px 48px 64px;
 }
-
-/* White Content Card */
-
-.content-card {
-    background: #ffffff;
-    border-radius: 24px;
-    padding: 3.5rem 4rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    min-height: 100%;
-    box-sizing: border-box;
-}
-
-/* article */
-
 .topic-tag {
-    display: inline-block;
-    background: #fce4ec;
-    color: #df4a7d;
-    font-size: 0.75rem;
-    font-weight: 800;
+    display: block;
+    color: var(--primary-pink);
+    font-size: 0.7rem;
+    font-weight: 700;
     letter-spacing: 0.08em;
-    padding: 6px 14px;
-    border-radius: 99px;
-    margin-bottom: 1.25rem;
+    margin-bottom: 12px;
 }
-
 .page-title {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #111827;
-    margin: 0 0 2rem;
-    line-height: 1.3;
-    letter-spacing: -0.02em;
-    border-bottom: 2px dashed #f3f4f6;
-    padding-bottom: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 28px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
-
-.content-block {
-    margin-bottom: 2.5rem;
+.content-block { margin-bottom: 32px; }
+.html-content { overflow-wrap: anywhere; }
+.html-content :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
+.html-content :deep(iframe) { max-width: 100%; }
+.html-content :deep(blockquote) {
+    border-left: 2px solid var(--primary-pink);
+    padding-left: 16px;
+    margin: 24px 0;
 }
 
 /* rich text */
@@ -624,80 +606,39 @@ input[type="radio"] {
    ===================================================== */
 
 .bottom-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 2px dashed #f3f4f6;
-}
-
-.invisible {
-    visibility: hidden;
-}
-
-.prev-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    gap: 12px;
+    padding: 8px 20px;
+    border-top: 1px solid var(--card-border);
     background: white;
-    border: 1.5px solid #e5e7eb;
-    color: #4b5563;
-    padding: 12px 24px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    z-index: 2;
 }
-
-.prev-btn:hover {
-    background: #f9fafb;
-    color: #111827;
-    border-color: #9ca3af;
-}
-
-.pagination-dots {
-    display: flex;
-    gap: 6px;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    transition: all 0.3s;
-}
-
-.dot.active {
-    width: 24px;
-    border-radius: 4px;
-    background: #df4a7d;
-}
-
-.next-btn {
-    display: flex;
+.invisible { visibility: hidden; }
+.prev-btn, .next-btn {
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: #df4a7d;
-    color: white;
-    border: none;
-    padding: 12px 26px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(223, 74, 125, 0.25);
-    transition: all 0.2s ease;
+    justify-content: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 8px;
     font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
 }
-
-.next-btn:hover {
-    background: #c83264;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(223, 74, 125, 0.35);
+.prev-btn { background: white; color: var(--primary-pink); }
+.prev-btn:hover { background: #fff0f5; }
+.next-btn { background: var(--primary-pink); color: white; }
+.next-btn:hover { background: #c83264; }
+.lesson-position { font-size: 0.8rem; color: var(--text-muted); }
+.prev-btn:focus-visible, .next-btn:focus-visible, .outline-toggle:focus-visible {
+    outline: 2px solid var(--primary-pink);
+    outline-offset: 2px;
 }
 
 /* loading */
@@ -729,53 +670,45 @@ input[type="radio"] {
 }
 
 /* responsive */
-
-@media (max-width: 1024px) {
-    .content-card {
-        padding: 2.5rem 2rem;
-    }
-}
-
 @media (max-width: 768px) {
     .layout-wrapper {
-        flex-direction: column;
-        padding: 1rem;
-        gap: 1rem;
-        overflow: auto;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 48px minmax(0, 1fr) 60px;
+    }
+    .outline-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 20px;
+        border: 0;
+        border-bottom: 1px solid var(--card-border);
+        background: white;
+        color: var(--primary-pink);
+        font: inherit;
+        cursor: pointer;
+    }
+    .outline-toggle span:last-child { margin-left: auto; }
+    .layout-wrapper > .sidebar {
+        display: none;
+        position: absolute;
+        top: 48px;
+        bottom: 60px;
+        left: 0;
+        width: min(320px, 90%);
         height: auto;
+        z-index: 3;
+        box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08);
     }
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: static;
-        border-radius: 20px;
-    }
-    .main-content {
-        overflow: visible;
-    }
-    .content-card {
-        padding: 2rem 1.5rem;
-        border-radius: 20px;
-    }
-    .quiz-card {
-        padding: 1.5rem;
-    }
-    .bottom-nav {
-        flex-direction: column-reverse;
-        gap: 1.5rem;
-    }
-    .prev-btn,
-    .next-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    .quiz-footer {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .submit-btn {
-        width: 100%;
-        justify-content: center;
-    }
+    .layout-wrapper > .sidebar.outline-open { display: flex; }
+    .main-content { grid-column: 1; grid-row: 2; }
+    .bottom-nav { grid-row: 3; padding-inline: 12px; }
+    .study-container { padding: 24px 20px 40px; }
+    .page-title { font-size: 1.5rem; }
+    .quiz-card { padding: 20px; }
+    .quiz-footer { flex-direction: column; align-items: stretch; }
+    .submit-btn { width: 100%; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .main-content { scroll-behavior: auto; }
 }
 </style>

@@ -351,16 +351,16 @@ const routes = [
     }
   },
 
-  // student: module dashboard — lesson list + progress for one module
+  // Keep the existing module URL; open lessons in the shared reader.
   {
     path: '/courses/:courseId/modules/:moduleId',
     name: 'LearningDashboard',
-    component: () => import('@/views/LearningDashboard.vue'),
+    component: () => import('@/views/LearningChapter.vue'),
     meta: {
       showNavbar: true,
-      showFooter: true,
+      showFooter: false,
       requiresAuth: true,
-      title: 'Module Dashboard'
+      title: 'Learning Module'
     }
   },
 
@@ -371,7 +371,7 @@ const routes = [
     component: () => import('@/views/LearningChapter.vue'),
     meta: {
       showNavbar: true,
-      showFooter: true,
+      showFooter: false,
       requiresAuth: true,
       title: 'Learning Chapter'
     }

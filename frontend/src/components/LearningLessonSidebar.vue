@@ -1,5 +1,5 @@
 <template>
-    <aside class="sidebar" :class="complete ? 'complete-sidebar' : 'study-sidebar'">
+    <aside class="sidebar" :class="[complete ? 'complete-sidebar' : 'study-sidebar', { 'reader-sidebar': reader }]" aria-label="Lesson outline">
         <div class="sidebar-header">
             <button class="nav-btn" @click="$emit('back')">
                 <div class="back-icon-circle">
@@ -8,7 +8,7 @@
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </div>
-                <span class="nav-text">{{ complete ? 'Back to Modules' : 'Back to Module' }}</span>
+                <span class="nav-text">{{ reader ? 'All modules' : (complete ? 'Back to Modules' : 'Back to Module') }}</span>
             </button>
         </div>
         <div class="module-info">
@@ -24,6 +24,7 @@
             <div class="nav-list">
                 <button v-for="(page, index) in dashboard.pages" :key="page.id" class="nav-item"
                     :class="{ active: !complete && page.id == pageId, completed: !complete && page.status === 'completed' }"
+                    :aria-current="!complete && page.id == pageId ? 'page' : undefined"
                     @click="!complete && $emit('select', page.id)">
                     <span class="material-symbols-outlined nav-icon">
                         {{ complete ? 'check_circle' : (page.id == pageId ? 'radio_button_checked' : (page.status === 'completed' ? 'check_circle' : 'play_circle')) }}
@@ -42,6 +43,7 @@ const props = defineProps({
     dashboard: { type: Object, required: true },
     pageId: { type: [String, Number], default: null },
     complete: { type: Boolean, default: false },
+    reader: { type: Boolean, default: false },
 });
 defineEmits(['back', 'select']);
 const progress = computed(() => props.complete ? 100 : props.dashboard.progress_percent);
@@ -405,4 +407,47 @@ const progress = computed(() => props.complete ? 100 : props.dashboard.progress_
    ===================================================== */
 
 
+/* Flat outline for the lesson reader; completion layout remains unchanged. */
+.reader-sidebar {
+    width: 260px;
+    min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    background: white;
+    border-right: 1px solid var(--card-border);
+    border-radius: 0;
+    box-shadow: none;
+}
+.reader-sidebar .sidebar-header { padding: 16px 20px 0; }
+.reader-sidebar .nav-btn { color: var(--primary-pink); gap: 8px; min-height: 44px; }
+.reader-sidebar .back-icon-circle { width: 20px; height: 20px; border: 0; color: inherit; }
+.reader-sidebar .nav-text { font-size: 0.8rem; font-weight: 500; }
+.reader-sidebar .nav-btn:hover .back-icon-circle { background: transparent; color: inherit; }
+.reader-sidebar .nav-btn:hover .nav-text { color: var(--primary-pink); }
+.reader-sidebar .module-info { padding: 16px 20px 20px; border-bottom: 1px solid var(--card-border); }
+.reader-sidebar .info-label, .reader-sidebar .nav-label { color: var(--text-muted); font-size: 0.65rem; }
+.reader-sidebar .info-title { color: var(--text-main); font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
+.reader-sidebar .progress-bar-wrap { height: 4px; background: #f3f4f6; }
+.reader-sidebar .progress-bar-fill { background: var(--primary-pink); }
+.reader-sidebar .progress-pct { color: var(--text-muted); font-weight: 500; font-size: 0.65rem; }
+.reader-sidebar .lesson-nav { padding: 16px 0; }
+.reader-sidebar .nav-label { margin: 0 20px 12px; }
+.reader-sidebar .nav-list { gap: 0; }
+.reader-sidebar .nav-item {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 20px;
+    gap: 8px;
+    color: var(--text-main);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+.reader-sidebar .nav-item:hover:not(.active) { background: #fff0f5; transform: none; }
+.reader-sidebar .nav-item.active { color: white; background: var(--primary-pink); border: 0; box-shadow: none; }
+.reader-sidebar .nav-item.completed .nav-icon { color: var(--forest-green); }
+.reader-sidebar .nav-item.active .nav-icon { color: white; }
+.reader-sidebar .nav-icon { font-size: 18px; }
+.reader-sidebar .nav-item-text { font-size: 0.8rem; font-weight: 400; line-height: 1.5; }
+.reader-sidebar .nav-item:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
 </style>

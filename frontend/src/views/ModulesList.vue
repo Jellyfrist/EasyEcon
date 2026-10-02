@@ -130,6 +130,11 @@ const loadModules = async () => {
 onMounted(loadModules)
 
 const goToLesson = moduleId => {
+    const firstPage = modules.value.find(mod => mod.id === moduleId)?.learning_pages?.[0]
+    if (firstPage) {
+        router.push({ name: 'LearningChapter', params: { courseId: courseId.value, moduleId, pageId: firstPage.id } })
+        return
+    }
     router.push({ name: 'LearningDashboard', params: { courseId: courseId.value, moduleId } })
 }
 </script>
