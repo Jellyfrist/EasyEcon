@@ -57,6 +57,7 @@ const routes = [
   /* =========== dashboards =========== */
   {
     path: '/dashboard',
+    alias: '/courses',
     name: 'Dashboard',
     component: () => import('@/views/Dashboard.vue'),
     meta: {
