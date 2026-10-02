@@ -1,159 +1,66 @@
 <template>
-    <div class="cd-root">
-    
-        <div v-if="store.loading" class="cd-state-box">
-            <div class="cd-spinner"></div>
-            <p class="cd-state-text">Loading course...</p>
-        </div>
-    
-        <div v-else-if="store.error" class="cd-state-box">
-            <div class="cd-error-icon">!</div>
-            <p class="cd-error-msg">{{ store.error }}</p>
-            <button class="cd-btn-back" @click="goToDashboard">Go Back</button>
-        </div>
-    
-        <template v-else-if="store.currentCourse">
-      
-            <div class="cd-container">
-              
-              <div class="cd-hero">
-                <div class="cd-hero-top">
-                  
-                  <button class="back-btn" @click="goToDashboard">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M19 12H5M12 5l-7 7 7 7"/>
-                    </svg>
-                  </button>
-    
-                  <div class="cd-breadcrumb">
-                    <span class="cd-label clickable" @click="goToDashboard">Home</span>
-                    <span class="separator">›</span>
-                    <span class="cd-label">Course</span>
-                  </div>
-                </div>
-    
-                <div class="cd-hero-inner">
-                  <h1 class="cd-title">{{ store.currentCourse.title }}</h1>
-                  <p v-if="store.currentCourse.description" class="cd-desc">
-                    {{ store.currentCourse.description }}
-                  </p>
-                </div>
-              </div>
-      
-              <div class="cd-body">
-      
-                <div class="cd-stats">
-                  <div class="cd-stat-card">
-                    <div class="cd-stat-num">{{ store.currentCourse.module_count ?? 0 }}</div>
-                    <div class="cd-stat-lbl">Total Modules</div>
-                  </div>
-      
-                  <div class="cd-stat-card">
-                    <div class="cd-stat-num">{{ store.currentCourse.flashcard_set_count ?? 0 }}</div>
-                    <div class="cd-stat-lbl">Flashcard Sets</div>
-                  </div>
-      
-                  <div class="cd-stat-card">
-                    <div class="cd-stat-num">{{ store.currentCourse.exam_template_count ?? 0 }}</div>
-                    <div class="cd-stat-lbl">Total Exams</div>
-                  </div>
-                </div>
-      
-                <div class="cd-section-head">
-                  <h2 class="cd-section-title">Study Tools</h2>
-                </div>
-      
-                <div class="cd-banners">
-      
-                  <div class="cd-banner cd-green" @click="router.push({ name: 'ModulesList', params: { courseId: courseId } })">
-                    <div class="cd-banner-left">
-                      <div class="cd-b-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <line x1="9" y1="3" x2="9" y2="21"></line>
-                          <path d="M13 8l2 2 4-4"></path>
-                        </svg>
-                      </div>
-                      <div class="cd-b-text">
-                        <span class="cd-b-tag">LEARN</span>
-                        <h3 class="cd-b-title">Modules</h3>
-                        <p class="cd-b-desc">Work through ordered lessons with mini quizzes to test your understanding. <span class="dot">•</span> {{ store.currentCourse.module_count ?? 0 }} available</p>
-                      </div>
-                    </div>
-                    <div class="cd-banner-right">
-                      <div class="cd-art cd-art-lines">
-                        <span></span><span></span><span></span>
-                      </div>
-                      <button class="cd-arrow" aria-label="go to modules">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                          <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-      
-                  <div class="cd-banner cd-pink" @click="router.push(`/flashcards/${courseId}`)">
-                    <div class="cd-banner-left">
-                      <div class="cd-b-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                          <line x1="2" y1="10" x2="22" y2="10"></line>
-                        </svg>
-                      </div>
-                      <div class="cd-b-text">
-                        <span class="cd-b-tag">REVIEW</span>
-                        <h3 class="cd-b-title">Flashcards</h3>
-                        <p class="cd-b-desc">Master key concepts with flashcard sets made by your teacher for fast revision. <span class="dot">•</span> {{ store.currentCourse.flashcard_set_count ?? 0 }} sets</p>
-                      </div>
-                    </div>
-                    <div class="cd-banner-right">
-                      <div class="cd-art cd-art-cards">
-                        <span></span><span></span><span></span>
-                      </div>
-                      <button class="cd-arrow" aria-label="go to flashcards">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                          <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-      
-                  <div class="cd-banner cd-orange" @click="router.push(`/exam/${courseId}`)">
-                    <div class="cd-banner-left">
-                      <div class="cd-b-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                        </svg>
-                      </div>
-                      <div class="cd-b-text">
-                        <span class="cd-b-tag">PRACTICE TEST</span>
-                        <h3 class="cd-b-title">Exams</h3>
-                        <p class="cd-b-desc">Practice with past midterm and final exam question banks to build confidence. <span class="dot">•</span> {{ store.currentCourse.exam_template_count ?? 0 }} exams</p>
-                      </div>
-                    </div>
-                    <div class="cd-banner-right">
-                      <div class="cd-art cd-art-circles">
-                        <span></span><span></span>
-                        <em>✓</em>
-                      </div>
-                      <button class="cd-arrow" aria-label="go to exams">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                          <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-      
-                </div>
-              </div>
-            </div>
-</template>
+  <div class="cd-root">
+    <div v-if="store.loading" class="cd-state-box"><div class="cd-spinner"></div><p>Loading course...</p></div>
+    <div v-else-if="store.error" class="cd-state-box">
+      <p class="cd-error-msg">{{ store.error }}</p>
+      <button class="cd-btn-back" @click="goToDashboard">Go Back</button>
+    </div>
+    <template v-else-if="store.currentCourse">
+      <div class="course-workspace">
+        <aside class="course-outline">
+          <h2>{{ store.currentCourse.title }}</h2>
+          <nav aria-label="Course navigation">
+            <router-link :to="{ name: 'Courses', params: { courseId } }" class="outline-link current" aria-current="page">
+              <span class="material-symbols-outlined">home</span> Course Overview
+            </router-link>
+            <router-link :to="{ name: 'ModulesList', params: { courseId } }" class="outline-link">
+              <span class="material-symbols-outlined">menu_book</span> Modules <span class="outline-count">{{ store.currentCourse.module_count ?? 0 }}</span>
+            </router-link>
+            <router-link :to="`/flashcards/${courseId}`" class="outline-link">
+              <span class="material-symbols-outlined">style</span> Flashcards <span class="outline-count">{{ store.currentCourse.flashcard_set_count ?? 0 }}</span>
+            </router-link>
+            <router-link :to="`/exam/${courseId}`" class="outline-link">
+              <span class="material-symbols-outlined">quiz</span> Exams <span class="outline-count">{{ store.currentCourse.exam_template_count ?? 0 }}</span>
+            </router-link>
+          </nav>
+        </aside>
+        <main class="course-content">
+          <nav class="course-breadcrumb" aria-label="Breadcrumb">
+            <router-link :to="{ name: 'Dashboard' }">Home</router-link><span>/</span>
+            <router-link :to="{ name: 'Courses', params: { courseId } }" aria-current="page">Course Overview</router-link>
+          </nav>
+          <h1>{{ store.currentCourse.title }}</h1>
+          <p v-if="store.currentCourse.description" class="course-description">{{ store.currentCourse.description }}</p>
+          <dl class="course-stats">
+            <div><dt>Total Modules</dt><dd>{{ store.currentCourse.module_count ?? 0 }}</dd></div>
+            <div><dt>Flashcard Sets</dt><dd>{{ store.currentCourse.flashcard_set_count ?? 0 }}</dd></div>
+            <div><dt>Total Exams</dt><dd>{{ store.currentCourse.exam_template_count ?? 0 }}</dd></div>
+          </dl>
+          <h2 class="study-heading">Study Tools</h2>
+          <div class="study-tools">
+            <router-link :to="{ name: 'ModulesList', params: { courseId } }" class="study-tool modules">
+              <span class="material-symbols-outlined tool-icon">menu_book</span>
+              <div><span class="tool-label">LEARN</span><h3>Modules</h3><p>Work through ordered lessons with mini quizzes to test your understanding.</p><span class="tool-count">{{ store.currentCourse.module_count ?? 0 }} available</span></div>
+              <span class="material-symbols-outlined tool-arrow">arrow_forward</span>
+            </router-link>
+            <router-link :to="`/flashcards/${courseId}`" class="study-tool flashcards">
+              <span class="material-symbols-outlined tool-icon">style</span>
+              <div><span class="tool-label">REVIEW</span><h3>Flashcards</h3><p>Master key concepts with flashcard sets made by your teacher for fast revision.</p><span class="tool-count">{{ store.currentCourse.flashcard_set_count ?? 0 }} sets</span></div>
+              <span class="material-symbols-outlined tool-arrow">arrow_forward</span>
+            </router-link>
+            <router-link :to="`/exam/${courseId}`" class="study-tool exams">
+              <span class="material-symbols-outlined tool-icon">quiz</span>
+              <div><span class="tool-label">PRACTICE TEST</span><h3>Exams</h3><p>Practice with past midterm and final exam question banks to build confidence.</p><span class="tool-count">{{ store.currentCourse.exam_template_count ?? 0 }} exams</span></div>
+              <span class="material-symbols-outlined tool-arrow">arrow_forward</span>
+            </router-link>
+          </div>
+        </main>
+      </div>
+      <nav class="course-bottom-nav" aria-label="Course actions">
+        <button @click="goToDashboard"><span class="material-symbols-outlined">chevron_left</span> Home</button>
+        <router-link :to="{ name: 'ModulesList', params: { courseId } }">Modules <span class="material-symbols-outlined">chevron_right</span></router-link>
+      </nav>
+    </template>
   </div>
 </template>
 
@@ -185,481 +92,55 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* =====================================================
- Root Layout
- ===================================================== */
-
-.cd-root {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient( 90deg, #fffcec, #e8dfbf, #ffc7db, #fff8d0);
-    font-family: 'DM Sans', 'Outfit', 'Segoe UI', sans-serif;
-    padding: 2rem;
-    box-sizing: border-box;
-}
-
-.cd-container {
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-/* ---- loading / error states ---- */
-
-.cd-state-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 1rem;
-}
-
-.cd-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid #fce4ec;
-    border-top-color: #e91e63;
-    border-radius: 50%;
-    animation: cd-spin 0.8s linear infinite;
-}
-
-@keyframes cd-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.cd-state-text {
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.cd-error-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #fef2f2;
-    color: #ef4444;
-    font-size: 1.5rem;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cd-error-msg {
-    color: #ef4444;
-    font-weight: 500;
-}
-
-.cd-btn-back {
-    padding: 0.6rem 1.5rem;
-    border-radius: 10px;
-    border: none;
-    background: #df4a7d;
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-/* =====================================================
- Hero: Pink rounded banner
- ===================================================== */
-
-.cd-hero {
-    background: linear-gradient(135deg, #df4a7d 0%, #c83264 100%);
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    color: #fff;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 25px rgba(223, 74, 125, 0.15);
-}
-
-.cd-hero-top {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.back-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    background: transparent;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 0;
-    flex-shrink: 0;
-}
-
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.6);
-}
-
-.cd-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    opacity: 0.9;
-}
-
-.cd-label.clickable {
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.cd-label.clickable:hover {
-    opacity: 0.7;
-    text-decoration: underline;
-}
-
-.separator {
-    font-size: 1.2rem;
-}
-
-.cd-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0 0 0.5rem;
-    letter-spacing: -0.01em;
-}
-
-.cd-desc {
-    font-size: 0.95rem;
-    opacity: 0.9;
-    margin: 0;
-    max-width: 600px;
-    line-height: 1.6;
-}
-
-/* =====================================================
- Stats: Separate white cards
- ===================================================== */
-
-.cd-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2.5rem;
-}
-
-.cd-stat-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.cd-stat-num {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #1f2937;
-    line-height: 1;
-    margin-bottom: 0.4rem;
-}
-
-.cd-stat-lbl {
-    font-size: 0.85rem;
-    color: #6b7280;
-    font-weight: 600;
-}
-
-/* =====================================================
- Section Heading
- ===================================================== */
-
-.cd-section-head {
-    margin-bottom: 1.25rem;
-}
-
-.cd-section-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #1f2937;
-    margin: 0;
-}
-
-/* =====================================================
- Feature Banners
- ===================================================== */
-
-.cd-banners {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.cd-banner {
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.cd-banner:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.cd-banner:hover .cd-arrow {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateX(5px);
-}
-
-.cd-green {
-    background: linear-gradient(135deg, #357a44 0%, #4db15f 100%);
-}
-
-.cd-pink {
-    background: linear-gradient(135deg, #b42158 0%, #df4c82 100%);
-}
-
-.cd-orange {
-    background: linear-gradient(135deg, #c97924 0%, #eeb141 100%);
-}
-
-/* Left Content */
-
-.cd-banner-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    flex: 1;
-    z-index: 2;
-}
-
-.cd-b-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.cd-b-icon svg {
-    width: 26px;
-    height: 26px;
-    color: #ffffff;
-}
-
-.cd-b-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.cd-b-tag {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.85;
-}
-
-.cd-b-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: -0.01em;
-}
-
-.cd-b-desc {
-    font-size: 0.9rem;
-    margin: 0;
-    font-weight: 400;
-    opacity: 0.95;
-}
-
-.cd-b-desc .dot {
-    margin: 0 0.4rem;
-    opacity: 0.5;
-}
-
-/* Right Content */
-
-.cd-banner-right {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-left: 1rem;
-    z-index: 2;
-}
-
-.cd-arrow {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-.cd-arrow svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* =====================================================
- Decorative Art 
- ===================================================== */
-
-.cd-art {
-    position: relative;
-    width: 90px;
-    height: 72px;
-    opacity: 0.25;
-    flex-shrink: 0;
-}
-
-.cd-art-lines span {
-    display: block;
-    position: absolute;
-    left: 0;
-    height: 9px;
-    border-radius: 5px;
-    background: #fff;
-}
-
-.cd-art-lines span:nth-child(1) {
-    top: 0;
-    width: 100%;
-}
-
-.cd-art-lines span:nth-child(2) {
-    top: 22px;
-    width: 72%;
-}
-
-.cd-art-lines span:nth-child(3) {
-    top: 44px;
-    width: 50%;
-}
-
-.cd-art-cards span {
-    display: block;
-    position: absolute;
-    width: 68px;
-    height: 48px;
-    border-radius: 7px;
-    background: #fff;
-}
-
-.cd-art-cards span:nth-child(1) {
-    top: 0;
-    left: 16px;
-    transform: rotate(-8deg);
-}
-
-.cd-art-cards span:nth-child(2) {
-    top: 8px;
-    left: 8px;
-    transform: rotate(-2deg);
-}
-
-.cd-art-cards span:nth-child(3) {
-    top: 14px;
-    left: 0;
-    transform: rotate(4deg);
-}
-
-.cd-art-circles span {
-    display: block;
-    position: absolute;
-    border-radius: 50%;
-    border: 3px solid #fff;
-}
-
-.cd-art-circles span:nth-child(1) {
-    width: 58px;
-    height: 58px;
-    top: 4px;
-    left: 8px;
-}
-
-.cd-art-circles span:nth-child(2) {
-    width: 38px;
-    height: 38px;
-    top: 18px;
-    left: 38px;
-    opacity: 0.45;
-}
-
-.cd-art-circles em {
-    position: absolute;
-    font-style: normal;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #fff;
-    top: 18px;
-    left: 25px;
-}
-
-/* =====================================================
- Responsive
- ===================================================== */
-
-@media (max-width: 860px) {
-    .cd-stats {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-    .cd-b-desc {
-        max-width: 280px;
-    }
-}
-
-@media (max-width: 640px) {
-    .cd-root {
-        padding: 1rem;
-    }
-    .cd-hero {
-        padding: 1.5rem;
-    }
-    .cd-banner {
-        padding: 1.25rem;
-    }
-    .cd-banner-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    .cd-b-icon {
-        width: 48px;
-        height: 48px;
-    }
-    .cd-b-desc {
-        display: none;
-    }
-    .cd-art {
-        display: none;
-    }
+.cd-root { background: var(--white); min-height: 100vh; font-family: 'DM Sans', 'Outfit', 'Segoe UI', sans-serif; }
+.course-workspace { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100vh - 110px); }
+.course-outline { border-right: 1px solid var(--card-border); padding: 1.5rem 0; background: var(--white); }
+.course-outline h2 { font-size: 1.1rem; line-height: 1.5; font-weight: 600; padding: 0 1.25rem 1rem; overflow-wrap: anywhere; }
+.course-outline nav { position: sticky; top: 80px; }
+.outline-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; text-decoration: none; font-size: 0.85rem; color: var(--text-muted); }
+.outline-link .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+.outline-count { margin-left: auto; }
+.outline-link.current { background: var(--primary-pink); color: var(--white); }
+.outline-link:not(.current):hover { background: var(--gray-light); color: var(--primary-pink); }
+.course-content { width: 100%; max-width: 760px; justify-self: center; padding: 2.5rem 2.5rem 4rem; min-width: 0; }
+.course-breadcrumb { display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.75rem; margin-bottom: 1rem; color: var(--text-muted); }
+.course-breadcrumb a { color: var(--primary-pink); text-decoration: none; }
+.course-content h1 { font-size: 1.8rem; line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.course-description { margin: 1.5rem 0; padding-left: 1rem; border-left: 3px solid var(--primary-pink); font-size: 0.95rem; line-height: 1.8; }
+.course-stats { display: flex; flex-wrap: wrap; gap: 1.5rem; padding: 1.5rem 0; border-bottom: 1px solid var(--card-border); margin-bottom: 2rem; }
+.course-stats div { display: flex; flex-direction: column-reverse; }
+.course-stats dt { color: var(--text-muted); font-size: 0.8rem; }
+.course-stats dd { color: var(--primary-pink); font-size: 1.5rem; font-weight: 600; }
+.study-heading { font-size: 1.1rem; margin-bottom: 1rem; }
+.study-tools { display: flex; flex-direction: column; gap: 1rem; }
+.study-tool { display: flex; gap: 1rem; align-items: flex-start; padding: 1.5rem; border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); color: var(--text-main); text-decoration: none; }
+.study-tool:hover { border-color: var(--primary-pink); }
+.tool-icon { font-size: 28px; margin-top: 0.25rem; }
+.modules .tool-icon, .modules .tool-label { color: var(--forest-green); }
+.flashcards .tool-icon, .flashcards .tool-label { color: var(--primary-pink); }
+.exams .tool-icon, .exams .tool-label { color: #c97924; }
+.tool-label { font-size: 0.65rem; letter-spacing: 0.08em; font-weight: 700; }
+.study-tool h3 { font-size: 1rem; margin: 0.25rem 0 0.5rem; }
+.study-tool p { font-size: 0.85rem; line-height: 1.7; color: var(--text-muted); }
+.tool-count { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
+.tool-arrow { margin-left: auto; font-size: 20px; color: var(--primary-pink); }
+.course-bottom-nav { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; border-top: 1px solid var(--card-border); background: var(--white); }
+.course-bottom-nav :is(a, button) { display: flex; align-items: center; gap: 0.25rem; font-family: inherit; font-size: 0.8rem; text-decoration: none; color: var(--primary-pink); border: 0; background: transparent; cursor: pointer; }
+.course-bottom-nav .material-symbols-outlined { font-size: 18px; }
+.cd-root :is(a, button):focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
+.cd-state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; }
+.cd-spinner { width: 36px; height: 36px; border: 3px solid var(--light-pink); border-top-color: var(--primary-pink); border-radius: 50%; animation: cd-spin 0.8s linear infinite; }
+@keyframes cd-spin { to { transform: rotate(360deg); } }
+.cd-error-msg { color: #ef4444; }
+.cd-btn-back { padding: 0.6rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-pink); color: var(--white); cursor: pointer; }
+@media (max-width: 768px) {
+  .course-workspace { display: flex; flex-direction: column; }
+  .course-outline { border-right: 0; border-bottom: 1px solid var(--card-border); padding: 1rem 0 0; }
+  .course-outline h2 { font-size: 1rem; padding-bottom: 0.75rem; }
+  .course-outline nav { position: static; display: flex; flex-wrap: wrap; }
+  .outline-link { flex: 1 1 50%; padding: 0.75rem 1rem; }
+  .course-content { padding: 1.5rem 1.25rem 2.5rem; }
+  .course-content h1 { font-size: 1.4rem; }
+  .study-tool { padding: 1.25rem; gap: 0.75rem; }
 }
 </style>
