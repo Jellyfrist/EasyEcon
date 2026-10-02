@@ -1,7 +1,5 @@
 <template>
 
-  <!-- This has MOCK DATA for you to test -->
-
   <FeaturePage class="page">
     <template #header>
         <EditorHeader :title="session?.title || 'Exam Results'" :back-to="session?.course_id ? { name: 'TeacherExamDashboard', params: { courseId: session.course_id } } : { name: 'Teacher' }" :breadcrumbs="[{ label: 'My Courses', to: { name: 'Teacher' } }, { label: 'Exams', to: session?.course_id ? { name: 'TeacherExamDashboard', params: { courseId: session.course_id } } : { name: 'Teacher' } }, { label: 'Results', to: route.fullPath }]"><span :class="['session-badge', session?.is_open ? 'open' : 'closed']">{{ session?.is_open ? 'Open' : 'Closed' }}</span></EditorHeader>
