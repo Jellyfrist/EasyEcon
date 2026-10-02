@@ -1,7 +1,7 @@
 <template>
     <FeaturePage class="ml-root">
     <template #navigation><CourseNavigation :course-id="courseId" current="modules" /></template>
-        <EditorHeader inline title="Modules" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]" />
+        <EditorHeader inline class="modules-page-heading" title="Modules" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]" />
 
         <div class="ml-container">
 
@@ -124,6 +124,8 @@ const goToLesson = moduleId => {
 </script>
 
 <style scoped>
+.modules-page-heading { position: static; }
+
 /* =====================================================
  Root Layout & Background
  ===================================================== */
