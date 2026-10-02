@@ -2,7 +2,7 @@
 Unified search endpoint
 
 GET /search?q=keyword   — seaech across all content type.
-    - student: courses, flashcard sets, learning pages, exam sessions.
+    - student: courses, learning pages, exam sessions.
     - teacher: only own content.
 '''
 
@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.course import Course
-from app.models.flashcard import FlashcardSet
 from app.models.learning_page import LearningPage
 from app.models.exam_template import ExamTemplate
 from app.models.user import User
@@ -26,7 +25,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 class SearchResultItem(BaseModel):
     id: int
-    type: str        # "course" | "flashcard" | "learning" | "exam"
+    type: str        # "course" | "learning" | "exam"
     title: str
     description: Optional[str] = None
     course_id: Optional[int] = None
@@ -35,7 +34,6 @@ class SearchResultItem(BaseModel):
 
 class SearchResponse(BaseModel):
     courses: List[SearchResultItem] = []
-    flashcards: List[SearchResultItem] = []
     learning: List[SearchResultItem] = []
     exams: List[SearchResultItem] = []
     total: int = 0
@@ -55,16 +53,6 @@ def search_student(
         .filter(
             Course.title.ilike(pattern) |
             Course.description.ilike(pattern)
-        )
-        .limit(5).all()
-    )
-
-    flashcards = (
-        db.query(FlashcardSet)
-        .filter(
-            FlashcardSet.is_active == True,
-            FlashcardSet.title.ilike(pattern) |
-            FlashcardSet.description.ilike(pattern)
         )
         .limit(5).all()
     )
@@ -94,16 +82,14 @@ def search_student(
         )
 
     result_courses = [to_item(c, "course") for c in courses]
-    result_flashcards = [to_item(f, "flashcard") for f in flashcards]
     result_learning = [to_item(p, "learning") for p in pages]
     result_exams = [to_item(e, "exam") for e in exams]
 
     return SearchResponse(
         courses=result_courses,
-        flashcards=result_flashcards,
         learning=result_learning,
         exams=result_exams,
-        total=len(result_courses) + len(result_flashcards) + len(result_learning) + len(result_exams),
+        total=len(result_courses) + len(result_learning) + len(result_exams),
     )
 
 
@@ -122,17 +108,6 @@ def search_teacher(
             Course.teacher_id == teacher.id,
             Course.title.ilike(pattern) |
             Course.description.ilike(pattern)
-        )
-        .limit(5).all()
-    )
-
-    flashcards = (
-        db.query(FlashcardSet)
-        .filter(
-            FlashcardSet.created_by_user_id == teacher.id,
-            FlashcardSet.is_active == True,
-            FlashcardSet.title.ilike(pattern) |
-            FlashcardSet.description.ilike(pattern)
         )
         .limit(5).all()
     )
@@ -165,14 +140,12 @@ def search_teacher(
         )
 
     result_courses = [to_item(c, "course") for c in courses]
-    result_flashcards = [to_item(f, "flashcard") for f in flashcards]
     result_learning = [to_item(p, "learning") for p in pages]
     result_exams = [to_item(e, "exam") for e in exams]
 
     return SearchResponse(
         courses=result_courses,
-        flashcards=result_flashcards,
         learning=result_learning,
         exams=result_exams,
-        total=len(result_courses) + len(result_flashcards) + len(result_learning) + len(result_exams),
+        total=len(result_courses) + len(result_learning) + len(result_exams),
     )

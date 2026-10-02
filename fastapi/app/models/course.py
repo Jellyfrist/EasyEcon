@@ -2,15 +2,13 @@
 course = a subject created by a teacher e.g. Economics in Everyday Life
 
 top level container
-teachers can attach three kinds of content directly to a course:
-- flashcard set = stand alone flashcard topics (not tied to any module)
+teachers can attach two kinds of content directly to a course:
 - module = ordered lessons (learning gage with mini quiz)
 - exam template = past midterm / final exam question banks
 
 hierarchy:
   course
     ├── module = LearningPage (lessons + mini quiz)
-    ├── flashcard set = Flashcard (stand alone, teacher chooses any topic)
     └── exam template = ExamSession -> ExamAttempt (past exams)
 '''
 
@@ -27,7 +25,6 @@ from app.db import Base
 if TYPE_CHECKING:
     from .user import User
     from .module import Module
-    from .flashcard import FlashcardSet
     from .exam_template import ExamTemplate
 
 UTC = timezone.utc
@@ -62,10 +59,6 @@ class Course(Base):
     teacher: Mapped["User"] = relationship(back_populates="courses")
 
     modules: Mapped[List["Module"]] = relationship(
-        back_populates="course", cascade="all, delete-orphan"
-    )
-
-    flashcard_sets: Mapped[List["FlashcardSet"]] = relationship(
         back_populates="course", cascade="all, delete-orphan"
     )
 

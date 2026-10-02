@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import Base, engine
-from app.routers import auth, course, flashcard, learning, exam, admin, user, search
+from app.routers import auth, course, media, learning, exam, admin, user, search
 from app.env_detector import should_auto_create_tables
 import logging
 import os
@@ -195,7 +195,7 @@ except Exception as e:
 # router registration
 fastapi_app.include_router(auth.router,      prefix=api_prefix)
 fastapi_app.include_router(course.router,    prefix=api_prefix)
-fastapi_app.include_router(flashcard.router, prefix=api_prefix)
+fastapi_app.include_router(media.router,     prefix=api_prefix)
 fastapi_app.include_router(learning.router,  prefix=api_prefix)
 fastapi_app.include_router(learning.teacher_router, prefix=api_prefix)
 fastapi_app.include_router(exam.router,      prefix=api_prefix)

@@ -1,5 +1,5 @@
 '''
-course = top-level container for 3 contents
+course = top-level container for lessons and exams
 
 Teacher routes (require_teacher):
     POST   /courses                       create course
@@ -55,7 +55,6 @@ def _inject_counts(course: Course) -> CourseResponse:
     '''
     response = CourseResponse.model_validate(course)
     response.module_count = len(course.modules)
-    response.flashcard_set_count = len(course.flashcard_sets)
     response.exam_template_count = len(course.exam_templates)
     return response
 
@@ -159,7 +158,7 @@ def delete_course(
 ):
     '''
     - teacher deletes their course
-    - deletes all modules, flashcard sets, exam templates, and nested content
+    - deletes all modules, exam templates, and nested content
     '''
     course = _get_course_or_404(course_id, db)
     _own_course_or_403(course, teacher)
@@ -203,7 +202,7 @@ def view_course_student(
 ):
     '''
     - students view any course details
-    - shows flashcard, learning and exam available in this course
+    - shows learning and exam available in this course
     '''
     course = _get_course_or_404(course_id, db)
     return _inject_counts(course)

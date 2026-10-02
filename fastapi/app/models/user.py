@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from .social_auth import SocialAuth
     from .course import Course
     from .learning_page import LearningPage
-    from .flashcard import FlashcardProgress
     from .best_attempt import BestAttempt
     from .exam_attempt import ExamAttempt
     from .exam_session import ExamSession
@@ -89,11 +88,7 @@ class User(Base):
         foreign_keys="PageProgress.student_id"
     )
 
-    # student: flashcard, mini quiz attempts, best mini quiz attempt, exam attempts
-    flashcard_progress: Mapped[List["FlashcardProgress"]] = relationship(
-        back_populates = "student",
-        foreign_keys="FlashcardProgress.student_id",
-    )
+    # student: mini quiz attempts, best mini quiz attempt, exam attempts
     best_attempt: Mapped[List["BestAttempt"]] = relationship(
         back_populates="student",
         foreign_keys="BestAttempt.student_id",

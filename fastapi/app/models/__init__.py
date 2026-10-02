@@ -3,7 +3,6 @@ from .social_auth import SocialAuth
 
 from .course import Course
 from .module import Module
-from .flashcard import FlashcardSet, Flashcard, FlashcardProgress
 from .learning_page import LearningPage
 from .best_attempt import BestAttempt
 from .exam_template import ExamTemplate

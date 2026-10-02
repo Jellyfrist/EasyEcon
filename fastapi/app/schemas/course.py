@@ -38,7 +38,6 @@ class CourseResponse(BaseModel):
     
     # computed fields (injected by router)
     module_count: Optional[int] = None
-    flashcard_set_count: Optional[int] = None
     exam_template_count: Optional[int] = None
 
 # course detail (full view)

@@ -6,7 +6,7 @@ contain learning pages (lesson)
 - teachers decide where to insert mini quiz
 by adding a mini_quiz block inside any LearningPage's content_blocks JSON.
 
-note: flashcard set and exam template isnt inside module
+note: exam templates are attached to courses, not modules
 '''
 
 from __future__ import annotations
