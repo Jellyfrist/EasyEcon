@@ -26,11 +26,6 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const featureMap = {
-    Flashcards: {
-        title: 'Flashcards',
-        subtitle: 'Memorize Smarter, Not Harder',
-        description: 'Master key economic concepts quickly with interactive flashcards designed for rapid memory retention.'
-    },
     Learning: {
         title: 'Learn',
         subtitle: 'Structured & Deep Understanding',

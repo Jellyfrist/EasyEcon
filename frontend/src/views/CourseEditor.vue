@@ -120,35 +120,6 @@
             <div v-if="isEditMode" class="ce-action-col">
                 <p class="ce-action-label">Course Content</p>
 
-                <!-- flashcard sets card -->
-                <div
-                    class="ce-action-card"
-                    @click="router.push({ name: 'TeacherFlashcardDashboard', params: { courseId: courseId } })"
-                >
-                    <div class="ce-action-top">
-                        <div class="ce-action-icon ce-icon-blue">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <rect x="2" y="5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.75"/>
-                                <rect x="5" y="3" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.75"/>
-                            </svg>
-                        </div>
-                        <svg class="ce-action-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3 class="ce-action-title">Flashcard Sets</h3>
-                    <p class="ce-action-desc">Stand-alone flashcard topics for this course.</p>
-                    <div class="ce-action-footer">
-                        <span class="ce-count-pill">{{ store.currentCourse?.flashcard_set_count ?? 0 }} sets</span>
-                        <button
-                            class="ce-action-new"
-                            @click.stop="router.push({ name: 'FlashcardEditor', params: { courseId: courseId } })"
-                        >
-                            + New Set
-                        </button>
-                    </div>
-                </div>
-
                 <!-- modules card -->
                 <div
                     class="ce-action-card"
@@ -692,11 +663,6 @@ const handleDelete = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.ce-icon-blue {
-    background: #eff6ff;
-    color: #3b82f6;
 }
 
 .ce-icon-amber {

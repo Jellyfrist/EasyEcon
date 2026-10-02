@@ -37,26 +37,6 @@
                     </router-link>
                 </div>
 
-                <!-- Study Tools --
-                <div class="nav-item dropdown" v-if="!authStore.isAdmin">
-                    <button class="nav-link" @click.stop="toggleDropdown('tools')">
-                        Study tools
-                        <span class="material-symbols-outlined">expand_more</span>
-                    </button>
-                    <div v-if="activeDropdown === 'tools'" class="dropdown-menu">
-                        <template v-if="authStore.isStudent">
-                            <router-link to="/flashcards" class="dropdown-item" @click="activeDropdown = null">Flashcards</router-link>
-                            <router-link to="/learning" class="dropdown-item" @click="activeDropdown = null">Learn</router-link>
-                            <router-link to="/test" class="dropdown-item" @click="activeDropdown = null">Practice Tests</router-link>
-                        </template>
-                        <template v-else-if="authStore.isTeacher">
-                            <router-link to="/teacher/flashcards" class="dropdown-item" @click="activeDropdown = null">Flashcards</router-link>
-                            <router-link to="/teacher/learning" class="dropdown-item" @click="activeDropdown = null">Learn</router-link>
-                            <router-link to="/teacher/test" class="dropdown-item" @click="activeDropdown = null">Practice Tests</router-link>
-                        </template>
-                    </div>
-                </div>
-                -->
             </div>
 
             <div class="nav-center" v-if="!authStore.isAdmin">
@@ -64,7 +44,7 @@
                     <span class="material-symbols-outlined search-icon">search</span>
                     <input
                         type="text"
-                        placeholder="Search flashcard sets, learning topics, tests..."
+                        placeholder="Search courses, lessons, exams..."
                         v-model="searchQuery"
                         @focus="isSearchFocused = true"
                         @input="onSearchInput"
@@ -99,20 +79,6 @@
                                 >
                                     {{ item.title }}
                                     <span v-if="item.description" class="search-item-desc">{{ item.description }}</span>
-                                </div>
-                            </div>
-
-                            <div v-if="searchResults.flashcards.length" class="search-group">
-                                <div class="search-group-label">
-                                    <span class="material-symbols-outlined">style</span> Flashcards
-                                </div>
-                                <div
-                                    v-for="item in searchResults.flashcards"
-                                    :key="`flash-${item.id}`"
-                                    class="search-item"
-                                    @mousedown="goToResult(item)"
-                                >
-                                    {{ item.title }}
                                 </div>
                             </div>
 
@@ -250,14 +216,14 @@ const handleLogout = async () => {
 const searchQuery = ref('')
 const isSearchFocused = ref(false)
 const isSearching = ref(false)
-const searchResults = ref({ courses: [], flashcards: [], learning: [], exams: [], total: 0 })
+const searchResults = ref({ courses: [], learning: [], exams: [], total: 0 })
 
 let debounceTimer = null
 
 const onSearchInput = () => {
     clearTimeout(debounceTimer)
     if (searchQuery.value.trim().length < 1) {
-        searchResults.value = { courses: [], flashcards: [], learning: [], exams: [], total: 0 }
+        searchResults.value = { courses: [], learning: [], exams: [], total: 0 }
         return
     }
     isSearching.value = true
@@ -287,7 +253,6 @@ const goToResult = (item) => {
     if (authStore.isStudent) {
         const routes = {
             course:    `/courses/${item.id}`,
-            flashcard: `/flashcards/${item.course_id}`,
             learning:  `/courses/${item.course_id}/modules`,
             exam:      `/exam/${item.course_id}`,
         }
@@ -296,7 +261,6 @@ const goToResult = (item) => {
     } else if (authStore.isTeacher) {
         const routes = {
             course:    `/teacher/courses/${item.id}/edit`,
-            flashcard: `/teacher/flashcards/${item.course_id}`,
             learning:  `/teacher/learning/${item.course_id}`,
             exam:      `/teacher/exam/${item.course_id}`,
         }
@@ -307,7 +271,7 @@ const goToResult = (item) => {
 const closeSearch = () => {
     isSearchFocused.value = false
     searchQuery.value = ''
-    searchResults.value = { courses: [], flashcards: [], learning: [], exams: [], total: 0 }
+    searchResults.value = { courses: [], learning: [], exams: [], total: 0 }
 }
 
 // Route watch

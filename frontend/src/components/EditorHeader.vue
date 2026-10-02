@@ -38,7 +38,7 @@ onUnmounted(() => observer?.disconnect())
 </script>
 
 <style scoped>
-/* Shared from FlashcardEditor; retain its existing visual identity. */
+/* Shared editor navigation; retain its existing visual identity. */
 .editor-topbar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 1rem; padding: 0.85rem 2.5rem; background: #ffffff;

@@ -6,7 +6,7 @@ const examService = {
     uploadQuestionImage(file) {
         const form = new FormData()
         form.append('file', file)
-        return api.post('/flashcards/upload-image', form)
+        return api.post('/media/upload-image', form)
     },
 
     /* 

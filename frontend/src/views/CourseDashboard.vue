@@ -16,9 +16,6 @@
             <router-link :to="{ name: 'ModulesList', params: { courseId } }" class="outline-link">
               <span class="material-symbols-outlined">menu_book</span> Modules <span class="outline-count">{{ store.currentCourse.module_count ?? 0 }}</span>
             </router-link>
-            <router-link :to="`/flashcards/${courseId}`" class="outline-link">
-              <span class="material-symbols-outlined">style</span> Flashcards <span class="outline-count">{{ store.currentCourse.flashcard_set_count ?? 0 }}</span>
-            </router-link>
             <router-link :to="`/exam/${courseId}`" class="outline-link">
               <span class="material-symbols-outlined">quiz</span> Exams <span class="outline-count">{{ store.currentCourse.exam_template_count ?? 0 }}</span>
             </router-link>
@@ -33,7 +30,6 @@
           <p v-if="store.currentCourse.description" class="course-description">{{ store.currentCourse.description }}</p>
           <dl class="course-stats">
             <div><dt>Total Modules</dt><dd>{{ store.currentCourse.module_count ?? 0 }}</dd></div>
-            <div><dt>Flashcard Sets</dt><dd>{{ store.currentCourse.flashcard_set_count ?? 0 }}</dd></div>
             <div><dt>Total Exams</dt><dd>{{ store.currentCourse.exam_template_count ?? 0 }}</dd></div>
           </dl>
           <h2 class="study-heading">Study Tools</h2>
@@ -41,11 +37,6 @@
             <router-link :to="{ name: 'ModulesList', params: { courseId } }" class="study-tool modules">
               <span class="material-symbols-outlined tool-icon">menu_book</span>
               <div><span class="tool-label">LEARN</span><h3>Modules</h3><p>Work through ordered lessons with mini quizzes to test your understanding.</p><span class="tool-count">{{ store.currentCourse.module_count ?? 0 }} available</span></div>
-              <span class="material-symbols-outlined tool-arrow">arrow_forward</span>
-            </router-link>
-            <router-link :to="`/flashcards/${courseId}`" class="study-tool flashcards">
-              <span class="material-symbols-outlined tool-icon">style</span>
-              <div><span class="tool-label">REVIEW</span><h3>Flashcards</h3><p>Master key concepts with flashcard sets made by your teacher for fast revision.</p><span class="tool-count">{{ store.currentCourse.flashcard_set_count ?? 0 }} sets</span></div>
               <span class="material-symbols-outlined tool-arrow">arrow_forward</span>
             </router-link>
             <router-link :to="`/exam/${courseId}`" class="study-tool exams">
@@ -117,7 +108,6 @@ onUnmounted(() => {
 .study-tool:hover { border-color: var(--primary-pink); }
 .tool-icon { font-size: 28px; margin-top: 0.25rem; }
 .modules .tool-icon, .modules .tool-label { color: var(--forest-green); }
-.flashcards .tool-icon, .flashcards .tool-label { color: var(--primary-pink); }
 .exams .tool-icon, .exams .tool-label { color: #c97924; }
 .tool-label { font-size: 0.65rem; letter-spacing: 0.08em; font-weight: 700; }
 .study-tool h3 { font-size: 1rem; margin: 0.25rem 0 0.5rem; }

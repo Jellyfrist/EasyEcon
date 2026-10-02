@@ -13,7 +13,7 @@
                 <h1>Easy<span class="highlight">Econ</span></h1>
                 <h2>Elevate Your Economics Grade</h2>
                 <p>
-                    Master theories with our practice past exams, <br> comprehensive study of each course, and interactive flashcards.
+                    Master theories with our practice past exams, <br> comprehensive lessons, and quizzes in each course.
                 </p>
             </div>
     
@@ -117,19 +117,7 @@
                     </div>
                 </div>
     
-                <!-- row 3: illustration left, text right -->
-                <div class="feature-row">
-                    <div class="feature-visual visual-pink">
-                        <!-- swap: replace inner content with <img src="@/assets/flashcard-preview.png" class="feature-img" /> -->
-                        <img src="@/assets/Dashboard_flashcard.png" class="feature-img" />
-                    </div>
-                    <div class="feature-text">
-                        <span class="feat-num">03</span>
-                        <h3>Flashcards</h3>
-                        <p>Master key economic concepts quickly with interactive flashcards designed for rapid memory retention.</p>
-                    </div>
-                </div>
-    
+
             </div>
         </section>
     </div>
@@ -647,50 +635,6 @@ const handleLogout = () => {
     padding: 4px 10px;
     border-radius: 999px;
     margin-bottom: 14px;
-}
-
-/* flashcard styles */
-
-.vi-card-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #d1d5db;
-    margin-bottom: 6px;
-}
-
-.vi-card-word {
-    font-size: 20px;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 10px;
-}
-
-.vi-card-def {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.6;
-    margin-bottom: 18px;
-}
-
-.vi-nav {
-    display: flex;
-    gap: 6px;
-}
-
-.vi-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    display: inline-block;
-}
-
-.vi-dot.active {
-    background: #111827;
-    width: 22px;
-    border-radius: 4px;
 }
 
 /* learning module styles */

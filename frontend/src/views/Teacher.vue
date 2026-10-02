@@ -78,13 +78,6 @@
                     <div class="t-course-meta">
                         <span class="t-meta-pill">
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                    <rect x="1" y="2.5" width="8" height="6" rx="1.25" stroke="currentColor" stroke-width="1.25"/>
-                                    <rect x="3" y="1" width="8" height="6" rx="1.25" stroke="currentColor" stroke-width="1.25"/>
-                                </svg>
-                                {{ course.flashcard_set_count ?? 0 }} sets
-                            </span>
-                        <span class="t-meta-pill">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                                     <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.25"/>
                                     <path d="M3.5 4H8.5M3.5 6H7M3.5 8H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
                                 </svg>

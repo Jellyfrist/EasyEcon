@@ -127,62 +127,6 @@ const routes = [
     }
   },
 
-  /* =========== flashcard =========== */
-
-  // teacher: manage sets for a course
-  {
-    path: '/teacher/flashcards/:courseId',
-    name: 'TeacherFlashcardDashboard',
-    component: () => import('@/views/TeacherFlashcardDashboard.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Manage Flashcards'
-    }
-  },
-
-  // student: browse sets for a course
-  {
-    path: '/flashcards/:courseId',
-    name: 'FlashcardsDashboard',
-    component: () => import('@/views/FlashcardDashboard.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      title: 'Flashcards'
-    }
-  },
-
-  // student: study a set
-  {
-    path: '/flashcards/:courseId/study/:setId',
-    name: 'FlashcardStudy',
-    component: () => import('@/views/FlashcardStudy.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      title: 'Flashcards'
-    }
-  },
-
-  // teacher: create or edit a set
-  {
-    path: '/flashcards/:courseId/edit/:setId?',
-    name: 'FlashcardEditor',
-    component: () => import('@/views/FlashcardEditor.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Edit Flashcards'
-    }
-  },
-
   /* ---- Practice Past Exam ---- */
 
   // student: browse all exam sets for a course. (see all exam session)
@@ -293,7 +237,6 @@ const routes = [
 
   // teacher - course - exam editor: create or edit a exam template.
   {
-    // path: '/flashcards/:courseId/edit/:setId?',
     path: '/teacher/exam/:courseId/edit/:templateId?',
     name: 'ExamEditor',
     component: () => import('@/views/ExamEditor.vue'),
