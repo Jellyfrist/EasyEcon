@@ -247,7 +247,7 @@ const routes = [
   {
     path: '/exam/analysis/:attemptId',
     name: 'ExamAnalysis',
-    component: () => import('@/views/ExamAnalysis.vue'),
+    component: () => import('@/views/ExamResult.vue'),
     meta: {
       showNavbar: true,
       showFooter: true,
@@ -261,7 +261,7 @@ const routes = [
   {
     path: '/exam/history/:sessionId',
     name: 'ExamHistory',
-    component: () => import('@/views/ExamHistory.vue'),
+    component: () => import('@/views/ExamResult.vue'),
     meta: {
       showNavbar: true,
       showFooter: true,

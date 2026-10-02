@@ -73,105 +73,95 @@
         </div>
       </div>
 
-      <div v-if="wrongTopics.length" class="card">
-        <h2 class="card-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-          Areas to Improve
-        </h2>
-        <div class="weakness-list">
-          <div
-            v-for="t in wrongTopics"
-            :key="t.topic_tag"
-            :class="['weakness-item', t.is_weak ? 'weak' : 'minor']"
-          >
-            <div class="weakness-head">
-              <span class="weakness-topic">{{ t.topic_tag }}</span>
-              <span class="weakness-count">
-                {{ t.wrong_count }}/{{ t.total_questions }} wrong · {{ Number(t.score_pct || 0).toFixed(0) }}%
-              </span>
-            </div>
-
-            <p v-if="t.message" class="weakness-q">{{ t.message }}</p>
-
-            <div v-if="t.lessons?.length" class="lesson-links">
-              <router-link
-                v-for="lesson in t.lessons"
-                :key="lesson.page_id"
-                :to="lesson.study_url"
-                class="review-link"
-              >
-                Review: {{ lesson.title }}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </router-link>
-            </div>
-            <p v-else class="no-lesson">No lesson is linked to this topic yet.</p>
-          </div>
-        </div>
-      </div>
+      <ExamQuestionReview :wrong-topics="wrongTopics" :error="reviewError" />
+      <div v-if="reviewError" class="error-banner" role="alert">{{ reviewError }}</div>
 
       <div class="actions-row">
-        <button class="btn-ghost" @click="$router.push({ name: 'ExamHistory', params: { sessionId: attempt.session_id } })">
-          My Exam History
-        </button>
-        <button class="btn-primary" @click="$router.push({ name: 'ExamAnalysis', params: { attemptId: attempt.id } })">
-          View Full Analysis
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <button class="btn-ghost" @click="router.push({ name: 'ExamSession', params: { sessionId: attempt.session_id } })">
+          Back to Exam session
         </button>
       </div>
 
     </template>
 
-    <div v-if="error" class="error-banner">ERROR: {{ error }}</div>
+    <ExamAttemptHistory v-if="!isLoading && !error && !historyError" :attempts="attempts" />
+    <div v-if="historyError" class="error-banner" role="alert">{{ historyError }}</div>
+    <div v-if="error" class="error-banner" role="alert">ERROR: {{ error }}</div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
+import ExamQuestionReview from '@/components/ExamQuestionReview.vue'
+import ExamAttemptHistory from '@/components/ExamAttemptHistory.vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 
 const route = useRoute()
 const router = useRouter()
-const attemptId = route.params.attemptId
+// All legacy result/analysis/history routes share this view.
+const attempt = ref(null)
+const attempts = ref([])
+const wrongTopics = ref([])
+const isLoading = ref(false)
+const error = ref(null)
+const reviewError = ref('')
+const historyError = ref('')
+let loadVersion = 0
 
-// --- State ---
-const attempt     = ref(null)
-const wrongTopics = ref([])   // GET /exam/attempts/:id/wrong-topics
-const isLoading   = ref(false)
-const error       = ref(null)
-
-// --- Load ---
-async function loadAttempt() {
+async function loadResult() {
+  const version = ++loadVersion
   isLoading.value = true
   error.value = null
+  reviewError.value = ''
+  historyError.value = ''
+  attempt.value = null
+  attempts.value = []
+  wrongTopics.value = []
+  const routeAttemptId = route.params.attemptId
+  const routeSessionId = route.params.sessionId
+
   try {
-    const res = await examService.getAttempt(attemptId)
+    let selectedId = routeAttemptId
+    if (!selectedId && routeSessionId) {
+      const res = await examService.getMyAttempts(routeSessionId)
+      if (version !== loadVersion) return
+      attempts.value = res.data ?? res ?? []
+      selectedId = [...attempts.value]
+        .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]?.id
+    }
+    if (!selectedId) return
+
+    const res = await examService.getAttempt(selectedId)
+    if (version !== loadVersion) return
     attempt.value = res.data ?? res
+
+    const [review, history] = await Promise.allSettled([
+      examService.getWrongTopics(selectedId),
+      routeSessionId ? Promise.resolve({ data: attempts.value }) : examService.getMyAttempts(attempt.value.session_id),
+    ])
+    if (version !== loadVersion) return
+    if (review.status === 'fulfilled') {
+      wrongTopics.value = review.value.data ?? review.value ?? []
+    } else {
+      reviewError.value = 'Could not load question analysis. Refresh this page to try again.'
+    }
+    if (history.status === 'fulfilled') {
+      attempts.value = history.value.data ?? history.value ?? []
+    } else {
+      historyError.value = 'Could not load exam history. Refresh this page to try again.'
+    }
   } catch (err) {
-    console.error('Failed to load attempt', err)
-    error.value = err?.response?.data?.detail ?? 'Failed to load result.'
+    if (version === loadVersion) {
+      error.value = err?.response?.data?.detail ?? 'Failed to load result.'
+    }
   } finally {
-    isLoading.value = false
+    if (version === loadVersion) isLoading.value = false
   }
 }
 
-// wrong topics + the lessons covering them. a failure here must not hide the
-// score, so it only warns and leaves the "Areas to Improve" card out.
-async function loadWrongTopics() {
-  try {
-    const res = await examService.getWrongTopics(attemptId)
-    wrongTopics.value = res.data ?? res ?? []
-  } catch (err) {
-    console.warn('Failed to load wrong topics', err)
-    wrongTopics.value = []
-  }
-}
-
-onMounted(() => {
-  loadAttempt()
-  loadWrongTopics()
-})
+watch(() => [route.params.attemptId, route.params.sessionId], loadResult, { immediate: true })
 
 // --- Circle progress ---
 const circumference = 2 * Math.PI * 52  // r=52

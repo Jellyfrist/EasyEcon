@@ -73,3 +73,10 @@ Each topic has its own commit. Only frontend files are staged.
   retain the existing submission payload. A failed submission retains answers
   and allows retry. Timer expiry sends exactly one submission.
 - Verification intercepted exam POST requests; it did not modify server data.
+- Combined results: score, topic breakdown, wrong answers, explanations,
+  recommended lessons, best attempt and all attempt summaries render together.
+  Existing result/analysis/history URLs still resolve without redirects or
+  renamed routes. Route parameter changes reload the selected result.
+- Result checks passed at 1440px and 390px, including history navigation,
+  unreleased explanations, empty history and analysis API failure. Analysis
+  failure preserves the score and does not show a false perfect-score message.

@@ -1,22 +1,6 @@
 <template>
-  <div class="page">
-
-    <div v-if="isLoading" class="loading-state">Loading history...</div>
-
-    <template v-else>
-
-      <div class="header">
-        <div class="header-left">
-          <button class="back-btn" @click="goBackToAnalysis">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          </button>
-          <div class="header-text">
-            <p class="breadcrumb">Session #{{ sessionId }}</p>
-            <h1 class="page-title">My Attempts</h1>
-          </div>
-        </div>
-      </div>
-
+  <section class="history-section">
+    <h2 class="card-title">My Exam History</h2>
       <div v-if="attempts.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -89,60 +73,27 @@
 
               <div class="attempt-actions">
                 <button class="btn-ghost-sm" @click="viewResult(attempt)">Result</button>
-                <button class="btn-ghost-sm" @click="viewAnalysis(attempt)">Analysis</button>
               </div>
             </div>
           </div>
         </div>
 
       </template>
-    </template>
-
-    <div v-if="error" class="error-banner">ERROR: {{ error }}</div>
-
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import examService from '@/services/examService'
-
-const route = useRoute()
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+const props = defineProps({ attempts: { type: Array, default: () => [] } })
 const router = useRouter()
-const sessionId = route.params.sessionId
-
-// --- State ---
-const attempts  = ref([])   
-const isLoading = ref(false)
-const error     = ref(null)
-
-// --- Load ---
-async function loadAttempts() {
-  isLoading.value = true
-  error.value = null
-  try {
-    const res = await examService.getMyAttempts(sessionId)
-    attempts.value = res.data ?? res
-  } catch (err) {
-    console.error('Failed to load attempts', err)
-    error.value = err?.response?.data?.detail ?? 'Failed to load history.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onMounted(() => { loadAttempts() })
-
-// --- Computed ---
-// newest first
 const sortedAttempts = computed(() =>
-  [...attempts.value].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
+  [...props.attempts].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
 )
 
 const best = computed(() => {
-  if (!attempts.value.length) return null
-  return [...attempts.value].sort((a, b) => (b.score_pct || 0) - (a.score_pct || 0))[0]
+  if (!props.attempts.length) return null
+  return [...props.attempts].sort((a, b) => (b.score_pct || 0) - (a.score_pct || 0))[0]
 })
 
 // --- Helpers ---
@@ -156,118 +107,12 @@ function barClass(pct) {
   return 'red'
 }
 
-// --- Navigate ---
 function viewResult(attempt) {
   router.push({ name: 'ExamResult', params: { attemptId: attempt.id } })
-}
-function viewAnalysis(attempt) {
-  router.push({ name: 'ExamAnalysis', params: { attemptId: attempt.id } })
-}
-function goBackToAnalysis() {
-  if (best.value) {
-    router.push({ 
-      name: 'ExamAnalysis', 
-      params: { attemptId: best.value.id } 
-    });
-  } else {
-    router.back();
-  }
 }
 </script>
 
 <style scoped>
-/* Page wrapper */
-.page {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-/*  Header */
-.header {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #f06292 100%);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 8px 24px rgba(237, 64, 129, 0.28);
-  position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  right: -40px; top: -40px;
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  pointer-events: none;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  right: 60px; bottom: -50px;
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
-  color: white;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.back-btn:hover {
-  background: rgba(255,255,255,0.28);
-  border-color: rgba(255,255,255,0.7);
-}
-
-.breadcrumb {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-.page-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--white);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-/* Best Attempt Card */
 .best-card {
   border-radius: var(--radius-lg);
   padding: 1.625rem 1.75rem;
@@ -497,10 +342,11 @@ function goBackToAnalysis() {
 
 /*  Responsive  */
 @media (max-width: 600px) {
-  .page { padding: 1.25rem 1rem; }
   .best-card { flex-direction: column; align-items: flex-start; }
   .best-right { align-items: flex-start; }
   .attempt-row { flex-wrap: wrap; }
   .attempt-meta { text-align: left; }
 }
+
+.history-section { display: flex; flex-direction: column; gap: 1.25rem; }
 </style>
