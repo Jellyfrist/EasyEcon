@@ -56,7 +56,7 @@ onUnmounted(() => observer?.disconnect())
 .topbar-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .editor-back { display: flex; align-items: center; justify-content: center; color: var(--text-muted); width: 36px; height: 36px; flex-shrink: 0; text-decoration: none; }
 .editor-topbar :is(a, button):focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
-.editor-topbar-inline { position: static; padding: 0; box-shadow: none; border: 0; margin-bottom: 28px; }
+.editor-topbar-inline { position: sticky; padding: 0; box-shadow: none; border: 0; margin-bottom: 28px; }
 @media (max-width: 900px) {
   .editor-topbar { flex-wrap: wrap; padding: 0.85rem 1.25rem; gap: 0.75rem; }
   .topbar-main { flex: 1 1 100%; }
