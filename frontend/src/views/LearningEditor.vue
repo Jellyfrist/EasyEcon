@@ -20,6 +20,7 @@
           </button>
         </div>
       </template>
+        <button class="le-preview-btn" @click="openPreview">Preview</button>
         <button class="le-add-section-btn le-header-add-section" @click="addSection">
           <span class="material-symbols-outlined" aria-hidden="true">add</span> Add section
         </button>
@@ -132,6 +133,12 @@
               <button class="le-tool-btn" @click="execCmd('insertUnorderedList')" title="Bullet list"><span class="material-symbols-outlined">format_list_bulleted</span></button>
               <button class="le-tool-btn" @click="execCmd('insertOrderedList')" title="Numbered list"><span class="material-symbols-outlined">format_list_numbered</span></button>
             </div>
+            <div class="le-tool-divider"></div>
+            <div class="le-pattern-tools" aria-label="Content layouts">
+              <button class="le-pattern-btn" @mousedown.prevent="insertPattern('callout')">Callout</button>
+              <button class="le-pattern-btn" @mousedown.prevent="insertPattern('columns')">Two columns</button>
+              <button class="le-pattern-btn" @mousedown.prevent="insertPattern('highlight')">Highlight</button>
+            </div>
             <div class="le-tool-spacer"></div>
             <button class="le-img-btn" @click="triggerImageUpload">
               <span class="material-symbols-outlined">image</span> Photo
@@ -141,7 +148,7 @@
 
           <!-- rich text area -->
           <div
-            class="le-rich-text"
+            class="le-rich-text lesson-html"
             contenteditable="true"
             ref="contentArea"
             @input="updateContent"
@@ -251,12 +258,25 @@
       </div>
 
     </template>
+    <Teleport to="body">
+      <dialog ref="previewDialog" class="le-preview-dialog" aria-labelledby="lesson-preview-title" @close="restorePreviewFocus">
+        <div class="le-preview-header">
+          <h2 id="lesson-preview-title">Lesson content preview</h2>
+          <button class="le-preview-btn" @click="previewDialog.close()">Close preview</button>
+        </div>
+        <article class="le-preview-article">
+          <h1>{{ lesson.title || 'Untitled Lesson' }}</h1>
+          <LessonRichText v-for="section in lesson.sections" :key="section.id" :html="section.content" class="le-preview-section" />
+        </article>
+      </dialog>
+    </Teleport>
   </FeaturePage>
 </template>
 
 <script setup>
 import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
+import LessonRichText from '@/components/LessonRichText.vue'
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import learningService from '@/services/learningService'
@@ -339,6 +359,10 @@ const checkFormat = () => {
 const clearFormat = () => { document.execCommand('removeFormat', false, null); updateContent() }
 
 const handleKeydown = e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && undoPattern(e.shiftKey ? 'redo' : 'undo')) {
+    e.preventDefault()
+    return
+  }
   if (e.key === 'Tab') {
     e.preventDefault()
     document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;')
@@ -348,7 +372,7 @@ const handleKeydown = e => {
 
 const execCmd = (cmd, value = null) => {
   contentArea.value?.focus()
-  document.execCommand(cmd, false, value)
+  if (!(['undo', 'redo'].includes(cmd) && undoPattern(cmd))) document.execCommand(cmd, false, value)
   updateContent()
 }
 
@@ -356,6 +380,76 @@ const updateContent = () => {
   if (activeSection.value && contentArea.value)
     activeSection.value.content = contentArea.value.innerHTML
 }
+
+const patternUndo = []
+const patternRedo = []
+const undoPattern = command => {
+  const source = command === 'undo' ? patternUndo : patternRedo
+  const target = command === 'undo' ? patternRedo : patternUndo
+  const item = source[source.length - 1]
+  const expected = command === 'undo' ? item?.after : item?.before
+  if (!item || item.sectionId !== activeSectionId.value || contentArea.value.innerHTML !== expected) return false
+  source.pop()
+  target.push(item)
+  contentArea.value.innerHTML = command === 'undo' ? item.before : item.after
+  updateContent()
+  return true
+}
+
+// Content layouts use the existing section HTML field and payload.
+const insertPattern = kind => {
+  const patterns = {
+    callout: '<div class="lesson-callout"><h3>Key concept</h3><p>Explain this concept here.</p></div><p><br></p>',
+    columns: '<div class="lesson-columns"><div class="lesson-content-card"><h3>First concept</h3><p>Describe the first concept.</p></div><div class="lesson-content-card"><h3>Second concept</h3><p>Describe the second concept.</p></div></div><p><br></p>',
+    highlight: '<div class="lesson-highlight"><p><strong>Remember:</strong> Add the key takeaway here.</p></div><p><br></p>',
+  }
+  const area = contentArea.value
+  if (!area || !patterns[kind]) return
+  area.focus()
+  const selection = window.getSelection()
+  if (!selection.rangeCount || !area.contains(selection.anchorNode)) {
+    const range = document.createRange()
+    range.selectNodeContents(area)
+    range.collapse(false)
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+  // Insert complete blocks at the section level; execCommand flattens grids.
+  const before = area.innerHTML
+  const range = document.createRange()
+  let block = selection.anchorNode
+  if (block === area && selection.anchorOffset > 0) block = area.childNodes[selection.anchorOffset - 1]
+  while (block && block !== area && block.parentNode !== area) block = block.parentNode
+  if (block && block !== area && block.nodeName === 'P' && !block.textContent.trim() && !block.querySelector('img, iframe')) {
+    range.selectNode(block)
+    range.deleteContents()
+  } else if (block && block !== area) {
+    range.setStartAfter(block)
+  } else {
+    range.selectNodeContents(area)
+    range.collapse(false)
+  }
+  range.collapse(true)
+  const fragment = range.createContextualFragment(patterns[kind])
+  const tail = fragment.lastChild
+  range.insertNode(fragment)
+  range.selectNodeContents(tail)
+  range.collapse(false)
+  selection.removeAllRanges()
+  selection.addRange(range)
+  patternUndo.push({ sectionId: activeSectionId.value, before, after: area.innerHTML })
+  patternRedo.length = 0
+  updateContent()
+}
+
+const previewDialog = ref(null)
+let previewReturnFocus
+const openPreview = () => {
+  updateContent()
+  previewReturnFocus = document.activeElement
+  previewDialog.value.showModal()
+}
+const restorePreviewFocus = () => previewReturnFocus?.focus()
 
 // ── sections ──────────────────────────────────────────────
 const setActiveSection = async id => {
@@ -813,17 +907,6 @@ onMounted(() => {
   color: var(--ink2);
   caret-color: var(--pink);
 }
-.le-rich-text :deep(h1) { font-size: 2rem; font-weight: 800; margin: 1.5rem 0 0.75rem; color: var(--ink); }
-.le-rich-text :deep(h2) { font-size: 1.5rem; font-weight: 700; margin: 1.25rem 0 0.6rem; color: var(--ink); }
-.le-rich-text :deep(h3) { font-size: 1.2rem; font-weight: 600; margin: 1rem 0 0.5rem; color: var(--ink2); }
-.le-rich-text :deep(p)  { margin: 0.5rem 0; }
-.le-rich-text :deep(ul), .le-rich-text :deep(ol) { padding-left: 1.5rem; margin: 0.5rem 0; }
-.le-rich-text :deep(img) {
-  max-width: 100%; height: auto; border-radius: 10px;
-  margin: 1.5rem 0; display: block;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
-
 /* ── quiz tab ─────────────────────────────────────────── */
 .le-quiz-layout {
   height: calc(100vh - var(--topbar-h));
@@ -974,4 +1057,18 @@ onMounted(() => {
   .le-topbar-center .le-bc-sep { display: none; }
   .le-publish-label { display: none; }
 }
+
+.le-pattern-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+.le-pattern-btn, .le-preview-btn { padding: 6px 10px; border: 1px solid var(--card-border); border-radius: 8px; background: var(--white); color: var(--text-main); font: inherit; font-size: 0.8rem; cursor: pointer; }
+.le-pattern-btn:hover, .le-preview-btn:hover { background: var(--gray-light); }
+.le-pattern-btn:focus-visible, .le-preview-btn:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 2px; }
+.le-preview-dialog { margin: auto; width: min(900px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--white); color: var(--text-main); }
+.le-preview-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+.le-preview-header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 24px; background: var(--white); border-bottom: 1px solid var(--card-border); }
+.le-preview-header h2 { font-size: 1rem; font-weight: 600; }
+.le-preview-article { max-width: 800px; padding: 24px 40px 48px; margin: auto; }
+.le-preview-article h1 { font-size: 1.8rem; font-weight: 400; line-height: 1.4; margin-bottom: 24px; overflow-wrap: anywhere; }
+.le-preview-section { margin-bottom: 32px; }
+@media (max-width: 600px) { .le-preview-article { padding: 24px 20px 40px; } }
+
 </style>
