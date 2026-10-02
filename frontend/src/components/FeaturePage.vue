@@ -40,8 +40,8 @@ onUnmounted(() => observer?.disconnect())
   margin: 0 auto;
   padding: var(--feature-gutter) var(--feature-gutter) 48px;
 }
-.feature-workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
-.feature-workspace:has(> .navigation-collapsed) { grid-template-columns: 72px minmax(0, 1fr); }
+.feature-workspace { --course-navigation-width: 260px; display: grid; grid-template-columns: 260px minmax(0, 1fr); }
+.feature-workspace:has(> .navigation-collapsed) { --course-navigation-width: 72px; grid-template-columns: 72px minmax(0, 1fr); }
 .feature-workspace:has(> .navigation-collapsed) > .feature-body { max-width: none; }
 .feature-page-fluid .feature-body { max-width: none; padding: 0; }
 .feature-body > :is(.page-card, .card, .form-card, .score-hero, .stats-bar, .session-list, .exam-list, .error-banner) { margin-bottom: 24px; }
@@ -92,6 +92,6 @@ onUnmounted(() => observer?.disconnect())
   .feature-body { padding: 20px 16px 32px; }
   .feature-page-fluid .feature-body { padding: 0; }
   .feature-workspace { grid-template-columns: minmax(0, 1fr); }
-  .feature-workspace:has(> .navigation-collapsed) { grid-template-columns: 72px minmax(0, 1fr); }
+  .feature-workspace:has(> .navigation-collapsed) { --course-navigation-width: 72px; grid-template-columns: 72px minmax(0, 1fr); }
 }
 </style>

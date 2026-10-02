@@ -1,5 +1,6 @@
 <template>
-  <aside class="feature-navigation" :class="{ 'navigation-collapsed': collapsed }" aria-label="Course navigation">
+  <div class="course-navigation-space" :class="{ 'navigation-collapsed': collapsed }" :style="{ '--navigation-height': navigationHeight + 'px' }">
+  <aside ref="navigation" class="feature-navigation" :class="{ 'navigation-collapsed': collapsed }" aria-label="Course navigation">
     <div class="navigation-heading">
       <h2 v-show="!collapsed">{{ course?.title || 'Course' }}</h2>
       <button type="button" class="navigation-toggle" :aria-expanded="!collapsed"
@@ -20,14 +21,25 @@
       </router-link>
     </nav>
   </aside>
+  </div>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useCourseNavigation } from '@/composables/useCourseNavigation'
 import { useCourseStore } from '@/store/courseStore'
 const props = defineProps({ courseId: { type: [String, Number], required: true }, current: String })
 const { collapsed } = useCourseNavigation()
+const navigation = ref(null)
+const navigationHeight = ref(0)
+let navigationObserver
+onMounted(() => {
+  const measureNavigation = () => { navigationHeight.value = navigation.value.getBoundingClientRect().height }
+  navigationObserver = new ResizeObserver(measureNavigation)
+  navigationObserver.observe(navigation.value)
+  measureNavigation()
+})
+onUnmounted(() => navigationObserver?.disconnect())
 const store = useCourseStore()
 const course = computed(() => String(store.currentCourse?.id) === String(props.courseId) ? store.currentCourse : null)
 watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
@@ -36,12 +48,13 @@ watch([() => props.courseId, () => store.currentCourse?.id], async ([id]) => {
 </script>
 
 <style scoped>
-.feature-navigation { position: sticky; top: var(--feature-sticky-top, 160px); align-self: start; padding: 24px 0; border-right: 1px solid var(--card-border); min-height: calc(100dvh - var(--feature-sticky-top, 160px)); background: var(--surface); }
+.course-navigation-space { min-width: 0; }
+.feature-navigation { position: fixed; left: 0; width: var(--course-navigation-width, 260px); z-index: 200; top: var(--feature-sticky-top, 160px); padding: 24px 0; border-right: 1px solid var(--card-border); height: calc(100dvh - var(--feature-sticky-top, 160px)); overflow-y: auto; background: var(--surface); }
 .navigation-heading { display: flex; align-items: center; gap: 4px; padding: 0 8px 20px 20px; }
 .navigation-toggle { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; margin: 0; border: 0; border-radius: 8px; background: var(--surface); color: var(--text-muted); cursor: pointer; }
 .navigation-toggle:hover { background: var(--gray-light); color: var(--primary-pink); }
 .navigation-toggle:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
-.navigation-collapsed { padding: 16px 8px; }
+.feature-navigation.navigation-collapsed { padding: 16px 8px; }
 .navigation-collapsed .navigation-heading { justify-content: center; padding: 0 0 16px; }
 .navigation-collapsed nav { align-items: center; gap: 8px; }
 .navigation-collapsed a { justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: 8px; }
@@ -54,9 +67,11 @@ a:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; 
 .material-symbols-outlined { font-size: 18px; }
 .navigation-count { margin-left: auto; }
 @media (max-width: 768px) {
-  .feature-navigation { position: relative; top: 0; min-height: 0; border-right: 0; border-bottom: 1px solid var(--card-border); padding: 16px 0 0; }
+  .course-navigation-space { height: var(--navigation-height); }
+  .course-navigation-space.navigation-collapsed { height: auto; }
+  .feature-navigation { width: 100%; height: auto; max-height: calc(100dvh - var(--feature-sticky-top)); border-right: 0; border-bottom: 1px solid var(--card-border); padding: 16px 0 0; }
   .navigation-heading { padding-bottom: 12px; }
-  .navigation-collapsed { position: sticky; top: var(--feature-sticky-top); min-height: calc(100dvh - var(--feature-sticky-top)); padding: 16px 8px; border-right: 1px solid var(--card-border); border-bottom: 0; }
+  .feature-navigation.navigation-collapsed { width: var(--course-navigation-width); height: calc(100dvh - var(--feature-sticky-top)); padding: 16px 8px; border-right: 1px solid var(--card-border); border-bottom: 0; }
   .navigation-collapsed nav { flex-direction: column; }
   .navigation-collapsed a { flex: none; }
   h2 { font-size: 0.95rem; }
