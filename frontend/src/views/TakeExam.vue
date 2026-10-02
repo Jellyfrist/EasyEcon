@@ -8,7 +8,7 @@
     
         <template v-else-if="session">
     
-          <div class="top-bar">
+          <div class="top-bar" :style="{ top: navbarOffset + 'px' }">
             <div class="top-bar-left">
               <div class="header-title-row">
                 <button class="back-btn" aria-label="Back to exam session" @click="goExamSet">
@@ -39,7 +39,7 @@
           </div>
     
           <form class="question-container" @submit.prevent="submit">
-            <div v-for="(q, index) in session.questions" :key="q.id" class="question-card">
+            <section v-for="(q, index) in session.questions" :key="q.id" class="question-block">
     
               <p class="q-points">Question {{ index + 1 }} of {{ session.questions.length }}</p>
               <div class="q-header">
@@ -66,7 +66,6 @@
                     :value="opt"
                     v-model="answers[q.id]"
                   :disabled="isSubmitting"
-                    hidden
                   />
                   <span class="option-letter">{{ String.fromCharCode(65 + oi) }}</span>
                   <span class="option-text">{{ opt }}</span>
@@ -77,12 +76,12 @@
               <div v-else-if="q.type === 'true_false'" class="tf-group">
                 <label :class="['tf-btn', { selected: answers[q.id] === 'True' }]">
                   <input type="radio" :name="q.id" value="True" v-model="answers[q.id]"
-                    :disabled="isSubmitting" hidden />
+                    :disabled="isSubmitting" />
                   <span class="tf-label">True</span>
                 </label>
                 <label :class="['tf-btn', { selected: answers[q.id] === 'False' }]">
                   <input type="radio" :name="q.id" value="False" v-model="answers[q.id]"
-                    :disabled="isSubmitting" hidden />
+                    :disabled="isSubmitting" />
                   <span class="tf-label">False</span>
                 </label>
               </div>
@@ -97,9 +96,9 @@
                 ></textarea>
               </div>
     
-            </div>
+            </section>
     
-            <div class="question-card">
+            <div class="submission-summary">
               <p class="modal-body-text" aria-live="polite">You have answered <strong>{{ answeredCount }} out of {{ session.questions.length }}</strong> questions.</p>
               <div v-if="unansweredCount > 0" class="warn-box">
                 <span class="material-symbols-outlined">warning</span>
@@ -132,6 +131,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
 import { questionHtml } from '@/utils/questionHtml'
+import { useNavbarOffset } from '@/composables/useNavbarOffset'
+
+const navbarOffset = useNavbarOffset()
 
 const route = useRoute()
 const router = useRouter()
@@ -805,4 +807,43 @@ function goExamSet() {
     }
 }
 .q-image { display: block; max-width: 100%; max-height: 420px; object-fit: contain; margin: 12px 0 20px; }
+
+/* One document surface, with a compact header below the shared navbar. */
+.top-bar { padding: 0.75rem 2rem; background: #ffffff; gap: 1rem; }
+.header-title-row { gap: 0.75rem; }
+.top-bar-left, .header-text-group { min-width: 0; }
+.exam-title { font-size: 1.15rem; overflow-wrap: anywhere; }
+.course-badge { font-size: 0.65rem; }
+.back-btn { width: 36px; height: 36px; flex-shrink: 0; }
+.top-bar-right { gap: 0.75rem; flex-shrink: 0; }
+.progress-pill { padding: 6px 12px; }
+.progress-pill-text { font-size: 0.8rem; }
+.timer { font-size: 0.9rem; padding: 6px 12px; min-width: 88px; }
+.progress-track-container { padding-top: 1rem; }
+.question-container {
+    flex: none; max-width: 800px; width: calc(100% - 4rem);
+    margin: 1.5rem auto 3rem; padding: 0 2.5rem;
+    background: #ffffff; border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+}
+.question-block {
+    width: 100%; padding: 2rem 0; border-bottom: 1px solid #e5e7eb;
+    scroll-margin-top: 10rem;
+}
+.q-header { margin-bottom: 1rem; padding-bottom: 0.75rem; }
+.q-text { font-size: 1.1rem; margin-bottom: 1.25rem; }
+.q-points { font-size: 0.8rem; }
+.q-type-badge { font-size: 0.65rem; padding: 4px 10px; }
+.options-list { gap: 0.5rem; }
+.option { padding: 0.75rem 1rem; gap: 0.75rem; }
+.option input, .tf-btn input { width: 18px; height: 18px; accent-color: #df4a7d; flex-shrink: 0; }
+.option-text { font-size: 1rem; }
+.submission-summary { width: 100%; padding: 2rem 0; }
+.question-container :is(button, input, textarea):focus-visible { outline: 2px solid #df4a7d; outline-offset: 3px; }
+@media (max-width: 768px) {
+    .top-bar { padding: 0.75rem 1rem; gap: 0.5rem; }
+    .question-container { width: calc(100% - 2rem); padding: 0 1.25rem; }
+    .question-block { padding: 1.5rem 0; }
+    .exam-title { font-size: 1rem; }
+}
 </style>

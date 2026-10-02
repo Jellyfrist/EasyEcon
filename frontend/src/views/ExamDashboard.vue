@@ -224,7 +224,11 @@ function formatDate(dt) {
 }
 
 function openExam(session) {
-    router.push({ name: 'ExamSession', params: { sessionId: session.id, query: { courseId: courseId.value } } })
+    router.push({
+        name: getMyAttempt(session.id) ? 'TakeExam' : 'ExamSession',
+        params: { sessionId: session.id },
+        query: { courseId: courseId.value },
+    })
 }
 
 function viewResult(session) {
