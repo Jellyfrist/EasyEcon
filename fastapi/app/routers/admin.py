@@ -5,6 +5,7 @@ routes:
     GET    /admin/users                                 list all users (with optional role filter)
     PATCH  /admin/users/{user_id}/role                  change a user's role
     PATCH  /admin/users/{user_id}/deactivate            deactivate a user account
+    DELETE /admin/users/{user_id}                       permanently delete a student account
     POST   /admin/teachers/invite                       create teacher + auto-generate credentials + send email
     POST   /admin/teachers/{user_id}/send-credentials   reset password + resend credentials email
     POST   /admin/seed                                  create initial admin user
@@ -24,11 +25,19 @@ import string
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_db
+from app.models.best_attempt import BestAttempt
+from app.models.course import Course
+from app.models.exam_attempt import ExamAttempt
+from app.models.exam_session import ExamSession
+from app.models.exam_template import ExamTemplate
+from app.models.learning_page import LearningPage
+from app.models.page_progress import PageProgress
+from app.models.social_auth import SocialAuth
 from app.models.user import User
 from app.schemas.auth import TeacherInvite, UserResponse
 from app.security import hash_password, require_admin
@@ -166,6 +175,52 @@ def deactivate_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.delete("/users/{user_id}", status_code=204)
+def delete_student(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> Response:
+    """Permanently delete a student's account and personal learning records."""
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="you cannot delete your own account")
+
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+    if user.role != "student":
+        raise HTTPException(status_code=400, detail="only student accounts can be permanently deleted")
+
+    # Preserve teaching materials instead of cascading into shared course data.
+    owns_course = db.query(Course.id).filter(Course.teacher_id == user_id).first()
+    authored_page = db.query(LearningPage.id).filter(LearningPage.created_by_user_id == user_id).first()
+    authored_exam = db.query(ExamTemplate.id).filter(ExamTemplate.created_by_user_id == user_id).first()
+    launched_exam = db.query(ExamSession.id).filter(ExamSession.launched_by_user_id == user_id).first()
+    if owns_course or authored_page or authored_exam or launched_exam:
+        raise HTTPException(
+            status_code=409,
+            detail="This account owns teaching content. Transfer or remove that content before deleting the account.",
+        )
+
+    try:
+        # The editor reference is optional, so clear it while keeping the lesson.
+        db.query(LearningPage).filter(
+            LearningPage.last_edited_by_user_id == user_id
+        ).update({LearningPage.last_edited_by_user_id: None}, synchronize_session=False)
+
+        # Delete personal learning history and linked sign-in identities first.
+        db.query(ExamAttempt).filter(ExamAttempt.student_id == user_id).delete(synchronize_session=False)
+        db.query(PageProgress).filter(PageProgress.student_id == user_id).delete(synchronize_session=False)
+        db.query(BestAttempt).filter(BestAttempt.student_id == user_id).delete(synchronize_session=False)
+        db.query(SocialAuth).filter(SocialAuth.user_id == user_id).delete(synchronize_session=False)
+        db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return Response(status_code=204)
 
 # invite teacher: auto-generate username + password + send email immediately
 @router.post("/teachers/invite", response_model = UserResponse, status_code = 201)

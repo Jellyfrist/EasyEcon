@@ -19,6 +19,11 @@ const adminService = {
         return api.patch(`/admin/users/${userId}/deactivate`)
     },
 
+    // permanently delete a student account and their personal activity
+    deleteStudent(userId) {
+        return api.delete(`/admin/users/${userId}`)
+    },
+
     // invite a teacher: system auto-generates username + password + sends email
     inviteTeacher(data) {
         // data: { full_name, email }

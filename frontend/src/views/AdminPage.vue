@@ -61,7 +61,7 @@
                     <span class="material-symbols-outlined section-icon">group</span>
                     <div>
                         <h2>All Accounts</h2>
-                        <p>Filter, change roles, or deactivate user accounts.</p>
+                        <p>Manage roles, deactivate teacher accounts, or permanently delete student accounts.</p>
                     </div>
                 </div>
 
@@ -121,10 +121,17 @@
                                         <option value="admin">admin</option>
                                     </select>
 
-                            <button class="btn-danger" :disabled="store.loading" @click="confirmDeactivate(user)">
-                                        <span class="material-symbols-outlined">block</span>
-                                        Deactivate
+                            <button class="btn-danger" :disabled="store.loading" @click="confirmAccountAction(user)">
+                                        <span class="material-symbols-outlined">{{ user.role === 'student' ? 'delete_forever' : 'block' }}</span>
+                                        {{ user.role === 'student' ? 'Delete permanently' : 'Deactivate' }}
                                     </button>
+                        </div>
+
+                        <div v-else-if="user.role === 'student'" class="user-actions">
+                            <button class="btn-danger" :disabled="store.loading" @click="confirmAccountAction(user)">
+                                <span class="material-symbols-outlined">delete_forever</span>
+                                Delete permanently
+                            </button>
                         </div>
 
                         <span v-else class="inactive-label">
@@ -137,18 +144,24 @@
         </div>
 
 
-        <!-- confirm deactivate modal -->
+        <!-- confirm account action modal -->
         <transition name="fade">
             <div v-if="confirm.show" class="modal-overlay" @click.self="confirm.show = false">
                 <div class="modal-card">
-                    <h3>Deactivate Account?</h3>
-                    <p>
+                    <h3>{{ confirm.user?.role === 'student' ? 'Delete Student Account Permanently?' : 'Deactivate Account?' }}</h3>
+                    <p v-if="confirm.user?.role === 'student'">
+                        This permanently deletes
+                        <strong>{{ confirm.user?.full_name || confirm.user?.username }}</strong>, including their exam attempts, quiz results, learning progress, and linked sign-in accounts. Teaching content is kept; accounts that own teaching content cannot be deleted.
+                    </p>
+                    <p v-else>
                         This will prevent
                         <strong>{{ confirm.user?.full_name || confirm.user?.username }}</strong> from logging in.
                     </p>
                     <div class="modal-actions">
                         <button class="btn-ghost" @click="confirm.show = false">Cancel</button>
-                        <button class="btn-action btn-action--danger" @click="handleDeactivate">Confirm</button>
+                        <button class="btn-action btn-action--danger" :disabled="store.loading" @click="handleAccountAction">
+                            {{ confirm.user?.role === 'student' ? 'Delete permanently' : 'Confirm' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -205,16 +218,20 @@ function handleRoleChange(user, newRole) {
     if (newRole !== user.role) store.changeRole(user.id, newRole)
 }
 
-function confirmDeactivate(user) {
+function confirmAccountAction(user) {
     confirm.user = user
     confirm.show = true
 }
 
-async function handleDeactivate() {
+async function handleAccountAction() {
     if (!confirm.user) return
-    await store.deactivateUser(confirm.user.id)
-    confirm.show = false
-    confirm.user = null
+    const success = confirm.user.role === 'student'
+        ? await store.deleteStudent(confirm.user.id)
+        : await store.deactivateUser(confirm.user.id)
+    if (success) {
+        confirm.show = false
+        confirm.user = null
+    }
 }
 
 async function handleResend(user) {

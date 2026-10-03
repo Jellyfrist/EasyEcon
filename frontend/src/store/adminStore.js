@@ -76,6 +76,23 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // permanently remove a student account and remove it from the current list
+    async function deleteStudent(userId) {
+        loading.value = true
+        error.value = null
+        try {
+            await adminService.deleteStudent(userId)
+            users.value = users.value.filter(user => user.id !== userId)
+            _setSuccess('student account permanently deleted')
+            return true
+        } catch (err) {
+            _setError(err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     // invite a teacher (full_name + email only)
     async function inviteTeacher(data) {
         loading.value = true
@@ -119,6 +136,7 @@ export const useAdminStore = defineStore('admin', () => {
         fetchUsers,
         changeRole,
         deactivateUser,
+        deleteStudent,
         inviteTeacher,
         sendCredentials,
     }
