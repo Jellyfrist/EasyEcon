@@ -9,17 +9,6 @@
         { label: 'Modules', to: { name: 'LearningModule', params: { courseId: courseIdParam } } },
         { label: isEditMode ? 'Edit Lesson' : 'New Lesson', to: route.fullPath },
       ]" @resize="editorHeaderHeight = $event">
-      <template #tools>
-        <div class="le-tabs">
-          <button class="le-tab" :class="{ 'le-tab-active': activeTab === 'content' }" @click="activeTab = 'content'">
-            <span class="material-symbols-outlined">article</span> Content
-          </button>
-          <button class="le-tab" :class="{ 'le-tab-active': activeTab === 'quiz' }" @click="activeTab = 'quiz'">
-            <span class="material-symbols-outlined">quiz</span> Mini Quiz
-            <span v-if="quiz.isEnabled && quiz.questions.length > 0" class="le-tab-badge">{{ quiz.questions.length }}</span>
-          </button>
-        </div>
-      </template>
         <button class="le-preview-btn" @click="openPreview">Preview</button>
         <button class="le-add-section-btn le-header-add-section" @click="addSection">
           <span class="material-symbols-outlined" aria-hidden="true">add</span> Add section
@@ -48,8 +37,7 @@
 
     <template v-else>
 
-      <!-- ===== CONTENT TAB ===== -->
-      <div v-show="activeTab === 'content'" class="le-content-layout">
+      <div class="le-content-layout">
 
         <!-- left: section outline -->
         <aside class="le-outline">
@@ -152,103 +140,6 @@
         </main>
       </div>
 
-      <!-- ===== QUIZ TAB ===== -->
-      <div v-show="activeTab === 'quiz'" class="le-quiz-layout">
-        <div class="le-quiz-inner">
-
-          <div class="le-quiz-header">
-            <div class="le-quiz-header-info">
-              <div class="le-quiz-icon" :class="quiz.isEnabled ? 'le-quiz-icon-on' : 'le-quiz-icon-off'">
-                <span class="material-symbols-outlined">quiz</span>
-              </div>
-              <div>
-                <h2 class="le-quiz-title-heading">Mini Quiz</h2>
-                <p class="le-quiz-subtitle">Auto-graded questions shown after the lesson content.</p>
-              </div>
-            </div>
-            <button
-              class="le-quiz-toggle-btn"
-              :class="quiz.isEnabled ? 'le-quiz-toggle-off' : 'le-quiz-toggle-on'"
-              @click="toggleQuiz"
-            >
-              {{ quiz.isEnabled ? 'Disable quiz' : 'Enable quiz' }}
-            </button>
-          </div>
-
-          <template v-if="quiz.isEnabled">
-            <input
-              v-model="quiz.title"
-              class="le-quiz-name-input"
-              placeholder="Quiz title (e.g. Check Your Understanding)"
-            />
-
-            <div class="le-question-list">
-              <div
-                v-for="(q, qi) in quiz.questions"
-                :key="q.id"
-                class="le-question-card"
-              >
-                <div class="le-question-top">
-                  <span class="le-q-badge">Q{{ qi + 1 }}</span>
-                  <button class="le-q-del" @click="removeQuizQuestion(qi)" title="Remove question">
-                    <span class="material-symbols-outlined">delete</span>
-                  </button>
-                </div>
-
-                <textarea
-                  v-model="q.text"
-                  rows="2"
-                  class="le-q-text"
-                  placeholder="Question text…"
-                ></textarea>
-
-                <div class="le-options">
-                  <div
-                    v-for="(opt, oi) in q.options"
-                    :key="oi"
-                    class="le-option-row"
-                    :class="{ 'le-option-correct': q.correct_answer_index === oi }"
-                  >
-                    <input
-                      type="radio"
-                      :name="'q_' + q.id"
-                      :value="oi"
-                      v-model="q.correct_answer_index"
-                      class="le-radio"
-                      title="Mark as correct answer"
-                    />
-                    <input
-                      v-model="q.options[oi]"
-                      type="text"
-                      class="le-option-input"
-                      :placeholder="'Option ' + (oi + 1)"
-                    />
-                  </div>
-                </div>
-
-                <textarea
-                  v-model="q.explanation"
-                  rows="2"
-                  class="le-q-explanation"
-                  :class="{ 'le-q-explanation-invalid': !(q.explanation || '').trim() }"
-                  placeholder="Required — explain why the correct answer is correct…"
-                ></textarea>
-              </div>
-            </div>
-
-            <button class="le-add-q-btn" @click="addQuizQuestion">
-              <span class="material-symbols-outlined">add</span> Add question
-            </button>
-          </template>
-
-          <div v-else class="le-quiz-empty">
-            <span class="material-symbols-outlined le-quiz-empty-icon">quiz</span>
-            <p>Enable the quiz to add questions for this lesson.</p>
-          </div>
-
-        </div>
-      </div>
-
     </template>
     <Teleport to="body">
       <dialog ref="previewDialog" class="le-preview-dialog" aria-labelledby="lesson-preview-title" @close="restorePreviewFocus">
@@ -282,7 +173,6 @@ const router = useRouter()
 
 const isSaving   = ref(false)
 const isLoading  = ref(true)
-const activeTab  = ref('content')
 const isPublished = ref(true)
 
 const courseIdParam = route.params.courseId
@@ -297,12 +187,6 @@ const lesson = ref({
   topic_tag: '',
   module_id: parseInt(moduleIdParam, 10),
   sections: [{ id: Date.now(), title: '', content: '' }]
-})
-
-const quiz = ref({
-  isEnabled: false,
-  title: 'Check Your Understanding',
-  questions: []
 })
 
 watch([() => lesson.value.title, () => lesson.value.sections], ([title, sections]) => {
@@ -470,26 +354,6 @@ const removeSection = id => {
     setActiveSection(lesson.value.sections[0].id)
 }
 
-// ── quiz ──────────────────────────────────────────────────
-const toggleQuiz = () => {
-  quiz.value.isEnabled = !quiz.value.isEnabled
-  if (quiz.value.isEnabled && quiz.value.questions.length === 0) addQuizQuestion()
-}
-
-const addQuizQuestion = () => {
-  quiz.value.questions.push({
-    id: 'q_' + Date.now(),
-    text: '',
-    options: ['', '', '', ''],
-    correct_answer_index: 0,
-    explanation: ''
-  })
-}
-
-const removeQuizQuestion = i => {
-  if (confirm('Remove this question?')) quiz.value.questions.splice(i, 1)
-}
-
 // ── load ──────────────────────────────────────────────────
 const loadLessonData = async () => {
   if (!isEditMode.value) { isLoading.value = false; return }
@@ -513,15 +377,6 @@ const loadLessonData = async () => {
             title: block.data?.title || '',
             content: block.data?.html || ''
           })
-        } else if (block.type === 'mini_quiz') {
-          quiz.value.isEnabled = true
-          quiz.value.title     = block.data?.title || 'Check Your Understanding'
-          if (block.data?.questions) {
-            quiz.value.questions = block.data.questions.map(q => ({
-              ...q,
-              correct_answer_index: q.correct_index ?? 0
-            }))
-          }
         }
       })
       if (loadedSections.length) {
@@ -560,38 +415,6 @@ const saveLesson = async () => {
       type: 'rich_text_section',
       data: { title: lesson.value.title.trim(), html: sec.content }
     }))
-
-    if (quiz.value.isEnabled && quiz.value.questions.length > 0) {
-      // every quiz question needs the teacher's own explanation (enforced by
-      // the backend too, this just fails earlier with the question numbers)
-      const missing = quiz.value.questions
-        .map((q, i) => ((q.explanation || '').trim() ? null : i + 1))
-        .filter(n => n !== null)
-
-      if (missing.length) {
-        alert(
-          `Write an explanation for quiz question ${missing.join(', ')} before saving.`
-        )
-        return          // isSaving is cleared in the finally block
-      }
-
-      contentBlocks.push({
-        id: `quiz_${Date.now()}`,
-        type: 'mini_quiz',
-        data: {
-          title: quiz.value.title,
-          questions: quiz.value.questions.map(q => ({
-            id: q.id,
-            type: 'multiple_choice',
-            text: q.text,
-            options: q.options,
-            correct_answer: q.options[q.correct_answer_index] || q.options[0],
-            correct_index: q.correct_answer_index,
-            explanation: (q.explanation || '').trim()
-          }))
-        }
-      })
-    }
 
     const payload = {
       title: lesson.value.title.trim(),
@@ -678,28 +501,6 @@ onMounted(() => {
 .le-bc-link:hover { color: var(--pink); }
 .le-bc-sep { color: var(--border); }
 .le-bc-cur { color: var(--ink2); font-weight: 600; }
-
-/* tabs */
-.le-tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 3px; gap: 2px; border: 1px solid var(--border); }
-.le-tab {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 14px;
-  border-radius: 7px;
-  border: none; background: transparent;
-  font-size: 0.82rem; font-weight: 600; font-family: inherit;
-  color: var(--muted); cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  position: relative;
-}
-.le-tab .material-symbols-outlined { font-size: 16px; }
-.le-tab:hover { color: var(--ink2); }
-.le-tab-active { background: var(--surface) !important; color: var(--pink) !important; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-.le-tab-badge {
-  background: var(--pink); color: #fff;
-  font-size: 0.65rem; font-weight: 700;
-  padding: 1px 6px; border-radius: 99px;
-  line-height: 1.6;
-}
 
 /* publish toggle */
 .le-publish-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
@@ -905,143 +706,6 @@ onMounted(() => {
   color: var(--ink2);
   caret-color: var(--pink);
 }
-/* ── quiz tab ─────────────────────────────────────────── */
-.le-quiz-layout {
-  height: calc(100vh - var(--topbar-h));
-  overflow-y: auto;
-  background: var(--bg);
-  display: flex; justify-content: center;
-  padding: 2rem 1.5rem 4rem;
-}
-
-.le-quiz-inner { width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 1.5rem; }
-
-.le-quiz-header {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.5rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  flex-wrap: wrap;
-}
-.le-quiz-header-info { display: flex; align-items: center; gap: 1rem; }
-
-.le-quiz-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.le-quiz-icon .material-symbols-outlined { font-size: 24px; }
-.le-quiz-icon-on  { background: var(--theme-bg-ecfdf5); color: var(--theme-fg-10b981); }
-.le-quiz-icon-off { background: var(--bg); color: var(--muted); }
-
-.le-quiz-title-heading { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
-.le-quiz-subtitle { margin: 2px 0 0; font-size: 0.82rem; color: var(--muted); }
-
-.le-quiz-toggle-btn {
-  padding: 8px 18px; border-radius: 9px;
-  font-size: 0.83rem; font-weight: 700;
-  font-family: inherit; cursor: pointer;
-  border: none; transition: all 0.15s; white-space: nowrap;
-}
-.le-quiz-toggle-on  { background: #10b981; color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,0.25); }
-.le-quiz-toggle-on:hover  { background: #059669; }
-.le-quiz-toggle-off { background: var(--theme-bg-fef2f2); color: var(--theme-fg-ef4444); border: 1px solid var(--theme-border-fecaca); }
-.le-quiz-toggle-off:hover { background: var(--theme-bg-fee2e2); }
-
-.le-quiz-name-input {
-  width: 100%; box-sizing: border-box;
-  padding: 0.9rem 1.1rem;
-  font-size: 1rem; font-weight: 700;
-  border: 1.5px solid var(--border); border-radius: 10px;
-  background: var(--surface); color: var(--ink);
-  font-family: inherit; outline: none;
-  transition: border-color 0.15s;
-}
-.le-quiz-name-input:focus { border-color: var(--pink); }
-
-.le-question-list { display: flex; flex-direction: column; gap: 1rem; }
-
-.le-question-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  display: flex; flex-direction: column; gap: 0.85rem;
-  transition: border-color 0.15s;
-}
-.le-question-card:focus-within { border-color: var(--pink-light); }
-
-.le-question-top { display: flex; align-items: center; justify-content: space-between; }
-
-.le-q-badge {
-  background: var(--pink-bg); color: var(--pink);
-  font-size: 0.72rem; font-weight: 700;
-  padding: 3px 10px; border-radius: 6px; letter-spacing: 0.04em;
-}
-
-.le-q-del {
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); display: flex; align-items: center;
-  padding: 4px; border-radius: 6px;
-  transition: background 0.12s, color 0.12s;
-}
-.le-q-del .material-symbols-outlined { font-size: 17px; }
-.le-q-del:hover { background: var(--theme-bg-fef2f2); color: var(--theme-fg-ef4444); }
-
-.le-q-text, .le-q-explanation {
-  width: 100%; box-sizing: border-box;
-  padding: 0.75rem 0.9rem;
-  border: 1.5px solid var(--border); border-radius: 9px;
-  font-family: inherit; font-size: 0.9rem;
-  color: var(--ink2); resize: vertical; outline: none;
-  transition: border-color 0.15s;
-}
-.le-q-text:focus, .le-q-explanation:focus { border-color: var(--pink); }
-.le-q-explanation { background: var(--theme-bg-f0fdf4); border-color: var(--theme-border-bbf7d0); font-size: 0.83rem; color: var(--theme-fg-065f46); }
-.le-q-explanation::placeholder { color: #86efac; }
-.le-q-explanation-invalid { background: var(--theme-bg-fff7f7); border-color: var(--theme-border-fca5a5); color: var(--theme-fg-b91c1c); }
-.le-q-explanation-invalid::placeholder { color: #fca5a5; }
-
-.le-options { display: flex; flex-direction: column; gap: 6px; }
-
-.le-option-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; border-radius: 9px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  transition: border-color 0.15s, background 0.15s;
-}
-.le-option-correct { border-color: var(--theme-border-86efac); background: var(--theme-bg-f0fdf4); }
-
-.le-radio { width: 17px; height: 17px; accent-color: #10b981; cursor: pointer; flex-shrink: 0; }
-
-.le-option-input {
-  flex: 1; border: none; outline: none;
-  font-family: inherit; font-size: 0.88rem;
-  color: var(--ink2); background: transparent;
-}
-.le-option-input::placeholder { color: #c0c8d4; }
-
-.le-add-q-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 14px; width: 100%;
-  border: 2px dashed var(--border); border-radius: 12px;
-  background: none; font-family: inherit;
-  font-size: 0.88rem; font-weight: 700; color: var(--muted);
-  cursor: pointer; transition: border-color 0.15s, color 0.15s;
-}
-.le-add-q-btn .material-symbols-outlined { font-size: 18px; }
-.le-add-q-btn:hover { border-color: var(--pink); color: var(--pink); }
-
-.le-quiz-empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1rem; padding: 5rem 2rem;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  color: var(--muted); font-size: 0.9rem; text-align: center;
-}
-.le-quiz-empty-icon { font-size: 3rem; color: var(--border); }
-
 /* ── responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
   .le-outline { display: none; }
