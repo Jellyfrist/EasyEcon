@@ -1,5 +1,6 @@
 <template>
     <FeaturePage class="cd-root">
+    <template #navigation><CourseNavigation :course-id="courseId" teacher current="modules" /></template>
     <template #header>
         <EditorHeader title="Modules"
                 :back-to="{ name: 'CoursesEditor', params: { courseId } }"
@@ -132,6 +133,7 @@
 
 <script setup>
 import FeaturePage from '@/components/FeaturePage.vue'
+import CourseNavigation from '@/components/CourseNavigation.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';

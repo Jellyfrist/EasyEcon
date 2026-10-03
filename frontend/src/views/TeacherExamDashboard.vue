@@ -1,5 +1,6 @@
 <template>
   <FeaturePage class="dashboard">
+    <template #navigation><CourseNavigation :course-id="courseId" teacher current="exams" /></template>
     <template #header>
         <EditorHeader :title="'Exams'" :back-to="{ name: 'CoursesEditor', params: { courseId } }" :breadcrumbs="[{ label: 'My Courses', to: { name: 'Teacher' } }, { label: 'Manage Course', to: { name: 'CoursesEditor', params: { courseId: courseId } } }, { label: 'Exams', to: route.fullPath }]"><button class="btn-create" @click.stop="openCreateExam">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -144,6 +145,7 @@
 
 <script setup>
 import FeatureToolbar from '@/components/FeatureToolbar.vue'
+import CourseNavigation from '@/components/CourseNavigation.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted } from 'vue'

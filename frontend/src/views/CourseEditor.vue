@@ -1,5 +1,6 @@
 <template>
     <FeaturePage class="ce-page">
+    <template v-if="isEditMode" #navigation><CourseNavigation :course-id="courseId" teacher current="overview" /></template>
     <template #header>
         <EditorHeader :title="isEditMode ? 'Manage Course' : 'New Course'"
             :back-to="{ name: 'Teacher' }"
@@ -180,6 +181,7 @@
 </template>
 
 <script setup>
+import CourseNavigation from '@/components/CourseNavigation.vue'
 import FeaturePage from '@/components/FeaturePage.vue'
 import EditorHeader from '@/components/EditorHeader.vue'
 import { useRoute, useRouter } from 'vue-router'
