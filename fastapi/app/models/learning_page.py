@@ -2,12 +2,11 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timezone
 import json
-from sqlalchemy import BigInteger, Integer, Identity, String, Text, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index, select
+from sqlalchemy import Integer, Identity, String, Text, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index, select, text
 from sqlalchemy.orm import mapped_column, relationship, synonym, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -15,9 +14,9 @@ def now_utc():
 
 class Topic(Base):
     __tablename__ = 'topic'
-    id = mapped_column('topic_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('topic_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     topic_id = synonym('id')
-    course_id = mapped_column('course_id', BIGINT, nullable=False)
+    course_id = mapped_column('course_id', Integer, nullable=False)
     name = mapped_column('name', String(150), nullable=False)
     __table_args__ = (
         UniqueConstraint('course_id', 'name'),
@@ -27,10 +26,10 @@ class Topic(Base):
 
 class LearningPage(Base):
     __tablename__ = 'lesson'
-    id = mapped_column('lesson_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('lesson_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     lesson_id = synonym('id')
-    module_id = mapped_column('module_id', BIGINT, nullable=False)
-    topic_id = mapped_column('topic_id', BIGINT, nullable=True)
+    module_id = mapped_column('module_id', Integer, nullable=False)
+    topic_id = mapped_column('topic_id', Integer, nullable=True)
     title = mapped_column('title', String(150), nullable=False)
     position = mapped_column('position', Integer, nullable=False)
     is_published = mapped_column('is_published', Boolean, nullable=False, default=False)
@@ -48,8 +47,8 @@ class LearningPage(Base):
     template_type = mapped_column(String(50), nullable=False, default="blank")
     preview = mapped_column(Text, nullable=True)
     published_at = mapped_column(DateTime(timezone=True), nullable=True)
-    created_by_user_id = mapped_column(BIGINT, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=False)
-    last_edited_by_user_id = mapped_column(BIGINT, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=True)
+    created_by_user_id = mapped_column(Integer, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=False)
+    last_edited_by_user_id = mapped_column(Integer, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=True)
     module = relationship("Module", back_populates="learning_pages")
     topic = relationship("Topic")
     creator = relationship("User", foreign_keys=[created_by_user_id], back_populates="created_pages")
@@ -86,13 +85,15 @@ class LearningPage(Base):
 
 class LessonSection(Base):
     __tablename__ = 'lesson_section'
-    lesson_id = mapped_column('lesson_id', BIGINT, primary_key=True, nullable=False)
+    lesson_id = mapped_column('lesson_id', Integer, primary_key=True, nullable=False)
     section_no = mapped_column('section_no', Integer, primary_key=True, nullable=False)
     content_richtext = mapped_column('content_richtext', Text, nullable=False)
-    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=False, default=now_utc, onupdate=now_utc)
+    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=True, default=now_utc, onupdate=now_utc)
+    legacy_imported = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     __table_args__ = (
         ForeignKeyConstraint(['lesson_id'], ['lesson.lesson_id'], ondelete='RESTRICT'),
         CheckConstraint('section_no > 0'),
+        CheckConstraint("legacy_imported OR updated_at IS NOT NULL", name="section_new_history_required"),
     )
 
     external_id = mapped_column(Text)
@@ -116,18 +117,20 @@ class LessonSection(Base):
 
 class Asset(Base):
     __tablename__ = 'asset'
-    id = mapped_column('asset_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('asset_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     asset_id = synonym('id')
     storage_key = mapped_column('storage_key', String(180), nullable=False)
-    original_filename = mapped_column('original_filename', String(150), nullable=False)
+    original_filename = mapped_column('original_filename', String(150), nullable=True)
     mime_type = mapped_column('mime_type', String(80), nullable=False)
-    byte_size = mapped_column('byte_size', BIGINT, nullable=False)
-    uploaded_by_user_id = mapped_column('uploaded_by_user_id', BIGINT, nullable=False)
+    byte_size = mapped_column('byte_size', Integer, nullable=False)
+    uploaded_by_user_id = mapped_column('uploaded_by_user_id', Integer, nullable=True)
     created_at = mapped_column('created_at', DateTime(timezone=True), nullable=False, default=now_utc)
+    legacy_imported = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     __table_args__ = (
         UniqueConstraint('storage_key'),
         ForeignKeyConstraint(['uploaded_by_user_id'], ['app_user.user_id'], ondelete='RESTRICT'),
         CheckConstraint('byte_size > 0'),
+        CheckConstraint("legacy_imported OR (storage_key IS NOT NULL AND original_filename IS NOT NULL AND mime_type IS NOT NULL AND byte_size IS NOT NULL AND uploaded_by_user_id IS NOT NULL AND created_at IS NOT NULL)", name="asset_new_metadata_required"),
     )
 
     uploader = relationship("User", foreign_keys=[uploaded_by_user_id])
@@ -136,9 +139,9 @@ class Asset(Base):
 
 class SectionAsset(Base):
     __tablename__ = 'section_asset'
-    lesson_id = mapped_column('lesson_id', BIGINT, primary_key=True, nullable=False)
+    lesson_id = mapped_column('lesson_id', Integer, primary_key=True, nullable=False)
     section_no = mapped_column('section_no', Integer, primary_key=True, nullable=False)
-    asset_id = mapped_column('asset_id', BIGINT, primary_key=True, nullable=False)
+    asset_id = mapped_column('asset_id', Integer, primary_key=True, nullable=False)
     __table_args__ = (
         ForeignKeyConstraint(['lesson_id', 'section_no'], ['lesson_section.lesson_id', 'lesson_section.section_no'], ondelete='RESTRICT'),
         ForeignKeyConstraint(['asset_id'], ['asset.asset_id'], ondelete='RESTRICT'),

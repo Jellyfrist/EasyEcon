@@ -1,12 +1,11 @@
 from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timezone
-from sqlalchemy import BigInteger, Integer, Identity, String, Text, DateTime, ForeignKeyConstraint, CheckConstraint, Index, select, text
+from sqlalchemy import Integer, Identity, String, Text, DateTime, ForeignKeyConstraint, CheckConstraint, Index, select, text
 from sqlalchemy.orm import mapped_column, relationship, synonym
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -14,10 +13,10 @@ def now_utc():
 
 class ExamSession(Base):
     __tablename__ = 'exam_session'
-    id = mapped_column('session_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('session_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     session_id = synonym('id')
-    exam_id = mapped_column('exam_id', BIGINT, nullable=False)
-    launched_by_user_id = mapped_column('opened_by_teacher_id', BIGINT, nullable=False)
+    exam_id = mapped_column('exam_id', Integer, nullable=False)
+    launched_by_user_id = mapped_column('opened_by_teacher_id', Integer, nullable=False)
     opened_by_teacher_id = synonym('launched_by_user_id')
     launched_at = mapped_column('opened_at', DateTime(timezone=True), nullable=False, default=now_utc)
     opened_at = synonym('launched_at')

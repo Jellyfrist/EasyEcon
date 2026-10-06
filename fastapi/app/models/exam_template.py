@@ -3,12 +3,11 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from decimal import Decimal
 import json
-from sqlalchemy import BigInteger, Integer, Identity, String, Text, Numeric, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
+from sqlalchemy import Integer, Identity, String, Text, Numeric, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
 from sqlalchemy.orm import mapped_column, relationship, synonym, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -16,9 +15,9 @@ def now_utc():
 
 class ExamTemplate(Base):
     __tablename__ = 'exam'
-    id = mapped_column('exam_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('exam_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     exam_id = synonym('id')
-    course_id = mapped_column('course_id', BIGINT, nullable=False)
+    course_id = mapped_column('course_id', Integer, nullable=False)
     title = mapped_column('title', String(150), nullable=False)
     _description = mapped_column('description', Text, nullable=False, default='')
     exam_type = mapped_column('exam_type', String(12), nullable=False)
@@ -43,8 +42,8 @@ class ExamTemplate(Base):
         CheckConstraint('passing_percentage BETWEEN 0 AND 100'),
     )
 
-    created_by_user_id = mapped_column(BIGINT, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=False)
-    source_template_id = mapped_column(BIGINT, ForeignKey("exam.exam_id", ondelete="RESTRICT"), nullable=True)
+    created_by_user_id = mapped_column(Integer, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=False)
+    source_template_id = mapped_column(Integer, ForeignKey("exam.exam_id", ondelete="RESTRICT"), nullable=True)
     description_was_null = mapped_column(Boolean, nullable=False, default=True)
     academic_year_width = mapped_column(Integer, nullable=True)
     term_style = mapped_column(String(20), nullable=True)
@@ -131,12 +130,12 @@ class ExamTemplate(Base):
 
 class Question(Base):
     __tablename__ = 'question'
-    id = mapped_column('question_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('question_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     question_id = synonym('id')
-    exam_id = mapped_column('exam_id', BIGINT, nullable=False)
-    topic_id = mapped_column('topic_id', BIGINT, nullable=True)
-    review_lesson_id = mapped_column('review_lesson_id', BIGINT, nullable=True)
-    image_asset_id = mapped_column('image_asset_id', BIGINT, nullable=True)
+    exam_id = mapped_column('exam_id', Integer, nullable=False)
+    topic_id = mapped_column('topic_id', Integer, nullable=True)
+    review_lesson_id = mapped_column('review_lesson_id', Integer, nullable=True)
+    image_asset_id = mapped_column('image_asset_id', Integer, nullable=True)
     position = mapped_column('position', Integer, nullable=False)
     question_type = mapped_column('question_type', String(20), nullable=False)
     prompt_richtext = mapped_column('prompt_richtext', Text, nullable=False)
@@ -211,7 +210,7 @@ class Question(Base):
 
 class Choice(Base):
     __tablename__ = 'choice'
-    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', Integer, primary_key=True, nullable=False)
     choice_no = mapped_column('choice_no', Integer, primary_key=True, nullable=False)
     label = mapped_column('label', String(10), nullable=False)
     choice_text = mapped_column('choice_text', Text, nullable=False)
@@ -224,7 +223,7 @@ class Choice(Base):
 
 class AcceptedAnswer(Base):
     __tablename__ = 'accepted_answer'
-    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', Integer, primary_key=True, nullable=False)
     answer_no = mapped_column('answer_no', Integer, primary_key=True, nullable=False)
     answer_text = mapped_column('answer_text', Text, nullable=False)
     __table_args__ = (

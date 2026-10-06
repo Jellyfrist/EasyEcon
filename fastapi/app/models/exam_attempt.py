@@ -7,11 +7,10 @@ from typing import Dict, Iterable, List, Optional, Sequence
 from sqlalchemy.orm import Session as OrmSession
 
 WEAK_THRESHOLD=60
-from sqlalchemy import BigInteger, Integer, Identity, String, Text, Numeric, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
+from sqlalchemy import Integer, Identity, String, Text, Numeric, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index, text
 from sqlalchemy.orm import mapped_column, relationship, synonym, object_session
 from app.db import Base
 
-BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -19,10 +18,10 @@ def now_utc():
 
 class ExamAttempt(Base):
     __tablename__ = 'exam_attempt'
-    id = mapped_column('attempt_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('attempt_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     attempt_id = synonym('id')
-    session_id = mapped_column('session_id', BIGINT, nullable=False)
-    student_id = mapped_column('student_id', BIGINT, nullable=False)
+    session_id = mapped_column('session_id', Integer, nullable=False)
+    student_id = mapped_column('student_id', Integer, nullable=False)
     attempt_no = mapped_column('attempt_no', Integer, nullable=False, default=1)
     status = mapped_column('status', String(15), nullable=False, default="in_progress")
     started_at = mapped_column('started_at', DateTime(timezone=True), nullable=False, default=now_utc)
@@ -31,18 +30,20 @@ class ExamAttempt(Base):
     awarded_points = synonym('score')
     max_score = mapped_column('possible_points', Numeric(12,2), nullable=True)
     possible_points = synonym('max_score')
-    passing_percentage_snapshot = mapped_column('passing_percentage_snapshot', Numeric(5,2), nullable=False)
+    passing_percentage_snapshot = mapped_column('passing_percentage_snapshot', Numeric(5,2), nullable=True)
+    legacy_imported = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     __table_args__ = (
         UniqueConstraint('session_id', 'student_id', 'attempt_no'),
         ForeignKeyConstraint(['session_id'], ['exam_session.session_id'], ondelete='RESTRICT'),
         ForeignKeyConstraint(['student_id'], ['app_user.user_id'], ondelete='RESTRICT'),
         CheckConstraint('attempt_no > 0'),
         CheckConstraint("status IN ('in_progress','submitted','graded','expired')"),
-        CheckConstraint('submitted_at IS NULL OR submitted_at >= started_at'),
+        CheckConstraint('legacy_imported OR submitted_at IS NULL OR submitted_at >= started_at'),
         CheckConstraint('awarded_points IS NULL OR awarded_points >= 0'),
         CheckConstraint('possible_points IS NULL OR possible_points >= 0'),
         CheckConstraint('awarded_points IS NULL OR possible_points IS NULL OR awarded_points <= possible_points'),
         CheckConstraint('passing_percentage_snapshot BETWEEN 0 AND 100'),
+        CheckConstraint("legacy_imported OR passing_percentage_snapshot IS NOT NULL", name="attempt_new_snapshot_required"),
         Index('attempt_student_idx', 'student_id', 'session_id'),
     )
 
@@ -612,8 +613,8 @@ class ExamAttempt(Base):
 
 class AttemptQuestion(Base):
     __tablename__ = 'attempt_question'
-    attempt_id = mapped_column('attempt_id', BIGINT, primary_key=True, nullable=False)
-    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    attempt_id = mapped_column('attempt_id', Integer, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', Integer, primary_key=True, nullable=False)
     display_order = mapped_column('display_order', Integer, nullable=False)
     __table_args__ = (
         UniqueConstraint('attempt_id', 'display_order'),
@@ -628,8 +629,8 @@ class AttemptQuestion(Base):
 
 class AttemptAnswer(Base):
     __tablename__ = 'attempt_answer'
-    attempt_id = mapped_column('attempt_id', BIGINT, primary_key=True, nullable=False)
-    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    attempt_id = mapped_column('attempt_id', Integer, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', Integer, primary_key=True, nullable=False)
     selected_choice_no = mapped_column('selected_choice_no', Integer, nullable=True)
     typed_answer = mapped_column('typed_answer', Text, nullable=True)
     answered_at = mapped_column('answered_at', DateTime(timezone=True), nullable=True)

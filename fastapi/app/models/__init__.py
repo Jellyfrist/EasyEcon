@@ -143,7 +143,8 @@ def capture_new_local_subject(mapper, connection, user):
 
 
 # SQL views are separate database objects, never Base subclasses/tables.
-# Definitions follow the supplied SQL; API percentile semantics remain unchanged.
+# Definitions follow the supplied SQL; missing historical answer grades remain
+# unknown in topic results. API percentile semantics remain unchanged.
 NORMALIZED_VIEWS = {
     'exam_result': """
 SELECT a.attempt_id,a.student_id,s.exam_id,a.session_id,a.attempt_no,a.status,a.submitted_at,
@@ -155,8 +156,8 @@ FROM public.exam_attempt a JOIN public.exam_session s USING(session_id)
     'attempt_topic_score': """
 SELECT aq.attempt_id,q.topic_id,t.name AS topic_name,
  SUM(r.awarded_points) AS awarded_points,SUM(q.points) AS possible_points,
- CASE WHEN a.status='graded' THEN ROUND(100*COALESCE(SUM(r.awarded_points),0)/NULLIF(SUM(q.points),0),2) END AS percentage,
- COUNT(*) FILTER(WHERE r.is_correct IS FALSE) AS wrong_count
+ CASE WHEN a.status='graded' AND COUNT(r.awarded_points)=COUNT(*) THEN ROUND(100*COALESCE(SUM(r.awarded_points),0)/NULLIF(SUM(q.points),0),2) END AS percentage,
+ CASE WHEN COUNT(r.is_correct)=COUNT(*) THEN COUNT(*) FILTER(WHERE r.is_correct IS FALSE) END AS wrong_count
 FROM public.attempt_question aq JOIN public.exam_attempt a USING(attempt_id)
 JOIN public.question q USING(question_id) LEFT JOIN public.topic t USING(topic_id)
 LEFT JOIN public.attempt_answer r ON (r.attempt_id,r.question_id)=(aq.attempt_id,aq.question_id)

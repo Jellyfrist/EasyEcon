@@ -1,12 +1,11 @@
 from __future__ import annotations
 from datetime import datetime, timezone
 import uuid
-from sqlalchemy import BigInteger, Integer, Identity, String, Boolean, DateTime, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
+from sqlalchemy import Integer, Identity, String, Boolean, DateTime, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index, text
 from sqlalchemy.orm import mapped_column, relationship, synonym
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -14,7 +13,7 @@ def now_utc():
 
 class User(Base):
     __tablename__ = 'app_user'
-    id = mapped_column('user_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('user_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     user_id = synonym('id')
     username = mapped_column('username', String(80), nullable=False)
     email = mapped_column('email', String(254), nullable=False)
@@ -22,14 +21,16 @@ class User(Base):
     role = mapped_column('role', String(10), nullable=False, default="student")
     account_status = mapped_column('account_status', String(12), nullable=False, default="active")
     auth_subject_id = mapped_column('auth_subject_id', String(120), nullable=False, default=lambda: str(uuid.uuid4()))
-    created_at = mapped_column('created_at', DateTime(timezone=True), nullable=False, default=now_utc)
-    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=False, default=now_utc, onupdate=now_utc)
+    created_at = mapped_column('created_at', DateTime(timezone=True), nullable=True, default=now_utc)
+    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=True, default=now_utc, onupdate=now_utc)
+    legacy_imported = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     __table_args__ = (
         UniqueConstraint('username'),
         UniqueConstraint('email'),
         UniqueConstraint('auth_subject_id'),
         CheckConstraint("role IN ('admin','teacher','student')"),
         CheckConstraint("account_status IN ('active','inactive')"),
+        CheckConstraint("legacy_imported OR (created_at IS NOT NULL AND updated_at IS NOT NULL)", name="user_new_history_required"),
     )
 
     hashed_password = mapped_column(String(255), nullable=True)
@@ -60,10 +61,10 @@ class User(Base):
 
 class TeacherInvitation(Base):
     __tablename__ = 'teacher_invitation'
-    id = mapped_column('invitation_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    id = mapped_column('invitation_id', Integer, Identity(always=False), primary_key=True, nullable=False)
     invitation_id = synonym('id')
-    invited_user_id = mapped_column('invited_user_id', BIGINT, nullable=False)
-    invited_by_admin_id = mapped_column('invited_by_admin_id', BIGINT, nullable=False)
+    invited_user_id = mapped_column('invited_user_id', Integer, nullable=False)
+    invited_by_admin_id = mapped_column('invited_by_admin_id', Integer, nullable=False)
     recipient_name = mapped_column('recipient_name', String(120), nullable=False)
     recipient_email = mapped_column('recipient_email', String(254), nullable=False)
     delivery_status = mapped_column('delivery_status', String(10), nullable=False, default="pending")
