@@ -5,9 +5,9 @@ from .course import Course
 from .module import Module
 from .learning_page import LearningPage, Topic, Asset, LessonSection, SectionAsset
 from .page_progress import PageProgress
-from .exam_template import ExamTemplate, Question, Choice, AcceptedAnswer, QuestionAsset
+from .exam_template import ExamTemplate, Question, Choice, AcceptedAnswer
 from .exam_session import ExamSession
-from .exam_attempt import ExamAttempt, AttemptQuestion, AttemptAnswer, AttemptAnswerValue, AttemptAnalysis, AttemptAnalysisLesson
+from .exam_attempt import ExamAttempt, AttemptQuestion, AttemptAnswer
 from sqlalchemy import event, select, func
 from sqlalchemy.orm import Session
 
@@ -88,8 +88,8 @@ def resolve_normalized_references(session, flush_context, instances):
                 obj.topic=topics[key]
             del obj._topic_name
         if isinstance(obj, Question) and hasattr(obj,"_image_urls"):
-            obj.images=[QuestionAsset(image_no=i,asset=asset_for(url)) for i,url in enumerate(obj._image_urls,1)]
-            obj.primary_image=obj.images[0].asset if obj.images else None
+            assets = [asset_for(url) for url in obj._image_urls]
+            obj.primary_image = assets[0] if assets else None
             del obj._image_urls
         if isinstance(obj, LessonSection):
             import json
@@ -140,3 +140,57 @@ def capture_new_local_subject(mapper, connection, user):
         connection.execute(User.__table__.update().where(User.id==user.id)
             .values(auth_subject_id=subject,updated_at=user.updated_at))
         set_committed_value(user,"auth_subject_id",subject)
+
+
+# SQL views are separate database objects, never Base subclasses/tables.
+# Definitions follow the supplied SQL; API percentile semantics remain unchanged.
+NORMALIZED_VIEWS = {
+    'exam_result': """
+SELECT a.attempt_id,a.student_id,s.exam_id,a.session_id,a.attempt_no,a.status,a.submitted_at,
+ a.awarded_points,a.possible_points,a.passing_percentage_snapshot,
+ CASE WHEN a.status='graded' THEN ROUND(100*a.awarded_points/NULLIF(a.possible_points,0),2) END AS score_percentage,
+ CASE WHEN a.status='graded' AND a.possible_points>0 THEN 100*a.awarded_points/a.possible_points>=a.passing_percentage_snapshot END AS passed
+FROM public.exam_attempt a JOIN public.exam_session s USING(session_id)
+""",
+    'attempt_topic_score': """
+SELECT aq.attempt_id,q.topic_id,t.name AS topic_name,
+ SUM(r.awarded_points) AS awarded_points,SUM(q.points) AS possible_points,
+ CASE WHEN a.status='graded' THEN ROUND(100*COALESCE(SUM(r.awarded_points),0)/NULLIF(SUM(q.points),0),2) END AS percentage,
+ COUNT(*) FILTER(WHERE r.is_correct IS FALSE) AS wrong_count
+FROM public.attempt_question aq JOIN public.exam_attempt a USING(attempt_id)
+JOIN public.question q USING(question_id) LEFT JOIN public.topic t USING(topic_id)
+LEFT JOIN public.attempt_answer r ON (r.attempt_id,r.question_id)=(aq.attempt_id,aq.question_id)
+GROUP BY aq.attempt_id,q.topic_id,t.name,a.status
+""",
+    'attempt_summary': """
+SELECT a.attempt_id,COUNT(aq.question_id) AS question_count,
+ COUNT(r.question_id) FILTER(WHERE r.selected_choice_no IS NOT NULL OR NULLIF(BTRIM(r.typed_answer),'') IS NOT NULL) AS answered_count
+FROM public.exam_attempt a LEFT JOIN public.attempt_question aq USING(attempt_id)
+LEFT JOIN public.attempt_answer r ON (r.attempt_id,r.question_id)=(aq.attempt_id,aq.question_id)
+GROUP BY a.attempt_id
+""",
+    'exam_percentile': """
+WITH cohort AS (
+ SELECT DISTINCT ON (session_id,student_id) session_id,student_id,score_percentage
+ FROM public.exam_result WHERE status='graded' AND score_percentage IS NOT NULL
+ ORDER BY session_id,student_id,score_percentage DESC,submitted_at,attempt_id
+)
+SELECT r.attempt_id,COUNT(c.student_id) AS cohort_size,
+ ROUND(100.0*(COUNT(c.student_id) FILTER(WHERE c.score_percentage<r.score_percentage)
+ +0.5*COUNT(c.student_id) FILTER(WHERE c.score_percentage=r.score_percentage))/NULLIF(COUNT(c.student_id),0),2) AS percentile
+FROM public.exam_result r LEFT JOIN cohort c ON c.session_id=r.session_id
+WHERE r.status='graded' AND r.score_percentage IS NOT NULL GROUP BY r.attempt_id
+""",
+}
+
+from sqlalchemy import DDL
+from app.db import Base
+
+# Explicit metadata creation on an empty test database also installs its views.
+# Application startup only inspects schema; it never calls create_all.
+for name, query in NORMALIZED_VIEWS.items():
+    event.listen(Base.metadata, "after_create",
+                 DDL(f"CREATE OR REPLACE VIEW public.{name} AS {query}").execute_if(dialect="postgresql"))
+for name in reversed(NORMALIZED_VIEWS):
+    event.listen(Base.metadata, "before_drop",
+                 DDL(f"DROP VIEW IF EXISTS public.{name}").execute_if(dialect="postgresql"))

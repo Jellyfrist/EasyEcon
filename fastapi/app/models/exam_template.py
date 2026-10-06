@@ -165,7 +165,6 @@ class Question(Base):
     primary_image = relationship("Asset", foreign_keys=[image_asset_id])
     choices = relationship("Choice", cascade="all, delete-orphan", order_by="Choice.choice_no")
     accepted_answers = relationship("AcceptedAnswer", cascade="all, delete-orphan", order_by="AcceptedAnswer.answer_no")
-    images = relationship("QuestionAsset", cascade="all, delete-orphan", order_by="QuestionAsset.image_no")
 
     @classmethod
     def from_dict(cls, value, position):
@@ -175,7 +174,10 @@ class Question(Base):
                  "correct": "list" if isinstance(raw,list) else "scalar", "images": "null" if value.get("image_urls") is None else "list"}
         q = cls(external_id=value["id"], position=position,
                 original_type=value["type"], question_type="short_answer" if value["type"] == "fill_in_the_blank" else value["type"],
-                prompt_richtext=json.dumps({"text":value.get("text"),"text_html":value.get("text_html")},ensure_ascii=False),
+                # Keep the complete editor document, including ordered/repeated
+                # image URLs, without introducing a question_asset table.
+                prompt_richtext=json.dumps({"text":value.get("text"),"text_html":value.get("text_html"),
+                                           "image_urls":deepcopy(value.get("image_urls"))},ensure_ascii=False),
                 explanation_richtext=value.get("explanation", ""), points=Decimal(str(value.get("points",1))),
                 order_index=value.get("order_index",position-1), review_lesson_id=value.get("linked_learning_page_id"),
                 shape=shape, extra={k: deepcopy(v) for k,v in value.items() if k not in keys})
@@ -202,7 +204,7 @@ class Question(Base):
                 "order_index":self.order_index,"linked_learning_page_id":self.review_lesson_id,
                 "options":None if self.shape.get("options")=="null" else [c.choice_text for c in self.choices],
                 "correct_answer":raw if self.shape.get("correct")=="list" else raw[0] if raw else None,
-                "image_urls":None if self.shape.get("images")=="null" else self.__dict__.get("_image_urls",[a.asset.url for a in self.images])}
+                "image_urls":None if self.shape.get("images")=="null" else self.__dict__.get("_image_urls",editor_document.get("image_urls") or [])}
         values.update(self.extra or {})
         return {k:values[k] for k in self.shape.get("fields",values)}
 
@@ -239,12 +241,3 @@ class AcceptedAnswer(Base):
 
     def as_value(self):
         return self.answer_text if self.value_type=="str" else json.loads(self.answer_text)
-
-
-class QuestionAsset(Base):
-    __tablename__ = "question_asset"
-    question_id = mapped_column(BIGINT, ForeignKey("question.question_id", ondelete="RESTRICT"), primary_key=True)
-    image_no = mapped_column(Integer, primary_key=True)
-    asset_id = mapped_column(BIGINT, ForeignKey("asset.asset_id", ondelete="RESTRICT"), nullable=False)
-    asset = relationship("Asset")
-    __table_args__ = (CheckConstraint("image_no>0"),)

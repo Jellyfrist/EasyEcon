@@ -49,9 +49,10 @@ class ExamAttempt(Base):
     score_pct = mapped_column(Numeric(7,2), nullable=False, default=0)
     passed = mapped_column(Boolean, nullable=False, default=False)
     percentile = mapped_column(Numeric(7,2), nullable=True)
-    topic_stats_was_null = mapped_column(Boolean, nullable=False, default=False)
-    weakness_report_was_null = mapped_column(Boolean, nullable=False, default=False)
-    analysis_entries = relationship("AttemptAnalysis", cascade="all, delete-orphan", order_by="AttemptAnalysis.entry_no")
+    # These are the original API report snapshots, not extra base entities.
+    # Preserve historical values (including nulls and deleted lesson IDs).
+    topic_stats = mapped_column(JSON, nullable=True, default=dict)
+    weakness_report = mapped_column(JSON, nullable=True, default=list)
     unmatched_answers = mapped_column(JSON, nullable=False, default=dict)
     student = relationship("User", back_populates="exam_attempts")
     session = relationship("ExamSession", back_populates="attempts")
@@ -72,32 +73,6 @@ class ExamAttempt(Base):
     @answers.setter
     def answers(self,value):
         self._pending_answers=deepcopy(value or {})
-
-    @property
-    def topic_stats(self):
-        if self.topic_stats_was_null:
-            return None
-        return {row.topic_tag:row.as_value() for row in self.analysis_entries if row.kind=="topic"}
-
-    @topic_stats.setter
-    def topic_stats(self,value):
-        self.topic_stats_was_null=value is None
-        self.analysis_entries=[row for row in self.analysis_entries if row.kind!="topic"]
-        self.analysis_entries.extend(AttemptAnalysis.from_value("topic",i,tag,fields)
-            for i,(tag,fields) in enumerate((value or {}).items(),1))
-
-    @property
-    def weakness_report(self):
-        if self.weakness_report_was_null:
-            return None
-        return [row.as_value() for row in self.analysis_entries if row.kind=="weakness"]
-
-    @weakness_report.setter
-    def weakness_report(self,value):
-        self.weakness_report_was_null=value is None
-        self.analysis_entries=[row for row in self.analysis_entries if row.kind!="weakness"]
-        self.analysis_entries.extend(AttemptAnalysis.from_value("weakness",i,fields.get("topic_tag"),fields)
-            for i,fields in enumerate(value or [],1))
 
     # grading logic
     @staticmethod
@@ -669,10 +644,11 @@ class AttemptAnswer(Base):
     )
 
     was_answered = mapped_column(Boolean, nullable=False, default=False)
-    value_shape = mapped_column(String(8), nullable=False, default="scalar")
+    # Canonical selected_choice_no/typed_answer remain available for the views.
+    # A single archived request value preserves legacy multi-select and bools.
+    response_value = mapped_column(JSON, nullable=True)
     selection = relationship("AttemptQuestion", back_populates="answer")
     question = relationship("Question", foreign_keys=[question_id], primaryjoin="AttemptAnswer.question_id==Question.id", viewonly=True)
-    values = relationship("AttemptAnswerValue", cascade="all, delete-orphan", order_by="AttemptAnswerValue.value_no")
 
     @property
     def external_question_id(self):
@@ -680,55 +656,7 @@ class AttemptAnswer(Base):
 
     @classmethod
     def from_value(cls,value,present=True):
-        return cls(was_answered=present, value_shape="list" if isinstance(value,list) else "scalar",
-                   values=[AttemptAnswerValue(value_no=i,value=deepcopy(v)) for i,v in enumerate(value if isinstance(value,list) else [value],1)])
+        return cls(was_answered=present, response_value=deepcopy(value))
 
     def as_value(self):
-        values=[v.value for v in self.values]
-        return values if self.value_shape=="list" else values[0] if values else None
-
-
-class AttemptAnswerValue(Base):
-    __tablename__="attempt_answer_value"
-    attempt_id=mapped_column(BIGINT,primary_key=True)
-    question_id=mapped_column(BIGINT,primary_key=True)
-    value_no=mapped_column(Integer,primary_key=True)
-    value=mapped_column(JSON,nullable=False)
-    __table_args__=(ForeignKeyConstraint(["attempt_id","question_id"],["attempt_answer.attempt_id","attempt_answer.question_id"],ondelete="RESTRICT"),CheckConstraint("value_no>0"))
-
-
-class AttemptAnalysis(Base):
-    """Historical API report entries; counters retain their original semantics."""
-    __tablename__="attempt_analysis"
-    attempt_id=mapped_column(BIGINT,ForeignKey("exam_attempt.attempt_id",ondelete="RESTRICT"),primary_key=True)
-    kind=mapped_column(String(10),primary_key=True)
-    entry_no=mapped_column(Integer,primary_key=True)
-    topic_tag=mapped_column(Text)
-    fields=mapped_column(JSON,nullable=False)
-    has_page_ids=mapped_column(Boolean,nullable=False,default=False)
-    lesson_links=relationship("AttemptAnalysisLesson",cascade="all, delete-orphan",order_by="AttemptAnalysisLesson.link_no")
-    __table_args__=(CheckConstraint("kind IN ('topic','weakness')"),CheckConstraint("entry_no>0"))
-
-    @classmethod
-    def from_value(cls,kind,position,tag,value):
-        row=cls(kind=kind,entry_no=position,topic_tag=tag,has_page_ids="suggested_page_ids" in value,
-                fields={k:deepcopy(v) for k,v in value.items() if k!="suggested_page_ids"})
-        row.lesson_links=[AttemptAnalysisLesson(link_no=i,legacy_lesson_id=page) for i,page in enumerate(value.get("suggested_page_ids") or [],1)]
-        return row
-
-    def as_value(self):
-        value=deepcopy(self.fields)
-        if self.has_page_ids:value["suggested_page_ids"]=[link.legacy_lesson_id for link in self.lesson_links]
-        return value
-
-
-class AttemptAnalysisLesson(Base):
-    __tablename__="attempt_analysis_lesson"
-    attempt_id=mapped_column(BIGINT,primary_key=True)
-    kind=mapped_column(String(10),primary_key=True)
-    entry_no=mapped_column(Integer,primary_key=True)
-    link_no=mapped_column(Integer,primary_key=True)
-    # Old reports can refer to deleted lessons; preserve that historical ID, not a fake FK.
-    legacy_lesson_id=mapped_column(BIGINT,nullable=False)
-    __table_args__=(ForeignKeyConstraint(["attempt_id","kind","entry_no"],
-        ["attempt_analysis.attempt_id","attempt_analysis.kind","attempt_analysis.entry_no"],ondelete="RESTRICT"),CheckConstraint("link_no>0"))
+        return deepcopy(self.response_value)
