@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import Base, engine
 from app.routers import auth, course, media, learning, exam, admin, user, search
-from app.env_detector import should_auto_create_tables
 import logging
 import os
 from fastapi.responses import JSONResponse
@@ -147,23 +146,35 @@ fastapi_app.add_middleware(
 # fastapi_app.add_middleware(JWTAndCSRFMiddleware)
 fastapi_app.state.settings = settings
 
-# auto-detect environment and conditionally create tables
+# Inspect the prepared database without creating tables or migrating live data.
 try:
     from sqlalchemy import inspect
+    from app.models import NORMALIZED_VIEWS
     inspector = inspect(engine)
     if inspector.has_table("exam_templates") and any(
         c["name"] == "question_data" for c in inspector.get_columns("exam_templates")
     ):
-        raise RuntimeError("Legacy database detected. Run the explicit normalization migration before starting this backend.")
-    if should_auto_create_tables():
-        if engine.dialect.name == "postgresql" and not inspector.has_table("easyecon_schema_migration"):
-            raise RuntimeError("Initialize a fresh PostgreSQL database with the explicit normalization migration --action init so assessment guards are installed")
-        logger.info("Auto-creating database tables (Docker)")
-        Base.metadata.create_all(bind=engine)
-    else:
-        logger.info("Skipping table creation (Vercel/Local)")
+        raise RuntimeError("Legacy database detected. Prepare and migrate the database before starting this backend; startup does not migrate data.")
+    missing_tables = set(Base.metadata.tables) - set(inspector.get_table_names())
+    if missing_tables:
+        raise RuntimeError("Database is missing required tables: " + ", ".join(sorted(missing_tables)))
+    missing_columns = []
+    for name, table in Base.metadata.tables.items():
+        existing_columns = {column["name"] for column in inspector.get_columns(name)}
+        missing_columns.extend(name + "." + column for column in set(table.columns.keys()) - existing_columns)
+    if missing_columns:
+        raise RuntimeError("Database is missing required columns: " + ", ".join(sorted(missing_columns)))
+    removed_tables = {"question_asset", "attempt_answer_value", "attempt_analysis", "attempt_analysis_lesson"}
+    unexpected_tables = removed_tables & set(inspector.get_table_names())
+    if unexpected_tables:
+        raise RuntimeError("Archive the superseded compatibility tables after preserving their data: " + ", ".join(sorted(unexpected_tables)))
+    if engine.dialect.name == "postgresql":
+        missing_views = set(NORMALIZED_VIEWS) - set(inspector.get_view_names())
+        if missing_views:
+            raise RuntimeError("Database is missing required views: " + ", ".join(sorted(missing_views)))
+    logger.info("Prepared database schema found; startup does not create database objects")
 except Exception as e:
-    logger.error(f"Error during table creation: {e}")
+    logger.error(f"Error during database schema inspection: {e}")
     if isinstance(e, RuntimeError):
         raise
     # preserve the existing handling of connection errors
