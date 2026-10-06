@@ -5,15 +5,13 @@ from app.schemas.learning import (
     LearningPageStudentResponse,
     LearningPageSummary,
     LearningPageUpdate,
-    MiniQuizResult,
-    MiniQuizSubmit,
     ModuleCreate,
     ModuleResponse,
     ModuleUpdate,
 )
 
 block type support in content_blocks:
-    heading | paragraph | image | video | formula | divider | mini_quiz
+    rich_text_section
 
 formula block data schema:
     {
@@ -29,7 +27,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 # content block
 class ContentBlock(BaseModel):
@@ -45,40 +43,16 @@ class ContentBlock(BaseModel):
       {"id": "b4", "type": "video",     "data": {"url": "...", "caption": "..."}}
       {"id": "b5", "type": "formula",   "data": {"language": "python", "code": "..."}}
       {"id": "b6", "type": "divider",   "data": {}}
-      {"id": "b7", "type": "mini_quiz", "data": {"title": "Quick Check", "questions": [...]}}
     '''
 
     id: str
     type: str
     data: Dict[str, Any] = Field(default_factory=dict)
 
-    @model_validator(mode="after")
-    def mini_quiz_questions_need_explanation(self) -> "ContentBlock":
-        '''
-        mini quiz questions carry a teacher-written explanation, same rule as
-        exam questions: blank or whitespace-only is rejected, naming the
-        question. other block types are untouched.
-        '''
-        if self.type != "mini_quiz":
-            return self
-
-        questions = (self.data or {}).get("questions") or []
-        for index, question in enumerate(questions, start=1):
-            if not isinstance(question, dict):
-                continue
-            explanation = (question.get("explanation") or "").strip()
-            if not explanation:
-                label = question.get("id") or f"#{index}"
-                raise ValueError(
-                    f"Mini quiz question '{label}': an explanation is required. "
-                    "Write your own explanation of the correct answer."
-                )
-            question["explanation"] = explanation
-        return self
 
 
 class ContentBlockRead(BaseModel):
-    """Stored blocks may predate write validation or have quiz answers hidden."""
+    """Stored content block returned to the lesson editor."""
 
     id: str
     type: str
@@ -158,7 +132,6 @@ class LearningPageStudentResponse(BaseModel):
     '''
     page response for student
     - topic_tag is EXCLUDED
-    - correct_answer and explanation stripped from mini_quiz blocks
     '''
     model_config = ConfigDict(from_attributes=True)
 
@@ -166,7 +139,7 @@ class LearningPageStudentResponse(BaseModel):
     module_id: int
     title: str
     template_type: str
-    content_blocks: List[ContentBlockRead]   # answers stripped by router
+    content_blocks: List[ContentBlockRead]
     order_index: int
     preview: Optional[str]
 
@@ -179,34 +152,6 @@ class LearningPageSummary(BaseModel):
     order_index: int
     preview: Optional[str]
     is_published: bool
-
-'''
-mini quiz submission
-'''
-
-class MiniQuizSubmit(BaseModel):
-    '''
-    student submit answer for a mini quiz block on a learning page
-    'answers' will map question id -> student's answer
-    '''
-    learning_page_id: int
-    answers: Dict[str, Any] = Field(
-        ...,
-        description='e.g. {"q1": "A", "q2": "supply"}',
-    )
-
-
-class MiniQuizResult(BaseModel):
-    '''return after grading a mini quiz attempt'''
-
-    model_config = ConfigDict(from_attributes=True)
-
-    latest_score_pct: float
-    best_score_pct: float
-    passed: bool
-    attempt_count: int
-    topic_stats: Dict[str, Any]
-    weakness_report: List[Dict[str, Any]]
 
 # dashboard response for student
 class ChapterInfo(BaseModel):
