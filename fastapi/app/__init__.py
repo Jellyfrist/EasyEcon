@@ -149,14 +149,24 @@ fastapi_app.state.settings = settings
 
 # auto-detect environment and conditionally create tables
 try:
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    if inspector.has_table("exam_templates") and any(
+        c["name"] == "question_data" for c in inspector.get_columns("exam_templates")
+    ):
+        raise RuntimeError("Legacy database detected. Run the explicit normalization migration before starting this backend.")
     if should_auto_create_tables():
+        if engine.dialect.name == "postgresql" and not inspector.has_table("easyecon_schema_migration"):
+            raise RuntimeError("Initialize a fresh PostgreSQL database with the explicit normalization migration --action init so assessment guards are installed")
         logger.info("Auto-creating database tables (Docker)")
         Base.metadata.create_all(bind=engine)
     else:
         logger.info("Skipping table creation (Vercel/Local)")
 except Exception as e:
     logger.error(f"Error during table creation: {e}")
-    # don't fail the app if table creation fails
+    if isinstance(e, RuntimeError):
+        raise
+    # preserve the existing handling of connection errors
 
 # auto-create admin on startup if no admin exists yet
 try:
