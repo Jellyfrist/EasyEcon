@@ -240,3 +240,5 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+# Keep backend tests local
+/fastapi/tests/
