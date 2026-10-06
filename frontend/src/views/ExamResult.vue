@@ -1,5 +1,5 @@
 <template>
-  <FeaturePage class="page">
+  <FeaturePage class="page student-course-page">
     <template #header>
         <EditorHeader title="Exam Result" :back-to="examListRoute" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: examListRoute }, { label: 'Result', to: route.fullPath }]">
             <template #status><p v-if="attempt" class="header-status">Attempt #{{ attempt.id }}</p></template>

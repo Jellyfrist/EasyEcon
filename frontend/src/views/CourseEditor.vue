@@ -136,7 +136,7 @@
                         </div>
                     </div>
                     <h3 class="ce-action-title">Modules</h3>
-                    <p class="ce-action-desc">Ordered lessons with mini quizzes.</p>
+                    <p class="ce-action-desc">Ordered lessons for students to learn at their own pace.</p>
                     <div class="ce-action-footer">
                         <span class="ce-count-pill">{{ store.currentCourse?.module_count ?? 0 }} modules</span>
                         <button

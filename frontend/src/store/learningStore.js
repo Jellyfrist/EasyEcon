@@ -1,4 +1,4 @@
-// manages modules, learning pages, mini quiz attempts, and student progress
+// manages modules, learning pages, and student progress
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -10,7 +10,6 @@ export const useLearningStore = defineStore('learning', () => {
     const modules = ref([])
     const pages = ref([])
     const currentPage = ref(null)
-    const quizResult = ref(null)
     const loading = ref(false)
     const error = ref(null)
 
@@ -214,48 +213,14 @@ export const useLearningStore = defineStore('learning', () => {
         }
     }
 
-    async function submitMiniQuiz(learningPageId, answers) {
-        loading.value = true
-        error.value = null
-        try {
-            const res = await learningService.submitMiniQuiz({
-                learning_page_id: learningPageId,
-                answers,
-            })
-            quizResult.value = res.data
-            return res.data
-        } catch (err) {
-            _setError(err)
-            return null
-        } finally {
-            loading.value = false
-        }
-    }
-
-    async function fetchMyQuizResult(pageId) {
-        loading.value = true
-        error.value = null
-        try {
-            const res = await learningService.getMyQuizResult(pageId)
-            quizResult.value = res.data
-        } catch (err) {
-            if (err?.response?.status !== 404) _setError(err)
-            quizResult.value = null
-        } finally {
-            loading.value = false
-        }
-    }
-
     function clearCurrent() {
         currentPage.value = null
-        quizResult.value = null
     }
 
     function clearAll() {
         modules.value = []
         pages.value = []
         currentPage.value = null
-        quizResult.value = null
         chapterInfo.value = { 
             title: '', 
             description: '', 
@@ -273,7 +238,6 @@ export const useLearningStore = defineStore('learning', () => {
         modules,
         pages,
         currentPage,
-        quizResult,
         chapterInfo,
         dashboardLessons,
         loading,
@@ -292,8 +256,6 @@ export const useLearningStore = defineStore('learning', () => {
         fetchModuleDashboard,
         completePage,
         studyPage,
-        submitMiniQuiz,
-        fetchMyQuizResult,
         clearCurrent,
         clearAll,
     }

@@ -23,61 +23,6 @@
                                 <LessonRichText :html="block.data.html" :omit-leading-title="blockIndex === 0 ? pageData.title : ''" class="html-content" />
                             </div>
 
-                            <div v-else-if="block.type === 'mini_quiz' && hasValidQuiz(block.data)" class="quiz-card">
-
-                                <div class="quiz-header">
-                                    <div class="quiz-icon-box">
-                                        <span class="material-symbols-outlined">quiz</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="quiz-title">{{ block.data.title || 'Mini Quiz' }}</h3>
-                                        <p class="quiz-subtitle">CHECK YOUR UNDERSTANDING</p>
-                                    </div>
-                                </div>
-
-                                <div class="quiz-body">
-                                    <div v-for="(q, qIndex) in block.data.questions" :key="q.id || qIndex" class="question-block">
-                                        <p class="question-text"><strong>Q{{ qIndex + 1 }}:</strong> {{ q.text }}</p>
-
-                                        <div class="options-list">
-                                            <label v-for="(opt, optIndex) in q.options" :key="optIndex" class="option-label" :class="{
-                              selected: studentAnswers[q.id] === optIndex && !isQuizSubmitted,
-                              correct: isQuizSubmitted && optIndex === q.correct_index,
-                              wrong: isQuizSubmitted && studentAnswers[q.id] === optIndex && optIndex !== q.correct_index,
-                              disabled: isQuizSubmitted
-                            }">
-                            <input
-                              type="radio"
-                              :name="'quiz_' + q.id"
-                              :value="optIndex"
-                              v-model="studentAnswers[q.id]"
-                              :disabled="isQuizSubmitted"
-                            >
-                            <span class="option-text">{{ opt }}</span>
-                            <span v-if="isQuizSubmitted && optIndex === q.correct_index" class="material-symbols-outlined icon-check">check_circle</span>
-                            <span v-if="isQuizSubmitted && studentAnswers[q.id] === optIndex && optIndex !== q.correct_index" class="material-symbols-outlined icon-wrong">cancel</span>
-                          </label>
-                                        </div>
-
-                                        <div v-if="isQuizSubmitted && q.explanation" class="explanation-box">
-                                            <strong>Explanation:</strong> {{ q.explanation }}
-                                        </div>
-                                    </div>
-
-                                    <div class="quiz-footer">
-                                        <p v-if="isQuizSubmitted" class="feedback-text" :class="calculateScore(block.data.questions) === block.data.questions.length ? 'text-green' : 'text-amber'">
-                                            {{ calculateScore(block.data.questions) === block.data.questions.length ? 'Perfect score!' : `Score: ${calculateScore(block.data.questions)} / ${block.data.questions.length}` }}
-                                        </p>
-                                        <p v-else class="feedback-text text-muted">Please select an answer for every question.</p>
-
-                                        <button @click="submitQuiz(block.data.questions)" class="submit-btn" :disabled="isQuizSubmitted || Object.keys(studentAnswers).length !== block.data.questions.length">
-                          {{ isQuizSubmitted ? 'Submitted' : 'Submit Answer' }}
-                        </button>
-                                    </div>
-
-                                </div>
-                            </div>
-
                         </div>
                         <button v-if="!isLastPage" class="up-next" @click="handleNext">
                             <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
@@ -138,24 +83,6 @@ const dashboardData = ref(null);
 const timeSpent = ref(0);
 let timer = null;
 
-/* mini quiz state */
-const studentAnswers = ref({});
-const isQuizSubmitted = ref(false);
-
-const hasValidQuiz = (data) => {
-    if (!data) return false;
-    if (data.questions && Array.isArray(data.questions)) return data.questions.length > 0;
-    return false;
-};
-
-const calculateScore = (questions) => {
-    let score = 0;
-    questions.forEach(q => {
-        if (studentAnswers.value[q.id] === q.correct_index) score++;
-    });
-    return score;
-};
-
 const currentIndex = computed(() => {
     if (!dashboardData.value || !dashboardData.value.pages) return 0;
     return dashboardData.value.pages.findIndex(p => p.id == pageId.value);
@@ -183,22 +110,10 @@ const loadSidebarData = async () => {
 
 const loadLesson = async (pId) => {
     pageData.value = null;
-    studentAnswers.value = {};
-    isQuizSubmitted.value = false;
 
     try {
         const res = await learningService.studyPage(pId);
         pageData.value = res.data;
-
-        try {
-            const quizRes = await learningService.getMyQuizResult(pId);
-            if (quizRes && quizRes.data && quizRes.data.answers) {
-                studentAnswers.value = quizRes.data.answers;
-                isQuizSubmitted.value = true;
-            }
-        } catch (e) {
-            console.log("No previous quiz data for this page.");
-        }
 
         timeSpent.value = 0;
         if (timer) clearInterval(timer);
@@ -209,16 +124,6 @@ const loadLesson = async (pId) => {
 
     } catch (err) {
         console.error("Failed to load lesson data", err);
-    }
-};
-
-const submitQuiz = async (questions) => {
-    isQuizSubmitted.value = true;
-    try {
-        await learningStore.submitMiniQuiz(pageId.value, studentAnswers.value);
-        await loadSidebarData();
-    } catch (error) {
-        console.warn("Failed to save quiz result:", error);
     }
 };
 
@@ -326,233 +231,6 @@ const handleNext = async () => {
 .lesson-title { font-size: 1.8rem; font-weight: 400; line-height: 1.4; margin: 0 0 24px; overflow-wrap: anywhere; }
 
 /* =====================================================
-   Quiz Card
-   ===================================================== */
-
-.quiz-card {
-    background: var(--surface);
-    border: 1.5px solid var(--theme-border-fce4ec);
-    border-radius: 20px;
-    padding: var(--feature-gutter);
-    margin-top: 3rem;
-    box-shadow: 0 8px 24px rgba(223, 74, 125, 0.06);
-}
-
-.quiz-header {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--theme-border-f3f4f6);
-}
-
-.quiz-icon-box {
-    width: 56px;
-    height: 56px;
-    background: var(--theme-bg-fce4ec);
-    color: var(--theme-fg-df4a7d);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.quiz-icon-box .material-symbols-outlined {
-    font-size: 30px;
-}
-
-.quiz-title {
-    margin: 0 0 6px;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--theme-fg-111827);
-}
-
-.quiz-subtitle {
-    margin: 0;
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--theme-fg-9ca3af);
-    letter-spacing: 0.08em;
-}
-
-/* questions */
-
-.question-block {
-    margin-bottom: 2.5rem;
-}
-
-.question-text {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--theme-fg-1f2937);
-    margin-bottom: 1.25rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-.options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.option-label {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
-    border: 1.5px solid var(--theme-border-e5e7eb);
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: var(--surface);
-}
-
-.option-label:hover:not(.disabled) {
-    border-color: var(--theme-border-ffc7db);
-    background: var(--theme-bg-fffafb);
-    transform: translateX(4px);
-}
-
-.option-label.selected {
-    border-color: #df4a7d;
-    background: var(--theme-bg-fff0f5);
-    box-shadow: 0 4px 12px rgba(223, 74, 125, 0.1);
-}
-
-.option-label.correct {
-    border-color: #10b981;
-    background: var(--theme-bg-dcfce7);
-    color: var(--theme-fg-065f46);
-    font-weight: 700;
-}
-
-.option-label.wrong {
-    border-color: var(--theme-border-ef4444);
-    background: var(--theme-bg-fee2e2);
-    color: var(--theme-fg-991b1b);
-}
-
-.option-label.disabled {
-    cursor: default;
-}
-
-.option-text {
-    flex: 1;
-    font-size: 1.05rem;
-}
-
-.icon-check {
-    color: var(--theme-fg-10b981);
-    font-size: 24px;
-}
-
-.icon-wrong {
-    color: var(--theme-fg-ef4444);
-    font-size: 24px;
-}
-
-input[type="radio"] {
-    width: 20px;
-    height: 20px;
-    accent-color: #df4a7d;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.disabled input[type="radio"] {
-    cursor: default;
-}
-
-/* explanation */
-
-.explanation-box {
-    margin-top: 16px;
-    padding: 16px 20px;
-    background: var(--theme-bg-dcfce7);
-    border-left: 4px solid #10b981;
-    border-radius: 0 12px 12px 0;
-    font-size: 0.95rem;
-    color: var(--theme-fg-065f46);
-    line-height: 1.6;
-    white-space: pre-wrap;
-    animation: slideDown 0.25s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* quiz footer */
-
-.quiz-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--theme-border-f3f4f6);
-    gap: 1rem;
-}
-
-.feedback-text {
-    font-size: 1.05rem;
-    font-weight: 800;
-    margin: 0;
-}
-
-.text-muted {
-    color: var(--theme-fg-9ca3af);
-}
-
-.text-green {
-    color: var(--theme-fg-10b981);
-}
-
-.text-amber {
-    color: var(--theme-fg-f59e0b);
-}
-
-.submit-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--primary-pink);
-    color: white;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 99px;
-    font-weight: 800;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(223, 74, 125, 0.25);
-    font-family: inherit;
-}
-
-.submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(223, 74, 125, 0.35);
-}
-
-.submit-btn:disabled {
-    background: var(--theme-bg-d1d5db);
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* =====================================================
    Bottom Navigation
    ===================================================== */
 
@@ -656,9 +334,6 @@ input[type="radio"] {
     .bottom-nav { grid-row: 3; padding-inline: 12px; }
     .study-container { padding: 24px 20px 40px; }
 
-    .quiz-card { padding: 20px; }
-    .quiz-footer { flex-direction: column; align-items: stretch; }
-    .submit-btn { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
     .main-content { scroll-behavior: auto; }

@@ -1,10 +1,10 @@
 <template>
-    <FeaturePage class="ml-root">
+    <FeaturePage class="ml-root student-course-page">
     <template #navigation><CourseNavigation :course-id="courseId" current="modules" /></template>
+
         <EditorHeader inline class="modules-page-heading" title="Modules" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Course', to: { name: 'Courses', params: { courseId: courseId } } }, { label: 'Modules', to: route.fullPath }]" />
 
         <div class="ml-container">
-
             <div class="ml-body">
 
                 <div v-if="loading" class="ml-state">
@@ -76,11 +76,11 @@ const modules = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// accent bar colors using the brand palette
+// Accent colors follow the established module-card treatment.
 const barColors = [
-    '#df4a7d', // Pink
-    '#059669', // Emerald Green
-    '#ea580c', // Orange
+    '#df4a7d',
+    '#059669',
+    '#ea580c',
     '#df4a7d',
     '#059669',
     '#ea580c',
@@ -124,14 +124,16 @@ const goToLesson = moduleId => {
 </script>
 
 <style scoped>
-.modules-page-heading { position: static; }
+.modules-page-heading {
+    position: static;
+    background: transparent;
+}
 
 /* =====================================================
  Root Layout & Background
  ===================================================== */
 
 .ml-container {
-
     margin: 0 auto;
 }
 
@@ -269,7 +271,7 @@ const goToLesson = moduleId => {
 
 .ml-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
 }
 

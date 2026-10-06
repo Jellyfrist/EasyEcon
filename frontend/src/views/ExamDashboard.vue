@@ -1,7 +1,7 @@
 <template>
-    <FeaturePage class="dashboard">
+    <FeaturePage class="dashboard student-course-page">
     <template #navigation><CourseNavigation :course-id="courseId" current="exams" /></template>
-        <EditorHeader inline class="exam-page-heading" title="Exams"
+        <EditorHeader inline class="exams-page-heading" title="Exams"
             :breadcrumbs="[
                 { label: 'Courses', to: { name: 'Dashboard' } },
                 { label: 'Course', to: { name: 'Courses', params: { courseId } } },
@@ -256,6 +256,11 @@ function viewResult(session) {
 </script>
 
 <style scoped>
+.exams-page-heading {
+    position: static;
+    background: transparent;
+}
+
 /* ── Dashboard wrapper ── */
 
 /* ── Page Card (header + filter combined) ── */
@@ -749,5 +754,4 @@ function viewResult(session) {
 .exam-start-actions button { min-height: 40px; border-radius: 8px; }
 .exam-start-actions .btn-primary { background: var(--primary-pink); }
 .exam-start-dialog button:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 3px; }
-.dashboard :deep(.exam-page-heading) { position: static; margin-bottom: 16px; }
 </style>

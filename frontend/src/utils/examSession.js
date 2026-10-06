@@ -1,4 +1,4 @@
-// Keep the existing ExamSessionCreate payload used by the launch page.
+// Keep the existing ExamSessionCreate payload used when publishing an exam to students.
 export function buildSessionPayload(templateId, form, defaultTitle = '') {
     const payload = {
         template_id: Number(templateId),

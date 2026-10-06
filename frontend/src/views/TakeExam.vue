@@ -1,5 +1,5 @@
 <template>
-    <FeaturePage class="exam-page">
+    <FeaturePage class="exam-page student-course-page">
     <template #header>
         <EditorHeader v-if="session" class="top-bar" :title="session?.title || 'Exam'" :back-to="examListRoute" :breadcrumbs="[{ label: 'Courses', to: { name: 'Dashboard' } }, { label: 'Exams', to: examListRoute }, { label: 'Take Exam', to: route.fullPath }]"><template #status><div class="progress-track-container">
             <div class="progress-track" role="progressbar" aria-label="Exam progress" :aria-valuenow="answeredCount" :aria-valuemax="session.questions.length" aria-valuemin="0">

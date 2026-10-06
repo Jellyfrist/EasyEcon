@@ -49,12 +49,11 @@ const examService = {
 
     
     /*
-        teacher: exam sessions
-        - POST   /exam/sessions/{session_id}            launch a session from a template
+        teacher: publish the current template snapshot as a student-facing session
+        - POST   /exam/sessions
         - GET    /exam/sessions/{session_id}/results    view all student results for a session
     */
 
-    // launch a session from a template
     launchSession(data) {
         // data: { template_id, title, instructions, available_from, available_until, ... }
         return api.post('/exam/sessions', data)

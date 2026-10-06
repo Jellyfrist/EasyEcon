@@ -72,7 +72,7 @@
                       <div class="cd-b-text">
                         <span class="cd-b-tag">LEARN</span>
                         <h3 class="cd-b-title">Modules</h3>
-                        <p class="cd-b-desc">Work through ordered lessons with mini quizzes to test your understanding. <span class="dot">•</span> {{ store.currentCourse.module_count ?? 0 }} available</p>
+                        <p class="cd-b-desc">Work through ordered lessons to build your understanding. <span class="dot">•</span> {{ store.currentCourse.module_count ?? 0 }} available</p>
                       </div>
                     </div>
                     <div class="cd-banner-right">

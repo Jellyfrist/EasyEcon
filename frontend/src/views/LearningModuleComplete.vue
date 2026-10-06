@@ -1,5 +1,5 @@
 <template>
-    <FeaturePage class="module-result-page" fluid>
+    <FeaturePage class="module-result-page student-course-page" fluid>
         <template #header>
             <EditorHeader title="Module Complete"
                 :back-to="{ name: 'ModulesList', params: { courseId } }"
@@ -18,32 +18,19 @@
 
             <div v-if="isLoading" class="loading-state">
                 <div class="spinner"></div>
-                <p>Calculating your score...</p>
+                <p>Finishing your module...</p>
             </div>
 
             <div v-else class="result-card">
                 <div class="icon-confetti">🎉</div>
                 <h1 class="result-title">Module Complete!</h1>
-                <p class="result-desc">You have successfully studied all lessons and completed the quizzes in this module.</p>
-
-                <!-- <div class="score-circle">
-              <div class="circle-chart" :style="{ background: `conic-gradient(#df4a7d ${accuracy}%, #fce4ec 0)` }">
-                <div class="circle-inner">
-                  <h1 class="score-text">{{ totalScore }}/{{ maxScore }}</h1>
-                  <span class="score-label">TOTAL SCORE</span>
-                </div>
-              </div>
-            </div> -->
+                <p class="result-desc">You have successfully studied all lessons in this module.</p>
 
                 <div class="stats-row">
                     <div class="stat-box">
                         <span class="stat-title"><span class="material-symbols-outlined text-sm">schedule</span> Time Spent</span>
                         <strong class="stat-value">{{ formattedTime }}</strong>
                     </div>
-                    <!-- <div class="stat-box">
-                <span class="stat-title"><span class="material-symbols-outlined text-sm">ads_click</span> Accuracy</span>
-                <strong class="stat-value">{{ accuracy }}%</strong>
-              </div> -->
                 </div>
 
                 <div class="action-buttons">
@@ -85,7 +72,6 @@ import EditorHeader from '@/components/EditorHeader.vue';
 import LearningLessonSidebar from '@/components/LearningLessonSidebar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import learningService from '@/services/learningService';
 import { useLearningStore } from '@/store/learningStore';
 
 const route = useRoute();
@@ -97,10 +83,6 @@ const moduleId = computed(() => route.params.moduleId);
 
 const dashboardData = ref(null);
 const isLoading = ref(true);
-
-const totalScore = ref(0);
-const maxScore = ref(0);
-const accuracy = ref(0);
 
 const rawTimeSeconds = ref(0);
 const formattedTime = computed(() => {
@@ -114,10 +96,6 @@ onMounted(async () => {
 
     rawTimeSeconds.value = route.query.time ? parseInt(route.query.time, 10) : 0;
 
-    totalScore.value = 0;
-    maxScore.value = 0;
-    accuracy.value = 0;
-
     try {
         const [resDashboard, resModules] = await Promise.all([
             learningStore.fetchModuleDashboard(moduleId.value),
@@ -130,32 +108,6 @@ onMounted(async () => {
                 pages: resDashboard.lessons
             };
 
-            let accumulatedScore = 0;
-            let accumulatedMax = 0;
-
-            const quizPromises = resDashboard.lessons.map(lesson =>
-                learningService.getMyQuizResult(lesson.id).catch(() => null)
-            );
-
-            const quizResults = await Promise.all(quizPromises);
-
-            quizResults.forEach((quizRes) => {
-                const result = quizRes ?.data || quizRes;
-
-                if (result && result.total_points > 0) {
-                    accumulatedScore += Number(result.score || 0);
-                    accumulatedMax += Number(result.total_points || 0);
-                }
-            });
-
-            totalScore.value = accumulatedScore;
-            maxScore.value = accumulatedMax;
-
-            if (accumulatedMax > 0) {
-                accuracy.value = Math.round((accumulatedScore / accumulatedMax) * 100);
-            } else {
-                accuracy.value = 100;
-            }
         }
     } catch (error) {
         console.error("Calculation Error:", error);
@@ -284,56 +236,6 @@ const reviewLessons = () => {
     font-size: 1.05rem;
     margin-bottom: 3rem;
     line-height: 1.6;
-}
-
-/* Score Circle */
-
-.score-circle {
-    display: flex;
-    justify-content: center;
-    margin: 0 0 3rem 0;
-}
-
-.circle-chart {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 1s ease-out;
-    box-shadow: 0 8px 25px rgba(223, 74, 125, 0.15);
-    /* เงาสีชมพู */
-}
-
-.circle-inner {
-    width: 160px;
-    height: 160px;
-    background: var(--surface);
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.02);
-}
-
-.score-text {
-    color: var(--theme-fg-df4a7d) !important;
-    font-size: 3.5rem !important;
-    margin: 0 !important;
-    font-weight: 900 !important;
-    line-height: 1;
-    letter-spacing: -2px;
-}
-
-.score-label {
-    color: var(--theme-fg-9ca3af);
-    font-size: 0.8rem;
-    margin-top: 8px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 /* Stats Row */
@@ -473,17 +375,6 @@ const reviewLessons = () => {
     background: var(--surface);
     text-align: center;
 }
-    .circle-chart {
-        width: 160px;
-        height: 160px;
-    }
-    .circle-inner {
-        width: 128px;
-        height: 128px;
-    }
-    .score-text {
-        font-size: 2.5rem !important;
-    }
 }
 .module-result-page :deep(.feature-body) {
     display: grid;

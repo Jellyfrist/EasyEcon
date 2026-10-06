@@ -249,21 +249,6 @@ const routes = [
     }
   },
 
-  // teacher - dashboard - session: launches ExamSession  (snapshot frozen at launch)
-  // API: POST /exam/sessions
-  {
-    path: '/teacher/exam/launch/:templateId',
-    name: 'TeacherExamLaunch',
-    component: () => import('@/views/ExamLaunch.vue'),
-    meta: {
-      showNavbar: true,
-      showFooter: true,
-      requiresAuth: true,
-      requiresTeacher: true,
-      title: 'Launch Exam'
-    }
-  },
-
   // teacher - dashboard - session - overviews: view all student results for a session.
   // API: GET /exam/sessions/:sessionId/results
   {
@@ -380,7 +365,7 @@ const routes = [
   {
     path: '/student/courses/:courseId/modules/:moduleId',
     name: 'LearningMiniquizPoint',
-    component: () => import('@/views/LearningMiniquizPoint.vue'),
+    component: () => import('@/views/LearningModuleComplete.vue'),
     meta: {
       showNavbar: true,
       showFooter: true,

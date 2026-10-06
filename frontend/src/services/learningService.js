@@ -49,14 +49,6 @@ const learningService = {
 
     completePage(pageId) {
         return api.post(`/learning/pages/${pageId}/complete`)
-    },
-
-    submitMiniQuiz(data) {
-        return api.post('/learning/pages/mini-quiz', data)
-    },
-
-    getMyQuizResult(pageId) {
-        return api.get(`/learning/pages/${pageId}/my-quiz`)
     }
 }
 

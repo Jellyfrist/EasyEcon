@@ -48,6 +48,8 @@
 
     </div>
 
+    <div v-if="error" class="error-banner" role="alert">{{ error }}</div>
+
     <!-- Stats Bar -->
     <div class="stats-bar">
       <div class="stat-card">
@@ -105,18 +107,16 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             <button
-              class="icon-btn"
-              :title="exam.is_published ? 'Unpublish' : 'Publish'"
-              @click="togglePublish(exam)"
+              v-if="!exam.is_published"
+              class="btn-publish"
+              :disabled="publishingExamId === exam.id"
+              @click="publishExam(exam)"
             >
-              <svg v-if="!exam.is_published" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <svg v-if="publishingExamId !== exam.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5v14"/></svg>
+              {{ publishingExamId === exam.id ? 'Publishing…' : 'Publish' }}
             </button>
             <button class="icon-btn danger" title="ลบ" @click="confirmDelete(exam)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </button>
-            <button class="btn-primary" @click="launchExam(exam)">
-              Launch Exam
             </button>
           </div>
         </div>
@@ -151,6 +151,7 @@ import FeaturePage from '@/components/FeaturePage.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import examService from '@/services/examService'
+import { buildSessionPayload } from '@/utils/examSession'
 
 const router = useRouter()
 const route = useRoute()
@@ -164,6 +165,7 @@ const showDeleteModal = ref(false)
 const deletingExam = ref(null)
 const isLoading = ref(false)
 const isDeleting = ref(false)
+const publishingExamId = ref(null)
 const error = ref(null)
 
 const examTypeLabels = {
@@ -219,22 +221,31 @@ function editExam(exam) {
   router.push({ name: 'ExamEditor', params: { courseId: courseId.value, templateId: exam.id } })
 }
 
-function launchExam(exam) {
-  router.push({ name: 'TeacherExamLaunch', params: { templateId: exam.id } })
-}
-
 // --- Actions ---
-async function togglePublish(exam) {
-  const original = exam.is_published
+async function publishExam(exam) {
+  if (publishingExamId.value !== null) return
+  publishingExamId.value = exam.id
+  error.value = null
   const idx = exams.value.findIndex(e => e.id === exam.id)
-  if (idx !== -1) exams.value[idx].is_published = !original
 
   try {
-    await examService.updateTemplate(exam.id, { is_published: !original })
+    await examService.updateTemplate(exam.id, { is_published: true })
+    await examService.launchSession(buildSessionPayload(exam.id, {
+      title: exam.title,
+      max_attempts: 1,
+    }))
+    if (idx !== -1) exams.value[idx].is_published = true
   } catch (err) {
-    console.error('Failed to toggle publish', err)
-    if (idx !== -1) exams.value[idx].is_published = original
-    error.value = 'Cannot save update, please try again.'
+    console.error('Failed to publish exam', err)
+    if (idx !== -1) exams.value[idx].is_published = false
+    try {
+      await examService.updateTemplate(exam.id, { is_published: false })
+    } catch (rollbackError) {
+      console.error('Failed to revert exam publication', rollbackError)
+    }
+    error.value = err?.response?.data?.detail ?? 'Could not publish this exam for students. Please try again.'
+  } finally {
+    publishingExamId.value = null
   }
 }
 
@@ -268,6 +279,16 @@ async function deleteExam() {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(237, 64, 129, 0.22);
+}
+
+.error-banner {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--theme-border-fca5a5);
+  border-radius: var(--radius-md);
+  background: var(--theme-bg-fef2f2);
+  color: var(--theme-fg-dc2626);
+  font-size: 0.84rem;
 }
 
 /* ── Header ── */
@@ -569,6 +590,24 @@ async function deleteExam() {
 .status-badge.draft { background: var(--gray-light);  color: var(--text-muted); }
 
 .action-buttons { display: flex; gap: 6px; }
+
+.btn-publish {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary-pink);
+  color: var(--white);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-publish:disabled { opacity: 0.65; cursor: wait; }
 
 .icon-btn {
   width: 34px;

@@ -33,6 +33,23 @@ onUnmounted(() => observer?.disconnect())
   min-height: calc(100dvh - 64px);
   font-family: inherit;
 }
+.feature-page.student-course-page { background: var(--gray-light); }
+.feature-page.student-course-page .student-section-hero {
+  position: static;
+  width: 100%;
+  margin: 0 0 20px;
+  padding: 0 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--card-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-main);
+  box-shadow: none;
+}
+.feature-page.student-course-page .student-section-hero .topbar-title { color: var(--text-main); font-size: 1.5rem; }
+.feature-page.student-course-page .student-section-hero .topbar-breadcrumb :is(.crumb-link, .crumb-current) { color: var(--text-muted); }
+.feature-page.student-course-page .student-section-hero .topbar-breadcrumb .crumb-link:hover { color: var(--primary-pink); }
+.feature-page.student-course-page .student-section-hero .crumb-sep { color: var(--text-muted); }
 .feature-body {
   width: 100%;
   max-width: var(--feature-width);
@@ -93,5 +110,7 @@ onUnmounted(() => observer?.disconnect())
   .feature-page-fluid .feature-body { padding: 0; }
   .feature-workspace { grid-template-columns: minmax(0, 1fr); }
   .feature-workspace:has(> .navigation-collapsed) { --course-navigation-width: 72px; grid-template-columns: 72px minmax(0, 1fr); }
+  .feature-page.student-course-page .student-section-hero { margin-bottom: 16px; padding-bottom: 12px; }
+  .feature-page.student-course-page .student-section-hero .topbar-title { font-size: 1.3rem; }
 }
 </style>
