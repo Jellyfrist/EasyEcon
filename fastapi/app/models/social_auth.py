@@ -14,6 +14,7 @@ from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+from .user import BIGINT
 
 '''
 A foreign key (FK) is a column or a set of columns in one database table
@@ -28,7 +29,7 @@ class SocialAuth(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key = True, index = True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable = False, index = True
+        BIGINT, ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable = False, index = True
     )
 
     # google / github

@@ -1,70 +1,50 @@
-'''
-course = a subject created by a teacher e.g. Economics in Everyday Life
-
-top level container
-teachers can attach two kinds of content directly to a course:
-- module = ordered lessons (learning gage with mini quiz)
-- exam template = past midterm / final exam question banks
-
-hierarchy:
-  course
-    ├── module = LearningPage (lessons + mini quiz)
-    └── exam template = ExamSession -> ExamAttempt (past exams)
-'''
-
 from __future__ import annotations
-
 from datetime import datetime, timezone
-from typing import List, TYPE_CHECKING
-
-from sqlalchemy import ForeignKey, Integer, String, Text, TIMESTAMP
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy import BigInteger, Integer, Identity, String, Text, Boolean, DateTime, ForeignKeyConstraint, Index
+from sqlalchemy.orm import mapped_column, relationship, synonym
+from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-if TYPE_CHECKING:
-    from .user import User
-    from .module import Module
-    from .exam_template import ExamTemplate
+BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
-UTC = timezone.utc
+def now_utc():
+    return datetime.now(timezone.utc)
+
 
 class Course(Base):
-    __tablename__ = "courses"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    teacher_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False, index=True
+    __tablename__ = 'course'
+    id = mapped_column('course_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    course_id = synonym('id')
+    teacher_id = mapped_column('owner_teacher_id', BIGINT, nullable=False)
+    owner_teacher_id = synonym('teacher_id')
+    title = mapped_column('title', String(50), nullable=False)
+    _description = mapped_column('description', Text, nullable=False, default='')
+    created_at = mapped_column('created_at', DateTime(timezone=True), nullable=False, default=now_utc)
+    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=False, default=now_utc, onupdate=now_utc)
+    __table_args__ = (
+        ForeignKeyConstraint(['owner_teacher_id'], ['app_user.user_id'], ondelete='RESTRICT'),
+        Index('course_owner_idx','owner_teacher_id'),
     )
 
-    title: Mapped[str] = mapped_column(String(50), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=True)
+    description_was_null = mapped_column(Boolean, nullable=False, default=True)
+    teacher = relationship("User", back_populates="courses", foreign_keys=[teacher_id])
+    modules = relationship("Module", back_populates="course", cascade="all, delete-orphan")
+    topics = relationship("Topic", cascade="all, delete-orphan")
+    all_exams = relationship("ExamTemplate", back_populates="course", cascade="all, delete-orphan")
 
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP,
-        nullable=False,
-        default=lambda: datetime.now(UTC)
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP,
-        nullable=False,
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC)
-    )
+    @property
+    def exam_templates(self):
+        return [exam for exam in self.all_exams if exam.source_template_id is None]
 
-    '''
-    relationships
-    '''
+    @hybrid_property
+    def description(self):
+        return None if self.description_was_null else self._description
 
-    teacher: Mapped["User"] = relationship(back_populates="courses")
+    @description.setter
+    def description(self, value):
+        self.description_was_null = value is None
+        self._description = value if value is not None else ""
 
-    modules: Mapped[List["Module"]] = relationship(
-        back_populates="course", cascade="all, delete-orphan"
-    )
-
-    exam_templates: Mapped[List["ExamTemplate"]] = relationship(
-        back_populates="course", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self) -> str:
-        return f"<Course(id={self.id}, title='{self.title}')>"
+    @description.expression
+    def description(cls):
+        return cls._description

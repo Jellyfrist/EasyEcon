@@ -1,102 +1,79 @@
-'''
-user.py = every person in system
-
-3 roles
-- student = self-register via email/password OR Google/GitHub SSO
-- teacher = created by an admin (username + password only)
-- admin = seed manually or promote by another admin
-
-password is hash by bcrypt
-
-have csrf protection
-'''
-
 from __future__ import annotations
-
 from datetime import datetime, timezone
-from typing import List, Optional, TYPE_CHECKING
-
-from sqlalchemy import Boolean, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+import uuid
+from sqlalchemy import BigInteger, Integer, Identity, String, Boolean, DateTime, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
+from sqlalchemy.orm import mapped_column, relationship, synonym
+from sqlalchemy.ext.hybrid import hybrid_property
 from app.db import Base
 
-UTC = timezone.utc
+BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
-if TYPE_CHECKING:
-    from .social_auth import SocialAuth
-    from .course import Course
-    from .learning_page import LearningPage
-    from .best_attempt import BestAttempt
-    from .exam_attempt import ExamAttempt
-    from .exam_session import ExamSession
-    from .exam_template import ExamTemplate
-    from .page_progress import PageProgress
+def now_utc():
+    return datetime.now(timezone.utc)
+
 
 class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key = True, index = True)
-    username: Mapped[str] = mapped_column(String(50), unique = True, index = True, nullable = False)
-    
-    email: Mapped[str] = mapped_column(String(100), unique = True, index = True, nullable = False)
-    hashed_password: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable = True,
-        # nullable = True because when user authenticates via SSO
+    __tablename__ = 'app_user'
+    id = mapped_column('user_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    user_id = synonym('id')
+    username = mapped_column('username', String(80), nullable=False)
+    email = mapped_column('email', String(254), nullable=False)
+    display_name = mapped_column('display_name', String(120), nullable=False)
+    role = mapped_column('role', String(10), nullable=False, default="student")
+    account_status = mapped_column('account_status', String(12), nullable=False, default="active")
+    auth_subject_id = mapped_column('auth_subject_id', String(120), nullable=False, default=lambda: str(uuid.uuid4()))
+    created_at = mapped_column('created_at', DateTime(timezone=True), nullable=False, default=now_utc)
+    updated_at = mapped_column('updated_at', DateTime(timezone=True), nullable=False, default=now_utc, onupdate=now_utc)
+    __table_args__ = (
+        UniqueConstraint('username'),
+        UniqueConstraint('email'),
+        UniqueConstraint('auth_subject_id'),
+        CheckConstraint("role IN ('admin','teacher','student')"),
+        CheckConstraint("account_status IN ('active','inactive')"),
     )
 
-    # role: student / teacher / admin
-    role: Mapped[str] = mapped_column(String(20), default = "student", nullable = False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default = True)
+    hashed_password = mapped_column(String(255), nullable=True)
+    full_name = mapped_column(String(100), nullable=True)
+    email_sent = mapped_column(Boolean, default=False, nullable=False)
+    is_verified = mapped_column(Boolean, default=False, nullable=False)
+    verification_token = mapped_column(String(255), nullable=True)
+    social_accounts = relationship("SocialAuth", back_populates="user", cascade="all, delete-orphan")
+    courses = relationship("Course", back_populates="teacher")
+    created_pages = relationship("LearningPage", foreign_keys="LearningPage.created_by_user_id", back_populates="creator")
+    exam_templates = relationship("ExamTemplate", foreign_keys="ExamTemplate.created_by_user_id", back_populates="creator")
+    launched_sessions = relationship("ExamSession", back_populates="launched_by")
+    progress_records = relationship("PageProgress", back_populates="student", cascade="all, delete-orphan")
+    exam_attempts = relationship("ExamAttempt", back_populates="student")
 
-    # profile
-    full_name: Mapped[Optional[str]] = mapped_column(String(100), nullable = True)
+    @hybrid_property
+    def is_active(self):
+        return self.account_status == "active"
 
-    # teacher account tracking
-    email_sent: Mapped[bool] = mapped_column(Boolean, default = False)
+    @is_active.setter
+    def is_active(self, value):
+        self.account_status = "active" if value else "inactive"
 
-    #vertify mail
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verification_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    @is_active.expression
+    def is_active(cls):
+        return cls.account_status == "active"
 
-    '''
-    relationship
-    '''
 
-    # SSO login (Google / GitHub)
-    social_accounts: Mapped[List["SocialAuth"]] = relationship(
-        back_populates = "user", cascade = "all, delete-orphan"
+class TeacherInvitation(Base):
+    __tablename__ = 'teacher_invitation'
+    id = mapped_column('invitation_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    invitation_id = synonym('id')
+    invited_user_id = mapped_column('invited_user_id', BIGINT, nullable=False)
+    invited_by_admin_id = mapped_column('invited_by_admin_id', BIGINT, nullable=False)
+    recipient_name = mapped_column('recipient_name', String(120), nullable=False)
+    recipient_email = mapped_column('recipient_email', String(254), nullable=False)
+    delivery_status = mapped_column('delivery_status', String(10), nullable=False, default="pending")
+    created_at = mapped_column('created_at', DateTime(timezone=True), nullable=False, default=now_utc)
+    last_sent_at = mapped_column('last_sent_at', DateTime(timezone=True), nullable=True)
+    send_count = mapped_column('send_count', Integer, nullable=False, default=0)
+    __table_args__ = (
+        ForeignKeyConstraint(['invited_user_id'], ['app_user.user_id'], ondelete='RESTRICT'),
+        ForeignKeyConstraint(['invited_by_admin_id'], ['app_user.user_id'], ondelete='RESTRICT'),
+        CheckConstraint("delivery_status IN ('pending','sent','failed')"),
+        CheckConstraint('send_count >= 0'),
+        Index('invitation_recipient_idx', 'invited_user_id'),
     )
-
-    # teacher: create course, learning page, exam, launch session
-    courses: Mapped[List["Course"]] = relationship(back_populates = "teacher")
-    created_pages: Mapped[List["LearningPage"]] = relationship(
-        back_populates = "creator",
-        foreign_keys = "LearningPage.created_by_user_id",
-    )
-    exam_templates: Mapped[List["ExamTemplate"]] = relationship(
-        back_populates = "creator",
-        foreign_keys = "ExamTemplate.created_by_user_id",
-    )
-    launched_sessions: Mapped[List["ExamSession"]] = relationship(
-        back_populates = "launched_by",
-        foreign_keys = "ExamSession.launched_by_user_id",
-    )
-
-    progress_records: Mapped[List["PageProgress"]] = relationship(
-        back_populates="student",
-        foreign_keys="PageProgress.student_id"
-    )
-
-    # student: mini quiz attempts, best mini quiz attempt, exam attempts
-    best_attempt: Mapped[List["BestAttempt"]] = relationship(
-        back_populates="student",
-        foreign_keys="BestAttempt.student_id",
-    )
-    exam_attempts: Mapped[List["ExamAttempt"]] = relationship(
-        back_populates="student",
-        foreign_keys="ExamAttempt.student_id",
-    )
-
-    def __repr__(self) -> str:
-        return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"

@@ -1,123 +1,103 @@
-'''
-exam attempt = a student's single submission for an exam session
-
-stores:
-    - raw answers keyed by question ID
-    - auto-graded score and pass/fail
-    - percentile rank among all attempts for this session
-
-percentile helpers (no extra columns, nothing written to the DB):
-    ExamAttempt.percentile_of(score, population, method=...)   pure math
-    ExamAttempt.collect_scores(db, session_id=/template_id=)   reference group
-    ExamAttempt.score_report(db, score, ...)                   rank one score
-    ExamAttempt.student_percentile(db, student_id, ...)        one user vs all
-    ExamAttempt.leaderboard(db, ...)                           everyone ranked
-scope = a session (session_id), an exam template across every launch
-(template_id), or the whole platform (neither) — so a score can be shown
-against all users' scores, not only the classmates in one session.
-    - weakness analysis: topic tags where student performed poorly,
-    each linked back to suggested LearningPage IDs for review
-
-answers schema (dict):
-{
-  "q1": "A",               # MCQ — option letter/text chosen
-  "q2": "mitochondria",    # fill-in-the-blank — student's text
-  "q3": ["A", "C"]         # multi-select
-}
-
-topic_stats schema (dict), computed on submission:
-{
-  "biology_photosynthesis": {
-    "correct": 1,
-    "total": 3,
-    "score_pct": 33,
-    "is_weak": true,            # score_pct < WEAK_THRESHOLD (default 60)
-    "suggested_page_ids": [42, 57]
-  },
-  ...
-}
-
-weakness_report schema (list), derived from topic_stats, sorted by score_pct asc:
-[
-  {
-    "topic_tag": "biology_photosynthesis",
-    "score_pct": 33,
-    "suggested_page_ids": [42, 57],
-    "message": "You scored 33% on 'biology_photosynthesis'. Review the linked lessons."
-  },
-  ...
-]
-'''
-
 from __future__ import annotations
-
-import statistics
+from copy import deepcopy
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence
+from decimal import Decimal
+import statistics
+from typing import Dict, Iterable, List, Optional, Sequence
+from sqlalchemy.orm import Session as OrmSession
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship, Session as OrmSession
-
+WEAK_THRESHOLD=60
+from sqlalchemy import BigInteger, Integer, Identity, String, Text, Numeric, Boolean, DateTime, JSON, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index
+from sqlalchemy.orm import mapped_column, relationship, synonym, object_session
 from app.db import Base
 
-UTC = timezone.utc
+BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
-WEAK_THRESHOLD = 60  # % correct below which a topic is flagged as "weak"
-
-if TYPE_CHECKING:
-    from .exam_session import ExamSession
-    from .user import User
+def now_utc():
+    return datetime.now(timezone.utc)
 
 
 class ExamAttempt(Base):
-    '''
-    one student's graded submission for an exam session.
-    all scoring and weakness analysis is computed from the session's
-    question_snapshot — no live DB question rows needed.
-    '''
-
-    __tablename__ = "exam_attempts"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-
-    # participants
-    student_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False
+    __tablename__ = 'exam_attempt'
+    id = mapped_column('attempt_id', BIGINT, Identity(always=False), primary_key=True, nullable=False)
+    attempt_id = synonym('id')
+    session_id = mapped_column('session_id', BIGINT, nullable=False)
+    student_id = mapped_column('student_id', BIGINT, nullable=False)
+    attempt_no = mapped_column('attempt_no', Integer, nullable=False, default=1)
+    status = mapped_column('status', String(15), nullable=False, default="in_progress")
+    started_at = mapped_column('started_at', DateTime(timezone=True), nullable=False, default=now_utc)
+    submitted_at = mapped_column('submitted_at', DateTime(timezone=True), nullable=True)
+    score = mapped_column('awarded_points', Numeric(12,2), nullable=True)
+    awarded_points = synonym('score')
+    max_score = mapped_column('possible_points', Numeric(12,2), nullable=True)
+    possible_points = synonym('max_score')
+    passing_percentage_snapshot = mapped_column('passing_percentage_snapshot', Numeric(5,2), nullable=False)
+    __table_args__ = (
+        UniqueConstraint('session_id', 'student_id', 'attempt_no'),
+        ForeignKeyConstraint(['session_id'], ['exam_session.session_id'], ondelete='RESTRICT'),
+        ForeignKeyConstraint(['student_id'], ['app_user.user_id'], ondelete='RESTRICT'),
+        CheckConstraint('attempt_no > 0'),
+        CheckConstraint("status IN ('in_progress','submitted','graded','expired')"),
+        CheckConstraint('submitted_at IS NULL OR submitted_at >= started_at'),
+        CheckConstraint('awarded_points IS NULL OR awarded_points >= 0'),
+        CheckConstraint('possible_points IS NULL OR possible_points >= 0'),
+        CheckConstraint('awarded_points IS NULL OR possible_points IS NULL OR awarded_points <= possible_points'),
+        CheckConstraint('passing_percentage_snapshot BETWEEN 0 AND 100'),
+        Index('attempt_student_idx', 'student_id', 'session_id'),
     )
-    session_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("exam_sessions.id"), nullable=False
-    )
 
-    # submission
-    answers: Mapped[dict] = mapped_column(
-        JSON, nullable=False, default=dict,
-        comment="{ question_id: student_answer, ... }"
-    )
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC)
-    )
-    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    score_pct = mapped_column(Numeric(7,2), nullable=False, default=0)
+    passed = mapped_column(Boolean, nullable=False, default=False)
+    percentile = mapped_column(Numeric(7,2), nullable=True)
+    topic_stats_was_null = mapped_column(Boolean, nullable=False, default=False)
+    weakness_report_was_null = mapped_column(Boolean, nullable=False, default=False)
+    analysis_entries = relationship("AttemptAnalysis", cascade="all, delete-orphan", order_by="AttemptAnalysis.entry_no")
+    unmatched_answers = mapped_column(JSON, nullable=False, default=dict)
+    student = relationship("User", back_populates="exam_attempts")
+    session = relationship("ExamSession", back_populates="attempts")
+    selected_questions = relationship("AttemptQuestion", cascade="all, delete-orphan", order_by="AttemptQuestion.display_order")
 
-    # scoring
-    score: Mapped[float] = mapped_column(Float, default=0.0)
-    max_score: Mapped[float] = mapped_column(Float, default=0.0)
-    score_pct: Mapped[float] = mapped_column(Float, default=0.0)  # score / max_score * 100
-    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    @property
+    def answer_rows(self):
+        return [s.answer for s in self.selected_questions if s.answer is not None]
 
-    # percentile rank within this session (0-100), recalculated after each submission
-    percentile: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    @property
+    def answers(self):
+        if hasattr(self,"_pending_answers"):
+            return self._pending_answers
+        result={r.question.external_id:r.as_value() for r in self.answer_rows if r.was_answered}
+        result.update(self.unmatched_answers or {})
+        return result
 
-    # weakness analysis
-    topic_stats: Mapped[dict] = mapped_column(JSON, nullable=True, default=dict)
-    weakness_report: Mapped[list] = mapped_column(JSON, nullable=True, default=list)
+    @answers.setter
+    def answers(self,value):
+        self._pending_answers=deepcopy(value or {})
 
-    # relationships
-    student: Mapped["User"] = relationship(
-        "User", foreign_keys=[student_id], back_populates="exam_attempts"
-    )
-    session: Mapped["ExamSession"] = relationship(
-        "ExamSession", back_populates="attempts"
-    )
+    @property
+    def topic_stats(self):
+        if self.topic_stats_was_null:
+            return None
+        return {row.topic_tag:row.as_value() for row in self.analysis_entries if row.kind=="topic"}
+
+    @topic_stats.setter
+    def topic_stats(self,value):
+        self.topic_stats_was_null=value is None
+        self.analysis_entries=[row for row in self.analysis_entries if row.kind!="topic"]
+        self.analysis_entries.extend(AttemptAnalysis.from_value("topic",i,tag,fields)
+            for i,(tag,fields) in enumerate((value or {}).items(),1))
+
+    @property
+    def weakness_report(self):
+        if self.weakness_report_was_null:
+            return None
+        return [row.as_value() for row in self.analysis_entries if row.kind=="weakness"]
+
+    @weakness_report.setter
+    def weakness_report(self,value):
+        self.weakness_report_was_null=value is None
+        self.analysis_entries=[row for row in self.analysis_entries if row.kind!="weakness"]
+        self.analysis_entries.extend(AttemptAnalysis.from_value("weakness",i,fields.get("topic_tag"),fields)
+            for i,fields in enumerate(value or [],1))
 
     # grading logic
     @staticmethod
@@ -146,7 +126,8 @@ class ExamAttempt(Base):
         auto-grade this attempt against the session's question_snapshot.
         call this after setting self.answers.
         populates: score, max_score, score_pct, passed, topic_stats, weakness_report.
-        no DB queries — all data comes from the JSON snapshot on the session.
+        All assessed data comes from the session snapshot adapter; editing the
+        live template's questions does not change these question rows.
         '''
         questions: list = self.session.question_snapshot or []
 
@@ -178,10 +159,16 @@ class ExamAttempt(Base):
                 raw_score += points
                 topic_buckets[tag]["correct"] += 1
 
-        self.score = raw_score
-        self.max_score = raw_max
+        self.score = Decimal(str(raw_score))
+        self.max_score = Decimal(str(raw_max))
         self.score_pct = round((raw_score / raw_max * 100) if raw_max else 0.0, 2)
         self.passed = self.score_pct >= passing_score_pct
+        self.passing_percentage_snapshot = passing_score_pct
+        for row in self.answer_rows:
+            q = row.question
+            row.is_correct = self.is_answer_correct(row.as_value() if row.was_answered else None, q.as_dict().get("correct_answer"), q.original_type)
+            row.awarded_points = q.points if row.is_correct else Decimal("0")
+            row.answered_at = self.submitted_at if row.was_answered else None
 
         # build topic_stats
         stats = {}
@@ -215,6 +202,12 @@ class ExamAttempt(Base):
             ],
             key=lambda x: x["score_pct"],
         )
+
+        # Save answer grades while the parent is still in_progress, then finalize.
+        orm = object_session(self)
+        if orm is not None:
+            orm.flush()
+        self.status = "graded"
 
     @staticmethod
     def recalculate_percentiles(orm_session: OrmSession, session_id: int) -> None:
@@ -640,3 +633,102 @@ class ExamAttempt(Base):
             f"<ExamAttempt(id={self.id}, student_id={self.student_id}, "
             f"score_pct={self.score_pct}, percentile={self.percentile})>"
         )
+
+
+class AttemptQuestion(Base):
+    __tablename__ = 'attempt_question'
+    attempt_id = mapped_column('attempt_id', BIGINT, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    display_order = mapped_column('display_order', Integer, nullable=False)
+    __table_args__ = (
+        UniqueConstraint('attempt_id', 'display_order'),
+        ForeignKeyConstraint(['attempt_id'], ['exam_attempt.attempt_id'], ondelete='RESTRICT'),
+        ForeignKeyConstraint(['question_id'], ['question.question_id'], ondelete='RESTRICT'),
+        CheckConstraint('display_order > 0'),
+    )
+
+    question = relationship("Question")
+    answer = relationship("AttemptAnswer", back_populates="selection", uselist=False, cascade="all, delete-orphan")
+
+
+class AttemptAnswer(Base):
+    __tablename__ = 'attempt_answer'
+    attempt_id = mapped_column('attempt_id', BIGINT, primary_key=True, nullable=False)
+    question_id = mapped_column('question_id', BIGINT, primary_key=True, nullable=False)
+    selected_choice_no = mapped_column('selected_choice_no', Integer, nullable=True)
+    typed_answer = mapped_column('typed_answer', Text, nullable=True)
+    answered_at = mapped_column('answered_at', DateTime(timezone=True), nullable=True)
+    awarded_points = mapped_column('awarded_points', Numeric(8,2), nullable=True)
+    is_correct = mapped_column('is_correct', Boolean, nullable=True)
+    __table_args__ = (
+        ForeignKeyConstraint(['attempt_id', 'question_id'], ['attempt_question.attempt_id', 'attempt_question.question_id'], ondelete='RESTRICT'),
+        ForeignKeyConstraint(['question_id', 'selected_choice_no'], ['choice.question_id', 'choice.choice_no'], ondelete='RESTRICT'),
+        CheckConstraint('NOT (selected_choice_no IS NOT NULL AND typed_answer IS NOT NULL)'),
+        CheckConstraint('awarded_points IS NULL OR awarded_points >= 0'),
+        CheckConstraint('(awarded_points IS NULL) = (is_correct IS NULL)'),
+    )
+
+    was_answered = mapped_column(Boolean, nullable=False, default=False)
+    value_shape = mapped_column(String(8), nullable=False, default="scalar")
+    selection = relationship("AttemptQuestion", back_populates="answer")
+    question = relationship("Question", foreign_keys=[question_id], primaryjoin="AttemptAnswer.question_id==Question.id", viewonly=True)
+    values = relationship("AttemptAnswerValue", cascade="all, delete-orphan", order_by="AttemptAnswerValue.value_no")
+
+    @property
+    def external_question_id(self):
+        return self.question.external_id
+
+    @classmethod
+    def from_value(cls,value,present=True):
+        return cls(was_answered=present, value_shape="list" if isinstance(value,list) else "scalar",
+                   values=[AttemptAnswerValue(value_no=i,value=deepcopy(v)) for i,v in enumerate(value if isinstance(value,list) else [value],1)])
+
+    def as_value(self):
+        values=[v.value for v in self.values]
+        return values if self.value_shape=="list" else values[0] if values else None
+
+
+class AttemptAnswerValue(Base):
+    __tablename__="attempt_answer_value"
+    attempt_id=mapped_column(BIGINT,primary_key=True)
+    question_id=mapped_column(BIGINT,primary_key=True)
+    value_no=mapped_column(Integer,primary_key=True)
+    value=mapped_column(JSON,nullable=False)
+    __table_args__=(ForeignKeyConstraint(["attempt_id","question_id"],["attempt_answer.attempt_id","attempt_answer.question_id"],ondelete="RESTRICT"),CheckConstraint("value_no>0"))
+
+
+class AttemptAnalysis(Base):
+    """Historical API report entries; counters retain their original semantics."""
+    __tablename__="attempt_analysis"
+    attempt_id=mapped_column(BIGINT,ForeignKey("exam_attempt.attempt_id",ondelete="RESTRICT"),primary_key=True)
+    kind=mapped_column(String(10),primary_key=True)
+    entry_no=mapped_column(Integer,primary_key=True)
+    topic_tag=mapped_column(Text)
+    fields=mapped_column(JSON,nullable=False)
+    has_page_ids=mapped_column(Boolean,nullable=False,default=False)
+    lesson_links=relationship("AttemptAnalysisLesson",cascade="all, delete-orphan",order_by="AttemptAnalysisLesson.link_no")
+    __table_args__=(CheckConstraint("kind IN ('topic','weakness')"),CheckConstraint("entry_no>0"))
+
+    @classmethod
+    def from_value(cls,kind,position,tag,value):
+        row=cls(kind=kind,entry_no=position,topic_tag=tag,has_page_ids="suggested_page_ids" in value,
+                fields={k:deepcopy(v) for k,v in value.items() if k!="suggested_page_ids"})
+        row.lesson_links=[AttemptAnalysisLesson(link_no=i,legacy_lesson_id=page) for i,page in enumerate(value.get("suggested_page_ids") or [],1)]
+        return row
+
+    def as_value(self):
+        value=deepcopy(self.fields)
+        if self.has_page_ids:value["suggested_page_ids"]=[link.legacy_lesson_id for link in self.lesson_links]
+        return value
+
+
+class AttemptAnalysisLesson(Base):
+    __tablename__="attempt_analysis_lesson"
+    attempt_id=mapped_column(BIGINT,primary_key=True)
+    kind=mapped_column(String(10),primary_key=True)
+    entry_no=mapped_column(Integer,primary_key=True)
+    link_no=mapped_column(Integer,primary_key=True)
+    # Old reports can refer to deleted lessons; preserve that historical ID, not a fake FK.
+    legacy_lesson_id=mapped_column(BIGINT,nullable=False)
+    __table_args__=(ForeignKeyConstraint(["attempt_id","kind","entry_no"],
+        ["attempt_analysis.attempt_id","attempt_analysis.kind","attempt_analysis.entry_no"],ondelete="RESTRICT"),CheckConstraint("link_no>0"))
