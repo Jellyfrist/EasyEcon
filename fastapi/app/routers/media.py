@@ -5,6 +5,8 @@ import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.models.user import User
 from app.security import require_teacher
+from app.db import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix='/media', tags=['media'])
 
@@ -41,11 +43,18 @@ async def _upload_to_supabase(file: UploadFile) -> str:
 async def upload_image(
     file: UploadFile = File(...),
     teacher: User = Depends(require_teacher),
+    db: Session = Depends(get_db),
 ):
     allowed = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail='only jpeg, png, webp, gif allowed')
     url = await _upload_to_supabase(file)
+    from datetime import datetime, timezone
+    from app.models.learning_page import Asset
+    db.add(Asset(url=url, storage_key=url.rsplit("/", 1)[-1],
+                 original_filename=file.filename, mime_type=file.content_type,
+                 byte_size=file.size, uploaded_by_user_id=teacher.id,
+                 created_at=datetime.now(timezone.utc)))
+    db.commit()
     return {'url': url}
-
 

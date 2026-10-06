@@ -65,7 +65,7 @@ router = APIRouter(prefix="/exam", tags=["exam"])
 
 def _get_template_or_404(template_id: int, db: Session) -> ExamTemplate:
     t = db.get(ExamTemplate, template_id)
-    if not t:
+    if not t or t.source_template_id is not None:
         raise HTTPException(status_code = 404, detail = "Exam template not found")
     return t
 
@@ -288,7 +288,10 @@ def _repair_short_answer_scores(db: Session, attempts: List[ExamAttempt]) -> Non
         if not has_matched_alternative:
             continue
         old_score = attempt.score
-        passing_pct = attempt.session.template.passing_score_pct if attempt.session.template else 60
+        if attempt.passing_percentage_snapshot is None:
+            # There is no evidence of the threshold used for this old result.
+            continue
+        passing_pct = attempt.passing_percentage_snapshot
         attempt.grade(passing_score_pct=passing_pct)
         if attempt.score != old_score:
             changed_sessions.add(attempt.session_id)
@@ -325,7 +328,8 @@ def _attach_percentiles(
             a.overall_percentile = None
         return attempts
 
-    _repair_short_answer_scores(db, graded)
+    # Result reads preserve stored historical grades. Any repair must be an
+    # explicit operation using the recorded threshold, never current settings.
 
     overall_by_student = ExamAttempt.collect_scores_by_student(db, per_user = per_user)
     session_by_student: Dict[int, Dict[int, float]] = {}
@@ -395,7 +399,10 @@ def create_template(
     _validate_question_lessons(db, body.course_id, body.question_data)
     data = body.model_dump()
     data["question_data"] = [q.model_dump() for q in body.question_data]
-    template = ExamTemplate(**data, created_by_user_id=teacher.id)
+    try:
+        template = ExamTemplate(**data, created_by_user_id=teacher.id)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     db.add(template)
     db.commit()
     db.refresh(template)
@@ -414,7 +421,7 @@ def list_templates(
     - list exam templates for a course
     - filter by exam type (midterm/final) or academic year to browse past papers
     '''
-    q = db.query(ExamTemplate).filter(ExamTemplate.course_id == course_id)
+    q = db.query(ExamTemplate).filter(ExamTemplate.course_id == course_id, ExamTemplate.source_template_id.is_(None))
     if exam_type:
         q = q.filter(ExamTemplate.exam_type == exam_type)
     if academic_year:
@@ -452,8 +459,12 @@ def update_template(
                 LearningPage.is_published.is_(True)).all()}
             if valid != page_ids:
                 raise HTTPException(status_code=422, detail="Existing linked lessons do not belong to the new course")
-    for field, value in data.items():
-        setattr(template, field, value)
+    try:
+        for field, value in data.items():
+            setattr(template, field, value)
+    except ValueError as error:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(error)) from error
     db.commit()
     db.refresh(template)
     return template
@@ -538,7 +549,7 @@ def list_open_sessions(
     '''list all active exam sessions for a course that are currently open'''
     sessions = (
         db.query(ExamSession)
-        .join(ExamTemplate)
+        .join(ExamTemplate, ExamTemplate.id == ExamSession.template_id)
         .filter(
             ExamTemplate.course_id == course_id,
         )
@@ -591,7 +602,10 @@ def submit_attempt(
     - percentiles recalculated for all attempts in this session.
     - returns full result including weakness report and suggested page IDs.
     '''
-    session = _get_session_or_404(body.session_id, db)
+    # Serialize numbering and the existing max-attempt rule within a session.
+    session = db.query(ExamSession).filter(ExamSession.id == body.session_id).with_for_update().first()
+    if session is None:
+        raise HTTPException(status_code=404, detail="Exam session not found")
     if not session.is_open or not _is_latest_session(session, db):
         raise HTTPException(status_code = 400, detail = "This exam is not currently open")
 
@@ -616,11 +630,18 @@ def submit_attempt(
                 detail=f"Maximum {session.max_attempts} attempt(s) allowed",
             )
 
+    submitted_at = datetime.now(timezone.utc)
     attempt = ExamAttempt(
         student_id=student.id,
         session_id=body.session_id,
         answers=body.answers,
-        submitted_at=datetime.now(timezone.utc),
+        started_at=submitted_at,
+        submitted_at=submitted_at,
+        session=session,
+        attempt_no=1 + max((a.attempt_no for a in db.query(ExamAttempt).filter(
+            ExamAttempt.session_id == body.session_id,
+            ExamAttempt.student_id == student.id,
+        ).all()), default=0),
     )
     db.add(attempt)
     db.flush()  # get attempt.id

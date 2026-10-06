@@ -67,7 +67,7 @@ def search_student(
     )
 
     exams = (
-        db.query(ExamTemplate)
+        db.query(ExamTemplate).filter(ExamTemplate.source_template_id.is_(None))
         .filter(ExamTemplate.title.ilike(pattern))
         .limit(5).all()
     )
@@ -122,7 +122,7 @@ def search_teacher(
     )
 
     exams = (
-        db.query(ExamTemplate)
+        db.query(ExamTemplate).filter(ExamTemplate.source_template_id.is_(None))
         .filter(
             ExamTemplate.created_by_user_id == teacher.id,
             ExamTemplate.title.ilike(pattern)

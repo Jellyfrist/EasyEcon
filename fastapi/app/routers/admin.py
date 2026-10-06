@@ -30,7 +30,6 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_db
-from app.models.best_attempt import BestAttempt
 from app.models.course import Course
 from app.models.exam_attempt import ExamAttempt
 from app.models.exam_session import ExamSession
@@ -198,7 +197,9 @@ def delete_student(
     authored_page = db.query(LearningPage.id).filter(LearningPage.created_by_user_id == user_id).first()
     authored_exam = db.query(ExamTemplate.id).filter(ExamTemplate.created_by_user_id == user_id).first()
     launched_exam = db.query(ExamSession.id).filter(ExamSession.launched_by_user_id == user_id).first()
-    if owns_course or authored_page or authored_exam or launched_exam:
+    from app.models.learning_page import Asset
+    owns_asset = db.query(Asset.id).filter(Asset.uploaded_by_user_id == user_id).first()
+    if owns_course or authored_page or authored_exam or launched_exam or owns_asset:
         raise HTTPException(
             status_code=409,
             detail="This account owns teaching content. Transfer or remove that content before deleting the account.",
@@ -210,10 +211,14 @@ def delete_student(
             LearningPage.last_edited_by_user_id == user_id
         ).update({LearningPage.last_edited_by_user_id: None}, synchronize_session=False)
 
-        # Delete personal learning history and linked sign-in identities first.
-        db.query(ExamAttempt).filter(ExamAttempt.student_id == user_id).delete(synchronize_session=False)
+        # The existing admin erase operation removes only this student's history.
+        if db.bind.dialect.name == "postgresql":
+            from sqlalchemy import text
+            db.execute(text("SELECT set_config('easyecon.erase_student', :student, true)"), {"student": str(user_id)})
+        for attempt in db.query(ExamAttempt).filter_by(student_id=user_id).all():
+            db.delete(attempt)
+        db.flush()
         db.query(PageProgress).filter(PageProgress.student_id == user_id).delete(synchronize_session=False)
-        db.query(BestAttempt).filter(BestAttempt.student_id == user_id).delete(synchronize_session=False)
         db.query(SocialAuth).filter(SocialAuth.user_id == user_id).delete(synchronize_session=False)
         db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
         db.commit()
@@ -266,7 +271,7 @@ async def invite_teacher(
         f"Login at: {login_url}\n\n"
         f"Please log in with your username, not this email address."
     )
-    _send_email_smtp(body.email, "EasyEcon: your teacher account is ready", email_body)
+    _send_teacher_email(db, teacher, admin, "EasyEcon: your teacher account is ready", email_body)
 
     return teacher
 
@@ -303,9 +308,39 @@ async def send_credentials(
         f"Login at: {login_url}\n\n"
         f"Please log in with your username, not this email address."
     )
-    _send_email_smtp(user.email, "EasyEcon: your login credentials have been reset", email_body)
+    _send_teacher_email(db, user, admin, "EasyEcon: your login credentials have been reset", email_body)
 
     return user
+
+def _send_teacher_email(db, user, admin, subject, body):
+    from datetime import datetime, timezone
+    from app.models.user import TeacherInvitation
+    now = datetime.now(timezone.utc)
+    recipient_name = user.full_name or user.display_name
+    invitation = db.query(TeacherInvitation).filter_by(
+        invited_user_id=user.id, recipient_email=user.email,
+        recipient_name=recipient_name,
+    ).order_by(TeacherInvitation.id.desc()).first()
+    if invitation is None:
+        invitation = TeacherInvitation(
+            invited_user_id=user.id, invited_by_admin_id=admin.id,
+            recipient_name=recipient_name, recipient_email=user.email,
+            delivery_status="pending", created_at=now, send_count=0,
+        )
+        db.add(invitation)
+    invitation.send_count += 1
+    invitation.delivery_status = "pending"
+    db.commit()
+    try:
+        _send_email_smtp(user.email, subject, body)
+    except HTTPException:
+        invitation.delivery_status = "failed"
+        db.commit()
+        raise
+    invitation.delivery_status = "sent"
+    invitation.last_sent_at = now
+    db.commit()
+
 
 # one-time admin seeder: call once, then delete this route
 @router.post("/seed", include_in_schema=False)

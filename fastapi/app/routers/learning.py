@@ -11,24 +11,20 @@ Teacher routes  (require_teacher):
 Student routes  (require_student):
     GET    /learning/modules?course_id=           list published modules
     GET    /learning/modules/{module_id}/pages    list published pages in module
-    GET    /learning/pages/{page_id}/study        get page (correct_answers stripped)
-    POST   /learning/pages/mini-quiz              submit mini quiz answers
-    GET    /learning/pages/{page_id}/my-quiz      get my best/latest score
+    GET    /learning/pages/{page_id}/study        get page content
 '''
 
-import copy
-from typing import Any, Dict, List
-from datetime import datetime
+from typing import List
+from datetime import datetime, timezone
 from pydantic import BaseModel
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 
 from app.models.learning_page import LearningPage
 from app.models.module import Module
-from app.models.best_attempt import BestAttempt
 from app.models.user import User
 from app.models.page_progress import PageProgress
 
@@ -38,8 +34,6 @@ from app.schemas.learning import (
     LearningPageStudentResponse,
     LearningPageSummary,
     LearningPageUpdate,
-    MiniQuizResult,
-    MiniQuizSubmit,
     ModuleCreate,
     ModuleResponse,
     ModuleUpdate,
@@ -66,19 +60,6 @@ def _get_page_or_404(page_id: int, db: Session) -> LearningPage:
     return p
 
 
-def _strip_answers(content_blocks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    '''
-    - remove correct answer and explanation from mini_quiz blocks before sending to students
-    '''
-    stripped = []
-    for block in content_blocks:
-        if block.get("type") == "mini_quiz":
-            block = copy.deepcopy(block)
-            for q in block.get("data", {}).get("questions", []):
-                q.pop("correct_answer", None)
-                q.pop("explanation", None)
-        stripped.append(block)
-    return stripped
 
 
 '''
@@ -94,6 +75,7 @@ def create_module(
 ):
     module = Module(**body.model_dump())
     db.add(module)
+    Module.synchronize_positions(db, Module, "course_id", module.course_id)
     db.commit()
     db.refresh(module)
     return module
@@ -109,6 +91,7 @@ def update_module(
     module = _get_module_or_404(module_id, db)
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(module, field, value)
+    Module.synchronize_positions(db, Module, "course_id", module.course_id)
     db.commit()
     db.refresh(module)
     return module
@@ -122,6 +105,7 @@ def delete_module(
 ):
     module = _get_module_or_404(module_id, db)
     db.delete(module)
+    Module.synchronize_positions(db, Module, "course_id", module.course_id)
     db.commit()
 
 
@@ -154,6 +138,7 @@ def create_page(
     
     page = LearningPage(**page_data)
     db.add(page)
+    Module.synchronize_positions(db, LearningPage, "module_id", page.module_id)
     db.commit()
     db.refresh(page)
     return page
@@ -186,6 +171,7 @@ def update_page(
     for field, value in data.items():
         setattr(page, field, value)
     page.last_edited_by_user_id = teacher.id
+    Module.synchronize_positions(db, LearningPage, "module_id", page.module_id)
     db.commit()
     db.refresh(page)
     return page
@@ -220,6 +206,7 @@ def delete_page(
 ):
     page = _get_page_or_404(page_id, db)
     db.delete(page)
+    Module.synchronize_positions(db, LearningPage, "module_id", page.module_id)
     db.commit()
 
 '''
@@ -252,7 +239,7 @@ def list_pages_student(
     module = _get_module_or_404(module_id, db)
     return [p for p in module.learning_pages if p.is_published]
 
-# get page (correct_answers stripped)
+# get page content
 @router.get("/pages/{page_id}/study", response_model = LearningPageStudentResponse)
 def study_page(
     page_id: int,
@@ -260,92 +247,25 @@ def study_page(
     student: User = Depends(require_student),
 ):
     '''
-    student reads a lesson page
-    - topic tag is excluded entirely
-    - correct answer and explanation stripped from mini quiz block
+    student reads a lesson page without the teacher-only topic tag
     '''
     page = _get_page_or_404(page_id, db)
     if not page.is_published:
         raise HTTPException(status_code = 404, detail = "Page not found")
-
-    safe_blocks = _strip_answers(page.content_blocks)
 
     return LearningPageStudentResponse(
         id = page.id,
         module_id = page.module_id,
         title = page.title,
         template_type = page.template_type,
-        content_blocks = safe_blocks,
+        # Hide legacy rows until the Mini Quiz data migration has run.
+        content_blocks = [
+            block for block in page.content_blocks
+            if block.get("type") != "mini_quiz"
+        ],
         order_index = page.order_index,
         preview = page.preview,
     )
-
-# submit mini quiz answers
-@router.post("/pages/mini-quiz", response_model = MiniQuizResult)
-def submit_mini_quiz(
-    body: MiniQuizSubmit,
-    db: Session = Depends(get_db),
-    student: User = Depends(require_student),
-):
-    '''
-    - student submits answers for a mini_quiz block inside a learning page
-    - finds the mini quiz block, grades, upsert best attempt
-    - only best score is kept, so student can retake as many times as they want
-    '''
-    page = _get_page_or_404(body.learning_page_id, db)
-
-    # find the mini quiz block in content blocks
-    quiz_block = next(
-        (b for b in page.content_blocks if b.get("type") == "mini_quiz"),
-        None,
-    )
-    if not quiz_block:
-        raise HTTPException(status_code = 400, detail = "This page has no mini quiz")
-
-    questions = quiz_block.get("data", {}).get("questions", [])
-
-    # upsert BestAttempt
-    attempt = (
-        db.query(BestAttempt)
-        .filter(
-            BestAttempt.student_id == student.id,
-            BestAttempt.learning_page_id == body.learning_page_id,
-        )
-        .first()
-    )
-    if not attempt:
-        attempt = BestAttempt(
-            student_id = student.id,
-            learning_page_id = body.learning_page_id,
-            attempt_count = 0,
-        )
-        db.add(attempt)
-        db.flush()
-
-    attempt.grade(questions = questions, answers = body.answers)
-    db.commit()
-    db.refresh(attempt)
-    return attempt
-
-# get student best or latest score
-@router.get("/pages/{page_id}/my-quiz", response_model = MiniQuizResult)
-def get_my_quiz_result(
-    page_id: int,
-    db: Session = Depends(get_db),
-    student: User = Depends(require_student),
-):
-    '''returns the student's best or latest mini quiz score'''
-    attempt = (
-        db.query(BestAttempt)
-        .filter(
-            BestAttempt.student_id == student.id,
-            BestAttempt.learning_page_id == page_id,
-        )
-        .first()
-    )
-    if not attempt:
-        raise HTTPException(status_code = 404, detail = "No quiz attempt found for this page")
-    return attempt
 
 # Student routes: Progress Tracking
 @router.post("/pages/{page_id}/complete", status_code=200)
@@ -369,17 +289,37 @@ def complete_page(
         .first()
     )
     
+    observed_at = datetime.now(timezone.utc)
     if not progress:
         progress = PageProgress(
             student_id=student.id, 
             learning_page_id=page_id, 
-            is_completed=True
+            is_completed=True,
+            started_at=observed_at, last_viewed_at=observed_at, completed_at=observed_at
         )
         db.add(progress)
     else:
         progress.is_completed = True
+        progress.last_viewed_at = observed_at
+        if progress.completed_at is None:
+            progress.completed_at = observed_at
         
-    db.commit()
+    from sqlalchemy.exc import IntegrityError
+    try:
+        db.commit()
+    except IntegrityError:
+        # Another request may have completed the same student/lesson pair.
+        db.rollback()
+        progress = db.query(PageProgress).filter_by(
+            student_id=student.id, learning_page_id=page_id,
+        ).first()
+        if progress is None:
+            raise
+        progress.is_completed = True
+        progress.last_viewed_at = observed_at
+        if progress.completed_at is None:
+            progress.completed_at = observed_at
+        db.commit()
     return {"status": "success", "message": "Page marked as completed"}
 
 @router.get("/modules/{module_id}/dashboard", response_model=ModuleDashboardResponse)
